@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Bento Fit 健康餐盒</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8bc34a">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f1f8e9',
+                            100: '#dcedc8',
+                            400: '#9ccc65',
+                            500: '#8bc34a', // Fresh Green
+                            600: '#7cb342',
+                            900: '#33691e',
+                        },
+                        dark: '#2c3e50',
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'float': '0 10px 30px -5px rgba(139, 195, 74, 0.2)',
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+            background-color: #f9faf9;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom Checkbox */
+        .custom-checkbox:checked + div {
+            background-color: #8bc34a;
+            border-color: #8bc34a;
+        }
+        .custom-checkbox:checked + div i {
+            display: block;
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="text-gray-700 font-sans antialiased h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-white/95 backdrop-blur-sm px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+        <div>
+            <h1 id="page-title" class="text-xl font-bold text-gray-800 tracking-tight">Bento Fit</h1>
+            <p id="page-subtitle" class="text-[10px] text-gray-400 font-medium">今天也要吃得健康</p>
+        </div>
+        <div class="w-9 h-9 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 cursor-pointer hover:bg-brand-100 transition" onclick="app.navigateTo('profile')">
+            <i class="fa-solid fa-user text-sm"></i>
+        </div>
+    </header>
+
+    <main id="main-container" class="flex-1 overflow-y-auto hide-scrollbar pb-24 px-4 pt-4 relative">
+        
+        <section id="view-dashboard" class="view-section fade-in hidden space-y-5">
+            <div class="bg-white p-5 rounded-[24px] shadow-soft border border-gray-50">
+                <div class="flex justify-between items-end mb-4">
+                    <h2 class="text-base font-bold text-gray-800">今日目標</h2>
+                    <button onclick="app.openReport()" class="text-[10px] bg-brand-100 text-brand-600 px-2 py-1 rounded-full font-bold hover:bg-brand-200 transition">
+                        <i class="fa-solid fa-chart-pie mr-1"></i>週分析
+                    </button>
+                    <span class="text-[10px] text-brand-600 bg-brand-50 px-2 py-1 rounded-full font-bold" id="tdee-display">TDEE: 計算中...</span>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-medium text-gray-500">熱量 (Kcal)</span>
+                            <span class="text-gray-800 font-bold"><span id="dash-cal-curr">0</span> <span class="text-gray-300 font-normal">/</span> <span id="dash-cal-target">0</span></span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                            <div id="bar-cal" class="bg-brand-400 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-blue-50 p-2 rounded-xl text-center"><div class="text-[10px] text-blue-400 mb-1">蛋白質</div><div class="h-1 w-full bg-blue-100 rounded-full"><div id="bar-prot" class="h-1 bg-blue-400 rounded-full" style="width:0%"></div></div></div>
+                        <div class="bg-yellow-50 p-2 rounded-xl text-center"><div class="text-[10px] text-yellow-500 mb-1">碳水</div><div class="h-1 w-full bg-yellow-100 rounded-full"><div id="bar-carb" class="h-1 bg-yellow-400 rounded-full" style="width:0%"></div></div></div>
+                        <div class="bg-red-50 p-2 rounded-xl text-center"><div class="text-[10px] text-red-400 mb-1">脂肪</div><div class="h-1 w-full bg-red-100 rounded-full"><div id="bar-fat" class="h-1 bg-red-400 rounded-full" style="width:0%"></div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-base font-bold text-gray-800 mb-3 ml-1">今日便當</h3>
+                <div id="today-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-gray-50">
+                    <div class="p-8 text-center text-gray-400 italic">尚未安排</div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-base font-bold text-gray-800 mb-3 ml-1 flex items-center gap-2">
+                    <span>明日備餐</span>
+                    <span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">提前準備</span>
+                </h3>
+                <div id="tomorrow-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-orange-100/50">
+                    </div>
+            </div>
+            <button onclick="app.navigateTo('planner')" class="w-full bg-white border border-brand-100 text-brand-600 font-bold py-3.5 rounded-2xl hover:bg-brand-50 transition active:scale-95 text-sm flex items-center justify-center gap-2 shadow-sm">
+                <i class="fa-solid fa-calendar-plus"></i> 規劃下週便當
+            </button>
+        </section>
+
+        <section id="view-planner" class="view-section fade-in hidden">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 ml-1">本週菜單</h2>
+            
+            <button onclick="app.generateAIPlan()" class="w-full mb-6 bg-brand-500 text-white p-4 rounded-2xl shadow-float flex items-center justify-center gap-2 transform active:scale-95 transition-all hover:bg-brand-600">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span class="font-bold">AI 智慧生成本週菜單</span>
+            </button>
+
+            <div id="ai-loading" class="hidden space-y-4">
+                <div class="flex flex-col items-center justify-center gap-2 text-brand-500 font-medium py-4">
+                    <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i>
+                    <span class="text-sm">AI 正在調配營養食譜...</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl h-20 w-full shimmer"></div>
+                <div class="bg-white p-4 rounded-2xl h-20 w-full shimmer"></div>
+            </div>
+
+            <div class="space-y-3" id="planner-list"></div>
+        </section>
+
+        <section id="view-shopping" class="view-section fade-in hidden h-full flex flex-col">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4 sticky top-0 z-10">
+                <div class="flex justify-between items-end mb-2">
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">採買完成度</div>
+                    </div>
+                <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                    <div id="shop-progress-bar" class="h-full bg-brand-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mb-2 px-1">
+                <button onclick="app.copyShoppingList()" class="text-xs text-brand-500 font-bold hover:text-brand-600 flex items-center gap-1"><i class="fa-regular fa-copy"></i> 複製清單</button>
+                <button onclick="app.clearShoppingList()" class="text-xs text-red-400 font-bold hover:text-red-500 flex items-center gap-1"><i class="fa-regular fa-trash-can"></i> 清除已買</button>
+            </div>
+            <button onclick="app.filterStaples()" class="text-xs text-gray-400 font-bold hover:text-gray-600 flex items-center gap-1">
+                <i class="fa-solid fa-filter"></i> 隱藏常備品
+            </button>
+            
+            <div id="shopping-list-container" class="space-y-8 pb-32"></div>
+        </section>
+        
+        <section id="view-history" class="view-section fade-in hidden">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 ml-1">歷史紀錄</h2>
+            <div id="history-list" class="space-y-4"></div>
+            <div id="history-empty" class="hidden text-center text-gray-400 py-10"><p class="text-sm">暫無紀錄</p></div>
+        </section>
+
+        <section id="view-profile" class="view-section fade-in hidden">
+            <div class="bg-white p-6 rounded-[24px] shadow-soft mb-6">
+                <h2 class="text-lg font-bold text-gray-800 mb-6 text-center">個人設定</h2>
+
+                <form id="profile-form" class="space-y-5" onsubmit="event.preventDefault(); app.saveProfile();">
+                    
+                    <h3 class="text-xs font-bold text-gray-400 border-l-4 border-brand-500 pl-2">基本資料</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">身高 (cm)</label>
+                            <input type="number" id="input-height" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="170" required>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">體重 (kg)</label>
+                            <input type="number" id="input-weight" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="60" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">年齡</label>
+                            <input type="number" id="input-age" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="25" required>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">性別</label>
+                            <select id="input-gender" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition">
+                                <option value="male">男性</option>
+                                <option value="female">女性</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">日常活動量</label>
+                        <select id="input-activity" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition">
+                            <option value="1.2">久坐不動 (辦公室工作)</option>
+                            <option value="1.375">輕度活動 (每週運動1-3天)</option>
+                            <option value="1.55">中度活動 (每週運動3-5天)</option>
+                            <option value="1.725">高度活動 (每週運動6-7天)</option>
+                            <option value="1.9">超高度活動 (勞力工作/運動員)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">飲食目標 (AI 參考用)</label>
+                        <select id="input-goal" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition">
+                            <option value="均衡飲食">🥗 均衡飲食 (維持健康)</option>
+                            <option value="增肌高蛋白">💪 增肌 (高蛋白/中碳水)</option>
+                            <option value="減脂低碳">🔥 減脂 (低碳水/高纖)</option>
+                            <option value="低GI飲食">📉 低GI (穩定血糖)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 / 過敏原 (AI 避開)</label>
+                        <textarea id="input-exclude" rows="2" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-200 transition" placeholder="例如：香菜、蝦子、青椒..."></textarea>
+                    </div>
+                    <h3 class="text-xs font-bold text-gray-400 border-l-4 border-blue-400 pl-2 mt-2">身體組成 (體脂計數據)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">體脂率 (%)</label>
+                            <input type="number" step="0.1" id="input-bf" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">肌肉量 (kg)</label>
+                            <input type="number" step="0.1" id="input-muscle" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">內臟脂肪等級</label>
+                            <input type="number" step="0.5" id="input-vfat" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">基礎代謝 (體脂計)</label>
+                            <input type="number" id="input-scale-bmr" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">水分含量 (%)</label>
+                            <input type="number" step="0.1" id="input-water" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">蛋白質 (%)</label>
+                            <input type="number" step="0.1" id="input-protein" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">骨量 (kg)</label>
+                            <input type="number" step="0.1" id="input-bone" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">BMI (選填)</label>
+                            <input type="number" step="0.1" id="input-bmi" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="自動計算">
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY (AI 功能必填)</label>
+                        <input type="password" id="input-apikey" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="AIzaSy...">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition-transform hover:bg-brand-600">儲存個人與身體數值</button>
+                </form>
+                <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-brand-500"></i> 體重趨勢
+                        </h3>
+                        <span class="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">最近 30 筆</span>
+                    </div>
+                    <svg id="body-chart-svg" viewBox="0 0 300 120" class="w-full h-32 text-brand-500" style="min-height: 150px;">
+                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#ccc" font-size="12">儲存 2 筆以上資料後顯示</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-[24px] shadow-soft mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-800">成就與挑戰</h2>
+                    <span class="text-xs bg-orange-100 text-orange-600 px-3 py-1 rounded-full font-bold">🔥 連續 <span id="streak-count">0</span> 天</span>
+                </div>
+                <div id="badge-container" class="grid grid-cols-4 gap-2">
+                    </div>
+            </div>
+            <div class="flex gap-3 mb-8">
+                <button onclick="app.exportData()" class="flex-1 bg-white border border-gray-200 text-gray-600 font-bold py-3 rounded-xl text-xs hover:bg-gray-50"><i class="fa-solid fa-download mr-1"></i> 備份</button>
+                <label class="flex-1 bg-white border border-gray-200 text-gray-600 font-bold py-3 rounded-xl text-xs hover:bg-gray-50 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-upload mr-1"></i> 匯入<input type="file" class="hidden" onchange="app.importData(this)"></label>
+            </div>
+            <div class="text-center"><button onclick="app.resetData()" class="text-xs text-red-300 hover:text-red-500 underline">重置所有資料</button></div>
+        </section>
+    </main>
+
+    <nav class="bg-white px-6 pb-6 pt-2 shadow-[0_-5px_30px_rgba(0,0,0,0.03)] z-30 w-full rounded-t-[30px] fixed bottom-0 safe-pb">
+        <ul class="flex justify-between items-center">
+            <li class="nav-item w-full" onclick="app.navigateTo('dashboard')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-brand-500 py-2" id="nav-dashboard"><i class="fa-solid fa-house text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">首頁</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('planner')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-gray-300 py-2" id="nav-planner"><i class="fa-solid fa-calendar-days text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">規劃</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('shopping')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-gray-300 py-2" id="nav-shopping"><i class="fa-solid fa-list-check text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">清單</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('history')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-gray-300 py-2" id="nav-history"><i class="fa-solid fa-clock-rotate-left text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">紀錄</span></div></li>
+        </ul>
+    </nav>
+
+        <div id="modal-selector" class="fixed inset-0 z-50 hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
+            <div class="bg-white w-full h-[80vh] sm:h-[600px] sm:w-[450px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl animate-slide-up">
+                
+                <div class="p-5 border-b border-gray-50 flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-gray-800">選擇菜色</h3>
+                    <button onclick="app.closeModal('modal-selector')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400"><i class="fa-solid fa-times"></i></button>
+                </div>
+                
+                <div class="px-5 py-3 flex gap-2 overflow-x-auto hide-scrollbar">
+                    <button onclick="app.filterRecipes('fav')" class="filter-chip px-4 py-1.5 bg-pink-50 text-pink-500 rounded-full text-xs font-bold whitespace-nowrap shadow-sm border border-pink-100">
+                        <i class="fa-solid fa-heart mr-1"></i>收藏
+                    </button>
+                    <button onclick="app.filterRecipes('all')" class="filter-chip px-4 py-1.5 bg-brand-500 text-white rounded-full text-xs font-bold whitespace-nowrap shadow-sm">
+                        全部
+                    </button>
+                </div>
+
+                <div id="selector-list" class="flex-1 overflow-y-auto p-5 space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="modal-detail" class="fixed inset-0 z-50 hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
+            <div class="bg-white w-full h-[70vh] sm:h-[600px] sm:w-[450px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl overflow-hidden">
+                
+                <div class="relative h-32 bg-brand-500 flex items-center justify-center flex-col p-6 text-center">
+                    
+                    <button onclick="app.closeModal('modal-detail')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30"><i class="fa-solid fa-times"></i></button>
+                    
+                    <button id="btn-fav-toggle" class="absolute top-4 right-16 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition active:scale-90">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+
+                    <h2 id="detail-title" class="text-2xl font-bold text-white tracking-wide mb-1"></h2>
+                    <span id="detail-cal" class="bg-white/20 px-3 py-1 rounded-full text-xs text-white font-medium"></span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6 pb-10">
+                    <div class="flex justify-between bg-gray-50 p-4 rounded-2xl mb-6 text-center">
+                        <div><div class="text-[10px] text-gray-400 mb-1">蛋白質</div><div id="detail-p" class="font-bold text-gray-800 text-sm"></div></div>
+                        <div class="w-px bg-gray-200"></div>
+                        <div><div class="text-[10px] text-gray-400 mb-1">碳水</div><div id="detail-c" class="font-bold text-gray-800 text-sm"></div></div>
+                        <div class="w-px bg-gray-200"></div>
+                        <div><div class="text-[10px] text-gray-400 mb-1">脂肪</div><div id="detail-f" class="font-bold text-gray-800 text-sm"></div></div>
+                    </div>
+                    <h3 class="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-basket-shopping text-brand-400"></i> 食材</h3>
+                    <ul id="detail-ingredients" class="list-disc list-inside text-gray-600 space-y-1 mb-6 text-sm pl-2 marker:text-gray-300"></ul>
+                    <h3 class="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-list-ol text-brand-400"></i> 步驟</h3>
+                    <p id="detail-instructions" class="text-gray-600 text-sm leading-7 bg-gray-50 p-4 rounded-2xl"></p>
+                </div>
+            </div>
+        </div>
+
+    <div id="modal-history" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] flex flex-col shadow-2xl max-h-[70vh]">
+            <div id="history-header" class="p-4 border-b border-gray-50 flex justify-between items-center"></div>
+            <div id="history-content" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-800/90 backdrop-blur text-white px-5 py-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-[70] text-xs font-bold flex items-center gap-2">
+        <i class="fa-solid fa-check text-brand-400"></i> <span id="toast-msg"></span>
+    </div>
+    <div id="modal-cooking" class="fixed inset-0 z-[100] hidden bg-gray-900 text-white flex flex-col transition-opacity duration-300">
+        <div class="p-6 flex justify-between items-center">
+            <button onclick="app.exitCooking()" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-white/20"><i class="fa-solid fa-xmark"></i></button>
+            <div class="text-xs font-mono text-brand-400 border border-brand-400 px-3 py-1 rounded-full">Cooking Mode</div>
+            <div class="w-10"></div> </div>
+
+        <div class="flex-1 flex flex-col justify-center items-center px-8 text-center" onclick="app.nextCookingStep()">
+            <h2 id="cook-step-num" class="text-6xl font-bold text-brand-500 mb-8 opacity-20">01</h2>
+            <p id="cook-step-text" class="text-2xl font-bold leading-relaxed tracking-wide">載入中...</p>
+            <p class="text-gray-500 text-sm mt-8 animate-pulse">點擊畫面進入下一步</p>
+        </div>
+
+        <div class="p-8 pb-12 safe-pb">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <button onclick="app.prevCookingStep(event)" class="text-gray-400 hover:text-white p-2"><i class="fa-solid fa-arrow-left"></i> 上一步</button>
+                <span id="cook-progress-text" class="text-xs text-gray-500 font-mono">1 / 5</span>
+            </div>
+            <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div id="cook-progress-bar" class="h-full bg-brand-500 transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-report" class="fixed inset-0 z-50 hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
+        <div class="bg-white w-full h-[85vh] sm:h-[650px] sm:w-[450px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl animate-slide-up">
+            
+            <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <div>
+                    <h3 class="font-bold text-xl text-gray-800">週營養分析</h3>
+                    <p class="text-xs text-gray-400 mt-1">本週菜單 (Mon-Fri) 總覽</p>
+                </div>
+                <button onclick="app.closeModal('modal-report')" class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                
+                <div class="text-center">
+                    <h4 class="text-sm font-bold text-gray-600 mb-4 flex items-center justify-center gap-2"><i class="fa-solid fa-chart-pie text-brand-500"></i> 營養素比例 (P/C/F)</h4>
+                    <div class="relative w-48 h-48 mx-auto">
+                        <svg id="chart-macro-pie" viewBox="0 0 100 100" class="w-full h-full transform -rotate-90"></svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-xs text-gray-400">總熱量</span>
+                            <span id="report-total-cal" class="text-lg font-bold text-gray-800">0</span>
+                            <span class="text-[10px] text-gray-400">Avg. Kcal</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-4 mt-4 text-xs">
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span> 蛋白質 <span id="val-p" class="font-bold">0%</span></div>
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> 碳水 <span id="val-c" class="font-bold">0%</span></div>
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400"></span> 脂肪 <span id="val-f" class="font-bold">0%</span></div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-gray-600 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-column text-brand-500"></i> 每日熱量分佈</h4>
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                        <svg id="chart-cal-bar" viewBox="0 0 300 100" class="w-full h-32"></svg>
+                    </div>
+                </div>
+
+                <div class="bg-brand-50 rounded-2xl p-4 border border-brand-100">
+                    <h4 class="text-sm font-bold text-brand-700 mb-2"><i class="fa-solid fa-robot mr-1"></i> AI 營養短評</h4>
+                    <p id="report-comment" class="text-xs text-brand-800 leading-relaxed">分析中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-ai-options" class="fixed inset-0 z-50 hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
+        <div class="bg-white w-full sm:w-[400px] rounded-t-[30px] sm:rounded-[30px] p-6 shadow-2xl animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-xl text-gray-800">AI 菜單設定</h3>
+                <button onclick="app.closeModal('modal-ai-options')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400"><i class="fa-solid fa-times"></i></button>
+            </div>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2"><i class="fa-solid fa-earth-asia"></i> 料理風格</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="ai-cuisine" value="均衡健康" class="peer hidden" checked>
+                            <div class="py-2 text-xs font-bold text-center rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-brand-100 peer-checked:text-brand-600 border border-transparent peer-checked:border-brand-200 transition">🥗 均衡</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="ai-cuisine" value="台式家常" class="peer hidden">
+                            <div class="py-2 text-xs font-bold text-center rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-brand-100 peer-checked:text-brand-600 border border-transparent peer-checked:border-brand-200 transition">🇹🇼 台式</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="ai-cuisine" value="日式定食" class="peer hidden">
+                            <div class="py-2 text-xs font-bold text-center rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-brand-100 peer-checked:text-brand-600 border border-transparent peer-checked:border-brand-200 transition">🇯🇵 日式</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="ai-cuisine" value="韓式風味" class="peer hidden">
+                            <div class="py-2 text-xs font-bold text-center rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-brand-100 peer-checked:text-brand-600 border border-transparent peer-checked:border-brand-200 transition">🇰🇷 韓式</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="ai-cuisine" value="西式地中海" class="peer hidden">
+                            <div class="py-2 text-xs font-bold text-center rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-brand-100 peer-checked:text-brand-600 border border-transparent peer-checked:border-brand-200 transition">🇮🇹 西式</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="ai-cuisine" value="南洋泰式" class="peer hidden">
+                            <div class="py-2 text-xs font-bold text-center rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-brand-100 peer-checked:text-brand-600 border border-transparent peer-checked:border-brand-200 transition">🇹🇭 泰式</div>
+                        </label>
+                    </div>
+                </div>
+
+                <label class="flex items-center gap-3 p-3 bg-orange-50 rounded-xl cursor-pointer border border-orange-100">
+                    <input type="checkbox" id="ai-opt-batch" class="w-5 h-5 text-orange-500 rounded focus:ring-orange-400 border-gray-300">
+                    <div class="flex-1">
+                        <div class="text-sm font-bold text-gray-800">開啟「懶人備餐」模式</div>
+                        <div class="text-[10px] text-gray-500">5 天只煮 2-3 道菜重複吃，省時省力</div>
+                    </div>
+                    <i class="fa-solid fa-repeat text-orange-300"></i>
+                </label>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">清冰箱 (優先用)</label>
+                        <input type="text" id="ai-opt-fridge" class="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-300">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-red-300 mb-1">排除食材</label>
+                        <input type="text" id="ai-opt-exclude" class="w-full bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-red-300">
+                    </div>
+                </div>
+                
+                <button onclick="app.confirmAIPlan()" class="w-full bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float active:scale-95 transition-transform">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 生成本週菜單
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-rating" class="fixed inset-0 z-[60] hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl flex flex-col items-center animate-slide-up">
+            <h3 class="text-lg font-bold text-gray-800 mb-1">今天的便當好吃嗎？</h3>
+            <p class="text-xs text-gray-400 mb-6">您的回饋將讓 AI 下次更懂您的胃口</p>
+            
+            <div class="flex gap-2 mb-6">
+                <button onclick="app.submitRating(1)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-red-50 hover:text-red-500 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button onclick="app.submitRating(2)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-orange-50 hover:text-orange-400 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button onclick="app.submitRating(3)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-yellow-50 hover:text-yellow-400 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button onclick="app.submitRating(4)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-brand-50 hover:text-brand-400 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button onclick="app.submitRating(5)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-brand-50 hover:text-brand-500 text-xl transition"><i class="fa-solid fa-star"></i></button>
+            </div>
+
+            <button onclick="app.closeModal('modal-rating')" class="text-xs text-gray-400 underline">略過</button>
+        </div>
+    </div>
+    <div id="modal-general" class="fixed inset-0 z-[80] hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl flex flex-col items-center animate-slide-up transform transition-all">
+            <div id="modal-icon-bg" class="w-16 h-16 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center mb-4 text-2xl shadow-sm">
+                <i id="modal-icon" class="fa-solid fa-circle-question"></i>
+            </div>
+            
+            <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-2">確認</h3>
+            <p id="modal-msg" class="text-sm text-gray-500 text-center mb-8 leading-relaxed px-2"></p>
+            
+            <div class="flex gap-3 w-full">
+                <button id="modal-btn-cancel" class="flex-1 bg-gray-50 text-gray-400 font-bold py-3.5 rounded-2xl hover:bg-gray-100 transition active:scale-95">取消</button>
+                <button id="modal-btn-confirm" class="flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95">確定</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // MOCK DATA
+        let recipes = [
+            { id: 1, name: "日式鹽烤鯖魚", cal: 420, p: 25, c: 5, f: 30, tags: ["魚"], ingredients: ["鯖魚片", "白蘿蔔", "檸檬"], instructions: "1. 鯖魚抹鹽靜置。\n2. 乾煎至兩面金黃。\n3. 搭配蘿蔔泥食用。" },
+            { id: 2, name: "蔥爆牛肉便當", cal: 480, p: 30, c: 45, f: 20, tags: ["牛"], ingredients: ["牛肉片", "青蔥", "洋蔥", "醬油"], instructions: "1. 爆香蔥段。\n2. 下牛肉大火快炒。\n3. 加入調味快速起鍋。" },
+            { id: 3, name: "鮮蝦酪梨沙拉", cal: 350, p: 25, c: 15, f: 22, tags: ["海鮮","輕食"], ingredients: ["鮮蝦", "酪梨", "生菜", "番茄"], instructions: "1. 蝦仁燙熟冷卻。\n2. 酪梨切塊。\n3. 淋上油醋醬拌勻。" },
+            { id: 4, name: "照燒雞腿排", cal: 500, p: 35, c: 40, f: 25, tags: ["雞肉"], ingredients: ["去骨雞腿", "照燒醬", "花椰菜"], instructions: "1. 雞腿排皮朝下煎。\n2. 倒入醬汁收乾。\n3. 切塊擺盤。" },
+            { id: 5, name: "清炒時蔬豆腐", cal: 320, p: 18, c: 20, f: 15, tags: ["素"], ingredients: ["板豆腐", "香菇", "紅蘿蔔", "荷蘭豆"], instructions: "1. 豆腐切片煎黃。\n2. 加入蔬菜拌炒。\n3. 鹽巴調味即可。" }
+        ];
+
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        const dayLabels = { 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五' };
+
+        const app = {
+            state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
+
+        // --- 請替換 app.init ---
+
+        init: () => {
+            const ls = localStorage;
+            // 1. 讀取原有資料
+            if(ls.getItem('bento_user')) app.state.user = JSON.parse(ls.getItem('bento_user'));
+            if(ls.getItem('bento_plan')) app.state.plan = JSON.parse(ls.getItem('bento_plan'));
+            if(ls.getItem('bento_shopping')) app.state.shopping = JSON.parse(ls.getItem('bento_shopping'));
+            if(ls.getItem('bento_recipes')) recipes = JSON.parse(ls.getItem('bento_recipes'));
+            if(ls.getItem('bento_history')) app.state.history = JSON.parse(ls.getItem('bento_history'));
+            if(ls.getItem('bento_prep')) app.state.prep = JSON.parse(ls.getItem('bento_prep'));
+            else app.state.prep = {};
+            if(ls.getItem('bento_body_log')) app.state.bodyLog = JSON.parse(ls.getItem('bento_body_log'));
+            else app.state.bodyLog = [];
+
+            // 2. 飲水初始化 (跨日重置)
+            const today = new Date().toLocaleDateString('zh-TW');
+            const lastDate = ls.getItem('bento_last_date');
+            
+            if (lastDate !== today) {
+                app.state.water = 0;
+                localStorage.setItem('bento_water', 0);
+            } else {
+                app.state.water = parseInt(ls.getItem('bento_water') || 0);
+            }
+
+            // 3. ✅ 新增：遊戲化數據初始化
+            if(ls.getItem('bento_game')) {
+                app.state.game = JSON.parse(ls.getItem('bento_game'));
+            } else {
+                app.state.game = { streak: 0, lastLogin: '', badges: [] };
+            }
+            
+            // 4. ✅ 執行：檢查連續登入與徽章
+            app.checkStreak(today);
+            app.checkBadges();
+
+            // 5. 導航
+            if (!app.state.user) {
+                app.navigateTo('profile');
+                document.querySelector('nav').classList.add('hidden');
+            } else {
+                app.navigateTo('dashboard');
+            }
+        },
+        // --- 請替換 app 物件中的 renderDashboard 函式 ---
+
+        renderDashboard: () => {
+            const u = app.state.user;
+            if(!u) return;
+            
+            const tdee = u.tdee || 2000;
+            const lunchTarget = Math.round(tdee * 0.35);
+            const waterTarget = 2000; // 預設目標 2000ml
+            const currentWater = app.state.water || 0;
+            
+            // 1. 更新 TDEE 文字
+            document.getElementById('tdee-display').innerText = `TDEE: ${tdee}`;
+            document.getElementById('dash-cal-target').innerText = lunchTarget;
+
+            // 2. 身體數值卡片 (維持您原本的邏輯)
+            let statsContainer = document.getElementById('dash-body-stats');
+            const dashboardCard = document.querySelector('#view-dashboard > div:first-child');
+            
+            if (!statsContainer && dashboardCard) {
+                statsContainer = document.createElement('div');
+                statsContainer.id = 'dash-body-stats';
+                statsContainer.className = "mt-4 pt-4 border-t border-gray-100 grid grid-cols-4 gap-2";
+                dashboardCard.querySelector('.space-y-3').appendChild(statsContainer);
+            }
+
+            if (statsContainer && u.bodyComp) {
+                const bc = u.bodyComp;
+                const stats = [
+                    { label: 'BMI', val: bc.bmi, unit: '', color: 'text-gray-600' },
+                    { label: '體脂率', val: bc.bf, unit: '%', color: 'text-blue-500' },
+                    { label: '肌肉量', val: bc.muscle, unit: 'kg', color: 'text-indigo-500' },
+                    { label: '內臟脂', val: bc.vfat, unit: '', color: 'text-red-400' }
+                ].filter(s => s.val);
+
+                if (stats.length > 0) {
+                    statsContainer.innerHTML = stats.map(s => `
+                        <div class="text-center">
+                            <div class="text-[9px] text-gray-400 mb-0.5">${s.label}</div>
+                            <div class="text-xs font-bold ${s.color}">${s.val}<span class="text-[9px] scale-75 ml-0.5">${s.unit}</span></div>
+                        </div>
+                    `).join('');
+                    statsContainer.classList.remove('hidden');
+                } else {
+                    statsContainer.classList.add('hidden');
+                }
+            }
+
+            // 3. ✅ 新增：飲水追蹤卡片 (插入在「今日目標」與「今日便當」之間)
+            // 檢查是否已經存在，不存在則建立
+            let waterCard = document.getElementById('dash-water-card');
+            if (!waterCard) {
+                waterCard = document.createElement('div');
+                waterCard.id = 'dash-water-card';
+                // 插入在 dashboardCard (今日目標) 的後面
+                dashboardCard.parentNode.insertBefore(waterCard, dashboardCard.nextSibling);
+            }
+
+            // 渲染飲水卡片內容
+            waterCard.className = "bg-blue-50/50 p-4 rounded-[24px] border border-blue-100 flex justify-between items-center";
+            waterCard.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center">
+                        <i class="fa-solid fa-glass-water text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-blue-400 font-bold mb-0.5">每日飲水</div>
+                        <div class="text-sm font-bold text-gray-700">${currentWater} <span class="text-xs text-gray-400 font-normal">/ ${waterTarget}ml</span></div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="app.updateWater(-250)" class="w-8 h-8 rounded-full bg-white text-blue-300 hover:text-blue-500 shadow-sm flex items-center justify-center transition active:scale-95"><i class="fa-solid fa-minus"></i></button>
+                    <button onclick="app.updateWater(250)" class="w-8 h-8 rounded-full bg-blue-500 text-white shadow-float hover:bg-blue-600 flex items-center justify-center transition active:scale-95"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            `;
+
+            // 4. 日期與便當邏輯 (維持不變)
+            const dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const todayIndex = new Date().getDay(); 
+            const tomorrowIndex = (todayIndex + 1) % 7; 
+            const todayKey = dayMap[todayIndex];
+            const tomorrowKey = dayMap[tomorrowIndex];
+
+            const rid = app.state.plan[todayKey];
+            const r = recipes.find(x => x.id === rid);
+
+            if(r) {
+                document.getElementById('dash-cal-curr').innerText = r.cal;
+                document.getElementById('bar-cal').style.width = Math.min((r.cal/lunchTarget)*100, 100) + '%';
+                document.getElementById('bar-prot').style.width = Math.min((r.p/40)*100, 100) + '%'; 
+                document.getElementById('bar-carb').style.width = Math.min((r.c/60)*100, 100) + '%'; 
+                document.getElementById('bar-fat').style.width = Math.min((r.f/25)*100, 100) + '%'; 
+
+                document.getElementById('today-meal-card').innerHTML = `
+                        <div class="flex items-center gap-4 p-4 text-left">
+                            <div class="w-20 h-20 rounded-xl bg-brand-100 flex items-center justify-center text-brand-500 shrink-0">
+                                <i class="fa-solid fa-bowl-food text-3xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-bold text-gray-800 text-lg line-clamp-1">${r.name}</h3>
+                                <div class="text-xs text-gray-500 mt-1">🔥 ${r.cal} Kcal · P${r.p} C${r.c} F${r.f}</div>
+                                <div class="flex justify-between items-end mt-2">
+                                    <div class="flex gap-1">
+                                        ${r.tags.map(t => `<span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full">${t}</span>`).join('')}
+                                    </div>
+                                    <button onclick="app.openRating('${todayKey}')" class="text-[10px] font-bold text-gray-400 hover:text-yellow-500 flex items-center gap-1 border border-gray-100 px-2 py-1 rounded-full transition bg-white" ${event ? 'onclick="event.stopPropagation(); app.openRating(\''+todayKey+'\')"' : ''}>
+                                        <i class="fa-regular fa-star"></i> 評分
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    // 為了讓點擊卡片仍能看詳情，我們要把評分按鈕的點擊事件獨立出來
+                    // (注意：上面的 onclick 已經處理了，這裡只需要確保外層 click 不會衝突)
+                    const card = document.getElementById('today-meal-card');
+                    card.onclick = (e) => {
+                        // 如果點到的是按鈕，就不開詳情
+                        if(e.target.closest('button')) return;
+                        app.openDetailById(r.id);
+                    };
+            } else {
+                document.getElementById('dash-cal-curr').innerText = "0";
+                document.getElementById('bar-cal').style.width = '0%';
+                document.getElementById('bar-prot').style.width = '0%';
+                document.getElementById('bar-carb').style.width = '0%';
+                document.getElementById('bar-fat').style.width = '0%';
+                document.getElementById('today-meal-card').innerHTML = `<div class="p-8 text-center text-gray-400 italic">今日休息或是週末</div>`;
+            }
+
+            // 明日備餐邏輯 (維持不變)
+            const nextRid = app.state.plan[tomorrowKey];
+            const nextR = recipes.find(x => x.id === nextRid);
+            const tomorrowCard = document.getElementById('tomorrow-meal-card');
+            const isPrepped = app.state.prep && app.state.prep[tomorrowKey];
+
+            if(nextR) {
+                tomorrowCard.onclick = () => app.openDetailById(nextR.id);
+                const cardBgClass = isPrepped ? "bg-green-50/50 border-green-200" : "bg-orange-50/30 border-orange-100/50";
+                const iconBgClass = isPrepped ? "bg-green-100 text-green-500" : "bg-orange-100 text-orange-500";
+                const iconClass = isPrepped ? "fa-check" : "fa-fire-burner";
+                const btnText = isPrepped ? "已備料" : "備料確認";
+                const btnStyle = isPrepped 
+                    ? "bg-green-500 text-white border-green-500" 
+                    : "bg-white text-gray-400 border-gray-200 hover:border-orange-300 hover:text-orange-500";
+
+                tomorrowCard.className = `bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-all duration-300 group relative border ${cardBgClass}`;
+                tomorrowCard.innerHTML = `
+                    <div class="flex items-center gap-4 p-4 text-left">
+                        <div class="w-20 h-20 rounded-xl ${iconBgClass} flex items-center justify-center shrink-0 transition-colors duration-300">
+                            <i class="fa-solid ${iconClass} text-3xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-gray-800 text-lg line-clamp-1 ${isPrepped ? 'text-green-700' : ''}">${nextR.name}</h3>
+                            <div class="text-xs text-gray-500 mt-1 mb-2">
+                                ${isPrepped ? '<span class="text-green-600 font-bold"><i class="fa-solid fa-check-circle"></i> 準備就緒</span>' : '明日預備食材：'}
+                            </div>
+                            <div class="flex flex-wrap gap-1 ${isPrepped ? 'opacity-50' : ''}">
+                                ${nextR.ingredients.slice(0, 2).map(ing => {
+                                    const ingName = (typeof ing === 'string') ? ing.split(' ')[0] : ing.name;
+                                    return `<span class="text-[10px] bg-white border border-gray-100 text-gray-600 px-2 py-0.5 rounded-md">${ingName}</span>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <button onclick="app.togglePrep('${tomorrowKey}', event)" class="absolute bottom-4 right-4 z-10 text-[10px] font-bold px-3 py-1.5 rounded-full border shadow-sm transition-all active:scale-95 flex items-center gap-1 ${btnStyle}">
+                            <i class="fa-solid ${isPrepped ? 'fa-check' : 'fa-clipboard-check'}"></i> ${btnText}
+                        </button>
+                    </div>
+                `;
+            } else {
+                tomorrowCard.onclick = null;
+                tomorrowCard.className = "bg-white rounded-[24px] overflow-hidden shadow-soft border border-gray-50";
+                tomorrowCard.innerHTML = `
+                    <div class="p-6 text-center text-gray-400 flex flex-col items-center gap-2">
+                        <i class="fa-regular fa-face-smile text-2xl text-gray-300"></i>
+                        <span class="text-xs">明日無計畫，不用備餐</span>
+                    </div>
+                `;
+            }
+        },
+        // --- 請新增這些函式到 app 物件中 ---
+
+        openRating: (dayKey) => {
+            app.state.ratingDay = dayKey; // 暫存正在評分哪一天
+            document.getElementById('modal-rating').classList.remove('hidden');
+        },
+
+        submitRating: (score) => {
+            app.closeModal('modal-rating');
+            const day = app.state.ratingDay;
+            const rid = app.state.plan[day];
+            const r = recipes.find(x => x.id === rid);
+
+            if (!r) return;
+
+            if (score >= 4) {
+                // 高分：自動收藏
+                if (!r.favorite) {
+                    r.favorite = true;
+                    localStorage.setItem('bento_recipes', JSON.stringify(recipes));
+                    app.showToast(`⭐ 感謝評分！已將「${r.name}」加入收藏`);
+                } else {
+                    app.showToast(`⭐ 感謝您的喜愛！`);
+                }
+            } else if (score <= 2) {
+                // 低分：加入排除名單 (可選：是否要詢問?)
+                // 這裡我們簡單做：將「菜名」加入排除關鍵字，避免未來再出現完全一樣的菜
+                const user = app.state.user;
+                const newExclude = r.name.split('佐')[0]; // 簡單抓主菜名
+                
+                if (!user.exclude.includes(newExclude)) {
+                    user.exclude = user.exclude ? `${user.exclude}、${newExclude}` : newExclude;
+                    // 更新並存檔
+                    app.state.user = user;
+                    localStorage.setItem('bento_user', JSON.stringify(user));
+                    
+                    // 同步更新介面上的輸入框 (如果剛好在設定頁)
+                    const inputEx = document.getElementById('input-exclude');
+                    if(inputEx) inputEx.value = user.exclude;
+                    
+                    app.showToast(`💔 已收到回饋，未來將減少推薦此類菜色`);
+                } else {
+                    app.showToast(`💔 謝謝回饋，我們會改進！`);
+                }
+            } else {
+                app.showToast(`✅ 評分已紀錄`);
+            }
+        },
+        // --- 請替換 app.startCooking 函式 ---
+        startCooking: async (id) => {
+            const r = recipes.find(x => x.id === id);
+            if(!r || !r.instructions) return app.showToast('此食譜沒有步驟');
+
+            // ✅ 修正：使用與 openDetail 相同的解析邏輯
+            let raw = r.instructions;
+            raw = raw.replace(/\\n/g, '\n');
+            if (!raw.includes('\n') && raw.match(/\d+\./)) {
+                raw = raw.replace(/(\d+\.)/g, '\n$1');
+            }
+            const steps = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+
+            // 1. 初始化數據
+            app.cookingState = {
+                steps: steps,
+                current: 0
+            };
+
+            // 2. 嘗試開啟螢幕恆亮 (Wake Lock)
+            try {
+                if ('wakeLock' in navigator) {
+                    app.wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('螢幕恆亮已開啟');
+                }
+            } catch (err) {
+                console.log('Wake Lock 失敗:', err);
+            }
+
+            // 3. 顯示 UI
+            document.getElementById('modal-cooking').classList.remove('hidden');
+            app.renderCookingStep();
+        },
+        renderCookingStep: () => {
+            const s = app.cookingState;
+            const total = s.steps.length;
+            
+            // 更新文字
+            document.getElementById('cook-step-num').innerText = (s.current + 1).toString().padStart(2, '0');
+            document.getElementById('cook-step-text').innerText = s.steps[s.current];
+            document.getElementById('cook-progress-text').innerText = `${s.current + 1} / ${total}`;
+            
+            // 更新進度條
+            const pct = ((s.current + 1) / total) * 100;
+            document.getElementById('cook-progress-bar').style.width = `${pct}%`;
+        },
+
+        nextCookingStep: async () => { // ⚠️ 記得加 async
+            const s = app.cookingState;
+            if (s.current < s.steps.length - 1) {
+                s.current++;
+                app.renderCookingStep();
+            } else {
+                // ✅ 修改處：最後一步的確認
+                if(await app.showModal('恭喜完成！要結束烹飪模式嗎？', "料理完成", "confirm")) {
+                    app.exitCooking();
+                    app.showToast('🎉 料理完成！記得拍照打卡喔');
+                }
+            }
+        },
+
+        prevCookingStep: (e) => {
+            if(e) e.stopPropagation(); // 避免觸發 nextCookingStep
+            const s = app.cookingState;
+            if (s.current > 0) {
+                s.current--;
+                app.renderCookingStep();
+            }
+        },
+
+        exitCooking: () => {
+            // 釋放 Wake Lock
+            if (app.wakeLock) {
+                app.wakeLock.release().then(() => app.wakeLock = null);
+            }
+            document.getElementById('modal-cooking').classList.add('hidden');
+        },
+            // 檢查連續登入
+            checkStreak: (today) => {
+                const game = app.state.game;
+                const lastLogin = game.lastLogin;
+                
+                if (lastLogin !== today) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toLocaleDateString('zh-TW');
+
+                    if (lastLogin === yesterdayStr) {
+                        game.streak += 1; // 連續登入
+                    } else {
+                        game.streak = 1; // 中斷或第一天
+                    }
+                    game.lastLogin = today;
+                    localStorage.setItem('bento_game', JSON.stringify(game));
+                }
+                
+                // 更新 Profile 頁面顯示
+                const streakEl = document.getElementById('streak-count');
+                if(streakEl) streakEl.innerText = game.streak;
+            },
+
+            // 檢查並渲染徽章
+            checkBadges: () => {
+                const game = app.state.game;
+                const user = app.state.user;
+                const history = app.state.history || [];
+                const bodyLog = app.state.bodyLog || [];
+
+                // 定義所有徽章
+                const allBadges = [
+                    { id: 'newbie', icon: 'fa-seedling', name: '新手上路', color: 'text-green-500', bg: 'bg-green-100', cond: () => true },
+                    { id: 'planner', icon: 'fa-calendar-check', name: '規劃達人', color: 'text-blue-500', bg: 'bg-blue-100', cond: () => history.length >= 1 },
+                    { id: 'streak3', icon: 'fa-fire', name: '熱度燃燒', color: 'text-orange-500', bg: 'bg-orange-100', cond: () => game.streak >= 3 },
+                    { id: 'tracker', icon: 'fa-weight-scale', name: '數據控', color: 'text-purple-500', bg: 'bg-purple-100', cond: () => bodyLog.length >= 3 }
+                ];
+
+                // 檢查解鎖
+                let newUnlock = false;
+                allBadges.forEach(b => {
+                    if (!game.badges.includes(b.id) && b.cond()) {
+                        game.badges.push(b.id);
+                        newUnlock = true;
+                        app.showToast(`🏆 解鎖成就：${b.name}`);
+                    }
+                });
+                if(newUnlock) localStorage.setItem('bento_game', JSON.stringify(game));
+
+                // 渲染 Profile 徽章列表
+                const container = document.getElementById('badge-container');
+                if(container) {
+                    container.innerHTML = allBadges.map(b => {
+                        const unlocked = game.badges.includes(b.id);
+                        return `
+                            <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${unlocked ? b.bg : 'bg-gray-50 opacity-40 grayscale'} transition-all">
+                                <i class="fa-solid ${b.icon} text-xl ${unlocked ? b.color : 'text-gray-400'}"></i>
+                                <span class="text-[9px] font-bold text-gray-600">${b.name}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            },
+            // --- 請新增此函式到 app 物件中 ---
+            updateWater: (amount) => {
+                let current = app.state.water || 0;
+                let newAmount = current + amount;
+                if(newAmount < 0) newAmount = 0; // 不能小於 0
+                
+                app.state.water = newAmount;
+                localStorage.setItem('bento_water', newAmount);
+                app.renderDashboard(); // 重新渲染畫面以更新數值
+            },
+            // --- 新增：切換備料狀態 ---
+            togglePrep: (dayKey, event) => {
+                // 阻止冒泡，避免觸發卡片的 onclick (進入詳情頁)
+                if(event) event.stopPropagation();
+                
+                // 切換狀態
+                app.state.prep[dayKey] = !app.state.prep[dayKey];
+                
+                // 存檔
+                localStorage.setItem('bento_prep', JSON.stringify(app.state.prep));
+                
+                // 重新渲染畫面 (更新按鈕樣式)
+                app.renderDashboard();
+                
+                // 簡單的回饋
+                if(app.state.prep[dayKey]) {
+                    app.showToast('✅ 已完成明日備料');
+                }
+            },
+            navigateTo: (pageId) => {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.nav-item > div').forEach(el => {
+                    el.classList.remove('text-brand-500');
+                    el.classList.add('text-gray-300');
+                });
+                document.getElementById(`view-${pageId}`).classList.remove('hidden');
+                
+                if (pageId !== 'profile') {
+                    document.querySelector('nav').classList.remove('hidden');
+                    const navEl = document.getElementById(`nav-${pageId}`);
+                    if(navEl) {
+                        navEl.classList.add('text-brand-500');
+                        navEl.classList.remove('text-gray-300');
+                    }
+                }
+                
+                window.scrollTo(0,0);
+                if(pageId === 'dashboard') app.renderDashboard();
+                if(pageId === 'planner') app.renderPlanner();
+                if(pageId === 'shopping') app.renderShopping();
+                if(pageId === 'history') app.renderHistory();
+                if(pageId === 'profile' && app.state.user) app.fillProfile();
+            },
+
+        // --- 請替換 app 物件中的 saveProfile 函式 ---
+
+        saveProfile: () => {
+            // 1. 獲取基本欄位
+            const h = parseFloat(document.getElementById('input-height').value);
+            const w = parseFloat(document.getElementById('input-weight').value);
+            const age = parseInt(document.getElementById('input-age').value);
+            const gender = document.getElementById('input-gender').value;
+            const activity = parseFloat(document.getElementById('input-activity').value);
+            const goal = document.getElementById('input-goal').value;
+            const key = document.getElementById('input-apikey').value.trim();
+            const exclude = document.getElementById('input-exclude').value.trim();
+            if (!h || !w || !age) return app.showToast('請填寫基本身高體重資料');
+
+            // 2. 獲取身體組成欄位
+            const bf = parseFloat(document.getElementById('input-bf').value);
+            const muscle = parseFloat(document.getElementById('input-muscle').value);
+            const vfat = parseFloat(document.getElementById('input-vfat').value);
+            const water = parseFloat(document.getElementById('input-water').value);
+            const protein = parseFloat(document.getElementById('input-protein').value);
+            const bone = parseFloat(document.getElementById('input-bone').value);
+            const scaleBmr = parseFloat(document.getElementById('input-scale-bmr').value);
+            let bmi = parseFloat(document.getElementById('input-bmi').value);
+
+            if (!bmi && h && w) bmi = (w / ((h / 100) * (h / 100))).toFixed(1);
+
+            // 3. 計算 BMR 與 TDEE
+            let bmr = 0;
+            if (bf > 0) {
+                const lbm = w * (1 - (bf / 100));
+                bmr = 370 + (21.6 * lbm);
+            } else if (scaleBmr > 0) {
+                bmr = scaleBmr;
+            } else {
+                if (gender === 'male') bmr = (10 * w) + (6.25 * h) - (5 * age) + 5;
+                else bmr = (10 * w) + (6.25 * h) - (5 * age) - 161;
+            }
+
+            const tdee = Math.round(bmr * activity);
+
+            // 4. 更新 User State
+            app.state.user = {
+                height: h, weight: w, age: age, gender: gender, activity: activity,
+                goal: goal, tdee: tdee, apiKey: key,
+                exclude: exclude, // 儲存排除食材
+                bodyComp: { bmi, bf: bf||null, muscle: muscle||null, vfat: vfat||null, water: water||null, protein: protein||null, bone: bone||null, scaleBmr: scaleBmr||null }
+            };
+            localStorage.setItem('bento_user', JSON.stringify(app.state.user));
+
+            // 5. ✅ 新增：自動記錄體態趨勢 (Body Log)
+            const todayDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' }); // 例如 "1/15"
+            
+            // 檢查今天是否已經記錄過 (避免重複)
+            const existingIndex = app.state.bodyLog.findIndex(log => log.date === todayDate);
+            const logEntry = { date: todayDate, weight: w, bf: bf || 0 };
+
+            if (existingIndex >= 0) {
+                app.state.bodyLog[existingIndex] = logEntry; // 更新今天的
+            } else {
+                app.state.bodyLog.push(logEntry); // 新增
+                // 只保留最近 30 筆，避免資料過多
+                if (app.state.bodyLog.length > 30) app.state.bodyLog.shift();
+            }
+            localStorage.setItem('bento_body_log', JSON.stringify(app.state.bodyLog));
+            
+            // 重新繪製圖表
+            app.renderBodyChart();
+
+            app.showToast(`設定已儲存！目標：${goal}`);
+            
+            // 如果是從個人頁面按儲存，通常停留在當前頁面看圖表會比較好，
+            // 但如果您希望跳轉回首頁，請保留下面這行；若想留下來看圖表，可註解掉。
+            // app.navigateTo('dashboard'); 
+            
+            // 為了讓使用者看到圖表，我們先不跳轉，改為滾動到圖表位置
+            document.getElementById('chart-container').scrollIntoView({ behavior: 'smooth' });
+        },
+        // --- 請替換 app 物件中的 fillProfile 函式 ---
+
+        fillProfile: () => {
+            const u = app.state.user;
+            if (!u) return;
+
+            document.getElementById('input-height').value = u.height || '';
+            document.getElementById('input-weight').value = u.weight || '';
+            document.getElementById('input-age').value = u.age || '';
+            document.getElementById('input-gender').value = u.gender || 'male';
+            document.getElementById('input-activity').value = u.activity || '1.2';
+            document.getElementById('input-goal').value = u.goal || '均衡飲食';
+            document.getElementById('input-exclude').value = u.exclude || '';
+            if (u.apiKey) document.getElementById('input-apikey').value = u.apiKey;
+
+            if (u.bodyComp) {
+                document.getElementById('input-bf').value = u.bodyComp.bf || '';
+                document.getElementById('input-muscle').value = u.bodyComp.muscle || '';
+                document.getElementById('input-vfat').value = u.bodyComp.vfat || '';
+                document.getElementById('input-water').value = u.bodyComp.water || '';
+                document.getElementById('input-protein').value = u.bodyComp.protein || '';
+                document.getElementById('input-bone').value = u.bodyComp.bone || '';
+                document.getElementById('input-scale-bmr').value = u.bodyComp.scaleBmr || '';
+                document.getElementById('input-bmi').value = u.bodyComp.bmi || '';
+            }
+
+            // ✅ 新增：進入頁面時繪製圖表
+            app.renderBodyChart();
+        },
+        // --- 請新增此函式到 app 物件中 ---
+
+        renderBodyChart: () => {
+            const container = document.getElementById('body-chart-svg');
+            if (!container) return;
+            
+            const logs = app.state.bodyLog || [];
+            container.innerHTML = ''; // 清空內容
+
+            if (logs.length === 0) {
+                container.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#ccc" font-size="12">尚無數據</text>`;
+                return;
+            }
+
+            // 尺寸設定 (配合 HTML 改為 120)
+            const width = 300;
+            const height = 120;
+            const padding = 20;
+
+            // 1. 計算數值範圍
+            const weights = logs.map(l => Number(l.weight)); // 確保是數字
+            let minW = Math.min(...weights);
+            let maxW = Math.max(...weights);
+            
+            // 防呆：如果最大最小值一樣 (例如只有一筆資料，或體重沒變)，手動給一個範圍，避免除以 0
+            if (minW === maxW) {
+                minW -= 2;
+                maxW += 2;
+            }
+            const rangeW = maxW - minW;
+
+            // 2. 計算座標點
+            const points = logs.map((log, i) => {
+                // 如果只有 1 筆資料，就畫在正中間；否則依比例分布
+                const x = logs.length === 1 
+                    ? width / 2 
+                    : padding + (i / (logs.length - 1)) * (width - padding * 2);
+                    
+                // 數值越高，y 座標越小 (越上面)
+                const y = height - padding - ((log.weight - minW) / rangeW) * (height - padding * 2);
+                
+                return { x, y, val: log.weight, date: log.date };
+            });
+
+            // 3. 組合 SVG 內容
+            let svgHTML = `
+                <defs>
+                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#8bc34a;stop-opacity:0.2" />
+                        <stop offset="100%" style="stop-color:#8bc34a;stop-opacity:0" />
+                    </linearGradient>
+                </defs>
+            `;
+
+            // 只有 2 筆以上資料才畫折線與陰影面積
+            if (points.length > 1) {
+                const pathD = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ");
+                const areaD = `${pathD} L ${points[points.length-1].x} ${height} L ${points[0].x} ${height} Z`;
+                
+                svgHTML += `<path d="${areaD}" fill="url(#chartGradient)" />`;
+                svgHTML += `<path d="${pathD}" fill="none" stroke="#8bc34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+            }
+
+            // 畫圓點與數值 (即使只有 1 筆也會執行)
+            points.forEach(p => {
+                svgHTML += `
+                    <circle cx="${p.x}" cy="${p.y}" r="4" fill="white" stroke="#8bc34a" stroke-width="2" />
+                    <text x="${p.x}" y="${p.y - 12}" text-anchor="middle" font-size="12" fill="#555" font-weight="bold">${p.val}</text>
+                    <text x="${p.x}" y="${height - 2}" text-anchor="middle" font-size="10" fill="#aaa">${p.date}</text>
+                `;
+            });
+
+            container.innerHTML = svgHTML;
+        },
+        // --- 請新增此函式到 app 物件中 ---
+
+        openReport: () => {
+            const plan = app.state.plan;
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            
+            // 1. 數據計算
+            let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
+            let dayCounts = 0;
+            let dailyCals = [];
+
+            days.forEach(d => {
+                const rid = plan[d];
+                const r = recipes.find(x => x.id === rid);
+                if(r) {
+                    totalCal += r.cal;
+                    totalP += r.p;
+                    totalC += r.c;
+                    totalF += r.f;
+                    dailyCals.push({ day: d, val: r.cal });
+                    dayCounts++;
+                } else {
+                    dailyCals.push({ day: d, val: 0 });
+                }
+            });
+
+            if(dayCounts === 0) return app.showToast('本週尚未安排菜單，無法分析');
+
+            const avgCal = Math.round(totalCal / dayCounts);
+            const avgP = Math.round(totalP / dayCounts);
+            const avgC = Math.round(totalC / dayCounts);
+            const avgF = Math.round(totalF / dayCounts);
+
+            // 熱量佔比估算 (P:4, C:4, F:9)
+            const calP = avgP * 4;
+            const calC = avgC * 4;
+            const calF = avgF * 9;
+            const calTotal = calP + calC + calF; // 重新計算分母以求精確比例
+            
+            const pctP = Math.round((calP / calTotal) * 100) || 0;
+            const pctC = Math.round((calC / calTotal) * 100) || 0;
+            const pctF = Math.round((calF / calTotal) * 100) || 0;
+
+            // 2. 渲染文字數據
+            document.getElementById('report-total-cal').innerText = avgCal;
+            document.getElementById('val-p').innerText = `${pctP}%`;
+            document.getElementById('val-c').innerText = `${pctC}%`;
+            document.getElementById('val-f').innerText = `${pctF}%`;
+
+            // 3. 繪製圓餅圖 (SVG Stroke Dasharray)
+            // 圓周長 = 2 * PI * R (R=32 -> C=200 方便計算)
+            const R = 15.9155; // 讓周長約等於 100
+            const pieSvg = document.getElementById('chart-macro-pie');
+            
+            // 累積進度 (因為 stroke 是從 0 開始疊加)
+            // 順序: 蛋白質(藍) -> 碳水(黃) -> 脂肪(紅)
+            // 注意: stroke-dasharray="數值 100"
+            
+            pieSvg.innerHTML = `
+                <circle cx="50" cy="50" r="${R}" fill="transparent" stroke="#f3f4f6" stroke-width="32"></circle>
+                <circle cx="50" cy="50" r="${R}" fill="transparent" stroke="#f87171" stroke-width="32" 
+                    stroke-dasharray="${pctP+pctC+pctF} 100" stroke-dashoffset="0"></circle>
+                <circle cx="50" cy="50" r="${R}" fill="transparent" stroke="#facc15" stroke-width="32" 
+                    stroke-dasharray="${pctP+pctC} 100" stroke-dashoffset="0"></circle>
+                <circle cx="50" cy="50" r="${R}" fill="transparent" stroke="#60a5fa" stroke-width="32" 
+                    stroke-dasharray="${pctP} 100" stroke-dashoffset="0"></circle>
+            `;
+
+            // 4. 繪製長條圖 (SVG)
+            const barSvg = document.getElementById('chart-cal-bar');
+            const bW = 300, bH = 100, bPad = 10;
+            const maxBarCal = Math.max(800, ...dailyCals.map(d=>d.val)); // Y軸最大值
+            
+            const barsHtml = dailyCals.map((d, i) => {
+                const barH = (d.val / maxBarCal) * (bH - 20);
+                const x = bPad + i * ((bW - bPad*2) / 5);
+                const barW = ((bW - bPad*2) / 5) - 10;
+                const color = d.val > 0 ? '#8bc34a' : '#e5e7eb';
+                return `
+                    <rect x="${x}" y="${bH - barH - 15}" width="${barW}" height="${barH}" rx="4" fill="${color}" />
+                    <text x="${x + barW/2}" y="${bH}" text-anchor="middle" font-size="10" fill="#9ca3af">${d.day}</text>
+                    <text x="${x + barW/2}" y="${bH - barH - 18}" text-anchor="middle" font-size="10" fill="#6b7280" font-weight="bold">${d.val || '-'}</text>
+                `;
+            }).join('');
+
+            // 加入一條目標線
+            const targetY = bH - 15 - (app.state.user.tdee * 0.35 / maxBarCal) * (bH - 20);
+            const lineHtml = `
+                <line x1="0" y1="${targetY}" x2="300" y2="${targetY}" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4"/>
+                <text x="5" y="${targetY - 5}" font-size="9" fill="#9ca3af">Target</text>
+            `;
+
+            barSvg.innerHTML = lineHtml + barsHtml;
+
+            // 5. 生成短評
+            let comment = "";
+            if (pctP > 30) comment += "💪 蛋白質攝取充足，有助於肌肉修復與生長。";
+            else if (pctP < 15) comment += "🥩 蛋白質比例稍低，建議多加一顆蛋或豆漿。";
+            
+            if (pctF > 40) comment += " ⚠️ 脂肪比例偏高，注意烹調方式與堅果攝取量。";
+            else if (pctC > 60) comment += " 🍚 碳水比例較高，若是運動日則非常合適。";
+            else comment += " 🥗 三大營養素分佈均衡，請繼續保持！";
+
+            document.getElementById('report-comment').innerText = comment;
+            document.getElementById('modal-report').classList.remove('hidden');
+        },
+
+        // --- 1. 修改 generateAIPlan (只負責開視窗) ---
+        generateAIPlan: () => {
+            const user = app.state.user;
+            if (!user || !user.apiKey) {
+                app.showToast('請先填寫 API Key');
+                setTimeout(() => app.navigateTo('profile'), 1500);
+                return;
+            }
+            
+            // 預填個人設定中的排除食材
+            document.getElementById('ai-opt-exclude').value = user.exclude || '';
+            document.getElementById('ai-opt-fridge').value = ''; // 清空清冰箱
+            
+            // 打開視窗
+            document.getElementById('modal-ai-options').classList.remove('hidden');
+        },
+
+        // --- 請替換 app.confirmAIPlan ---
+        confirmAIPlan: async () => {
+            app.closeModal('modal-ai-options');
+            
+            // 歷史紀錄保存邏輯 (維持不變)
+            if (Object.values(app.state.plan).some(id => id)) {
+                    if(await app.showModal("即將生成新菜單，是否將目前的菜單存入歷史紀錄？", "保存確認")) {
+                        if (!app.state.history) app.state.history = [];
+                        app.state.history.unshift({
+                            id: Date.now(),
+                            date: new Date().toLocaleDateString('zh-TW'),
+                            recipes: JSON.parse(JSON.stringify(recipes)),
+                            plan: {...app.state.plan}
+                        });
+                        localStorage.setItem('bento_history', JSON.stringify(app.state.history));
+                        app.showToast('✅ 已保存至歷史紀錄');
+                    }
+                }
+
+            // 1. 獲取新參數
+            const fridgeItems = document.getElementById('ai-opt-fridge').value.trim();
+            const tempExclude = document.getElementById('ai-opt-exclude').value.trim();
+            
+            // 獲取選中的風味
+            const cuisineEl = document.querySelector('input[name="ai-cuisine"]:checked');
+            const cuisine = cuisineEl ? cuisineEl.value : "均衡健康";
+            
+            // 獲取懶人模式
+            const isBatch = document.getElementById('ai-opt-batch').checked;
+
+            // 2. 組合 Prompt
+            const fridgeNote = fridgeItems ? `★ 優先使用冰箱食材：${fridgeItems}` : "";
+            const excludeNote = tempExclude ? `★ 絕對避開食材：${tempExclude}` : "";
+            
+            // 懶人模式指令
+            const batchNote = isBatch 
+                ? "★ 使用者選擇「懶人備餐模式」：請確保這 10 道菜的食材重複性高、易於批量採買與備料（例如多道菜共用雞胸肉或花椰菜）。" 
+                : "請設計 10 道「口味完全不同」的菜色，增加豐富度。";
+
+            // UI Loading
+            const btn = document.querySelector('button[onclick="app.generateAIPlan()"]');
+            const loading = document.getElementById('ai-loading');
+            const list = document.getElementById('planner-list');
+            
+            if(btn) btn.classList.add('hidden');
+            if(list) list.classList.add('hidden');
+            if(loading) loading.classList.remove('hidden');
+
+            try {
+                const user = app.state.user;
+                const targetCal = Math.round(user.tdee * 0.35);
+                
+                // 🔴 統一的高品質 Prompt (週計畫)
+                const aiPrompt = `
+                    你是一位五星級健康餐盒設計師。請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
+                    目標：${user.goal}。
+                    料理風格：${cuisine}。
+                    ${batchNote}
+                    ${fridgeNote}
+                    ${excludeNote}
+                    
+                    【嚴格 JSON 格式要求】
+                    請回傳一個 JSON Array，包含 10 個物件 (請確保每道菜名都不一樣，供使用者替換選擇)。
+                    ⚠️ 重要：無論是否為懶人模式，都必須給足 10 個不同的物件，不要偷懶只給 2 個。
+                    每個物件必須包含以下欄位（Key 名稱必須完全一致）：
+                    - "name": (字串) 菜色名稱 (例如 "香煎迷迭香雞腿排佐時蔬")
+                    - "main_tag": (字串) 四選一: "雞肉", "牛肉", "海鮮", "素食"
+                    - "cal": (數字) 熱量
+                    - "p": (數字) 蛋白質
+                    - "c": (數字) 碳水
+                    - "f": (數字) 脂肪
+                    - "ingredients": (物件陣列) 食材清單，格式為 [{"name":"食材名", "qty":"數量(如 100g)", "type":"生鮮/蔬果/澱粉/雜貨"}]。請列出所有調味與配菜。
+                    - "instructions": (字串) 烹飪步驟。**重要：步驟之間請務必使用 \\n 換行**，並標示 1. 2. 3.，描述需詳細（包含火候、時間）。
+
+                    範例：
+                    [
+                    {
+                        "name": "示範菜色",
+                        "main_tag": "雞肉",
+                        "cal": 500, "p": 30, "c": 50, "f": 15,
+                        "ingredients": [{"name":"雞胸肉","qty":"150g","type":"生鮮"}, {"name":"花椰菜","qty":"100g","type":"蔬果"}],
+                        "instructions": "1. 備料：雞肉切塊...\\n2. 烹調：熱鍋後放入..."
+                    }
+                    ]
+                `;
+
+                const data = await app.callGeminiAPI(aiPrompt);
+                
+                // 資料處理 (防呆：確保欄位存在)
+                recipes = data.map((r, i) => ({
+                    ...r, 
+                    id: Date.now() + i, 
+                    tags: [r.main_tag || '一般'], 
+                    favorite: false,
+                    // 相容性處理：生成簡單字串列表供顯示，同時保留結構化資料供採買用
+                    ingredients: r.ingredients.map(ing => `${ing.name} ${ing.qty}`),
+                    structured_ingredients: r.ingredients
+                }));
+                
+                localStorage.setItem('bento_recipes', JSON.stringify(recipes));
+                // 🔴 修正重點：由程式邏輯來分配「懶人」或「豐富」
+                // AI 負責給 10 個選擇，我們負責決定怎麼吃  
+                if (isBatch) {
+                    // 懶人模式：只用前 3 道菜填滿 5 天 (A, A, B, B, C)
+                    // recipes[3] ~ recipes[9] 會自動變成替換選項
+                    app.state.plan = { 
+                        Mon: recipes[0].id, 
+                        Tue: recipes[0].id, 
+                        Wed: recipes[1].id, 
+                        Thu: recipes[1].id, 
+                        Fri: recipes[2].id 
+                    };
+                } else {
+                    // 一般模式：前 5 道菜填滿 5 天 (A, B, C, D, E)
+                    app.state.plan = { 
+                        Mon: recipes[0].id, 
+                        Tue: recipes[1].id, 
+                        Wed: recipes[2].id, 
+                        Thu: recipes[3].id, 
+                        Fri: recipes[4].id 
+                    };
+                }
+                    app.state.shopping = {};
+                    localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
+
+                    const msgType = isBatch ? "懶人 (已預留7道替換菜)" : "豐富 (已預留5道替換菜)";
+                    app.showToast(`🎉 已生成「${cuisine}」${msgType}清單！`);
+                    app.renderPlanner();
+
+                } catch (e) {
+                   await app.showModal(`生成失敗: ${e.message}`, "系統錯誤", "error");
+                } finally {
+                    if(loading) loading.classList.add('hidden');
+                    if(btn) btn.classList.remove('hidden');
+                    if(list) list.classList.remove('hidden');
+                }
+            },
+        // --- 3. 新增 rerollDay (單日重骰) ---
+        rerollDay: async (dayKey) => {
+            if(!(await app.showModal(`確定要重新生成「${dayLabels[dayKey]}」的便當嗎？`, "重骰確認"))) return;
+
+            const user = app.state.user;
+            const targetCal = Math.round(user.tdee * 0.35);
+            // 🔴 修正重點：收集目前所有已存在的菜名，防止 AI 生成重複的
+            const currentRecipeNames = recipes.filter(r => r.name).map(r => r.name).join('、');
+            const avoidNote = currentRecipeNames 
+                    ? `⚠️ 絕對避開以下菜色（請勿生成重複或極度相似的）：${currentRecipeNames}` 
+                    : "";
+            const excludeNote = user.exclude ? `★ 使用者忌口：${user.exclude}` : "";
+
+            const card = document.getElementById(`plan-card-${dayKey}`);
+            const originalContent = card.innerHTML;
+            card.innerHTML = `<div class="flex justify-center items-center h-20 text-brand-500"><i class="fa-solid fa-circle-notch fa-spin text-xl"></i></div>`;
+
+            try {
+                // 🔴 統一的高品質 Prompt (單日版)
+                const aiPrompt = `
+                    你是一位五星級健康餐盒設計師。請設計 1 道「詳細且美味」的午餐便當，取代原本的菜色。
+                    熱量約 ${targetCal} kcal，目標：${user.goal}。
+                    ${excludeNote}
+                    【防重複機制】 目前已有的菜色包括：${currentRecipeNames}。請設計一個「全新且不同」的菜色，絕對不可重複或極度相似。
+                    ${avoidNote}
+
+                    【嚴格 JSON 格式要求】
+                    請回傳包含 1 個物件的 JSON Array。欄位必須完全一致：
+                    - "name": (字串) 菜色名稱
+                    - "main_tag": (字串) "雞肉", "牛肉", "海鮮", "素食"
+                    - "cal": (數字)
+                    - "p": (數字)
+                    - "c": (數字)
+                    - "f": (數字)
+                    - "ingredients": [{"name":"食材名", "qty":"數量", "type":"生鮮/蔬果/澱粉/雜貨"}]
+                    - "instructions": (字串) 步驟請用 \\n 分隔，描述需詳細。
+                `;
+
+                const data = await app.callGeminiAPI(aiPrompt);
+                
+                // 檢查數據是否完整 (解決 undefined 問題)
+                const item = data[0];
+                if (!item.name || !item.ingredients) throw new Error("AI 回傳格式不完整，請重試");
+                // 二次檢查：如果 AI 還是給了重複的名字 (機率很低)，自動加個 (新)
+                let finalName = item.name;
+                if (recipes.some(r => r.name === finalName)) {
+                    finalName += " (特製)";
+                }
+                const newRecipe = {
+                    ...item, 
+                    id: Date.now(), 
+                    tags: [item.main_tag || '一般'], 
+                    favorite: false,
+                    ingredients: item.ingredients.map(ing => `${ing.name} ${ing.qty}`),
+                    structured_ingredients: item.ingredients
+                };
+
+                recipes.push(newRecipe);
+                localStorage.setItem('bento_recipes', JSON.stringify(recipes));
+                
+                app.state.plan[dayKey] = newRecipe.id;
+                localStorage.setItem('bento_plan', JSON.stringify(app.state.plan));
+
+                app.showToast('✨ 新菜色已上桌！');
+                app.renderPlanner();
+
+            } catch (e) {
+                console.error(e);
+               await app.showModal('重骰失敗: ' + e.message, "系統錯誤", "error");
+                card.innerHTML = originalContent;
+            }
+        },
+        // --- 4. 抽取共用 API 呼叫邏輯 (讓程式碼更乾淨) ---
+        callGeminiAPI: async (promptText) => {
+            const key = app.state.user.apiKey;
+            const models = ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
+            
+            for (const model of models) {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                    });
+                    if(!res.ok) throw new Error();
+                    const data = await res.json();
+                    let text = data.candidates[0].content.parts[0].text;
+                    text = text.replace(/```json|```/g, '').trim();
+                    const start = text.indexOf('[');
+                    const end = text.lastIndexOf(']');
+                    return JSON.parse(text.substring(start, end+1));
+                } catch(e) { continue; }
+            }
+            throw new Error("所有模型忙碌中，請檢查 Key");
+        },
+        // --- 請替換 app 物件中的 renderPlanner ---
+        renderPlanner: () => {
+            const list = document.getElementById('planner-list');
+            list.innerHTML = '';
+            const dayLabels = { 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五' };
+
+            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].forEach(d => {
+                const rid = app.state.plan[d];
+                const r = recipes.find(x => x.id === rid);
+                const el = document.createElement('div');
+                // 加入 ID 方便重骰時定位
+                el.id = `plan-card-${d}`; 
+                el.className = "bg-white p-3 rounded-2xl border border-gray-100 flex items-center gap-3 transition active:scale-[0.98] group";
+                
+                const dayText = dayLabels[d]; 
+
+                if(r) {
+                    el.innerHTML = `
+                        <div class="w-10 font-bold text-gray-400 text-sm text-center tracking-widest shrink-0">${dayText}</div>
+                        <div class="w-14 h-14 rounded-xl bg-brand-50 flex items-center justify-center text-brand-500 text-2xl shrink-0">
+                            <i class="fa-solid fa-bowl-rice"></i>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0 cursor-pointer" onclick="app.openDetailById(${r.id})">
+                            <h4 class="font-bold text-gray-700 text-sm truncate">${r.name}</h4>
+                            <div class="text-[10px] text-gray-400 mt-0.5">${r.cal} Kcal · ${r.tags[0]}</div>
+                        </div>
+
+                        <div class="flex gap-1">
+                            <button onclick="app.rerollDay('${d}')" class="w-8 h-8 rounded-full bg-purple-50 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition shadow-sm" title="AI 重骰這餐">
+                                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                            </button>
+                            <button onclick="app.openSelector('${d}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-500 hover:text-white transition shadow-sm" title="手動選擇">
+                                <i class="fa-solid fa-rotate text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // 空狀態保持不變...
+                    el.innerHTML = `
+                        <div class="w-10 font-bold text-gray-400 text-sm text-center tracking-widest">${dayText}</div>
+                        <div class="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center text-gray-200"><i class="fa-solid fa-plus"></i></div>
+                        <div class="flex-1 text-sm text-gray-400">尚未安排</div>
+                        <button onclick="app.openSelector('${d}')" class="bg-brand-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-sm">選擇</button>
+                    `;
+                }
+                list.appendChild(el);
+            });
+        },
+            // --- INGREDIENT SPLITTER & AGGREGATOR (NEW) ---
+            getAggregatedIngredients: () => {
+                const needed = new Set();
+                Object.values(app.state.plan).forEach(rid => {
+                    const r = recipes.find(x => x.id === rid);
+                    if (r && r.ingredients) {
+                        r.ingredients.forEach(str => {
+                            // Split by separators: 、 , ， / or space
+                            const items = str.split(/[、,，\/ ]+/); 
+                            items.forEach(item => {
+                                const cleanItem = item.trim();
+                                if(cleanItem && cleanItem.length > 0) needed.add(cleanItem);
+                            });
+                        });
+                    }
+                });
+                return needed;
+            },
+
+            // --- CATEGORY LOGIC (ENHANCED) ---
+            getCategory: (name) => {
+                const n = name.toLowerCase();
+                // 1. Meat/Fresh (Priority High: Tofu, Dairy, Meat)
+                if (n.match(/雞|牛|豬|魚|蝦|肉|排|羊|鴨|鵝|海鮮|蛋|培根|香腸|鮭|鮪|鯖|鯛|蛤|蚵|卷|板豆腐|嫩豆腐|豆干|豆腐|起司|乳酪|奶|優格|火腿|丸/)) return "🥩 生鮮冷藏";
+                
+                // 2. Veg (Medium)
+                if (n.match(/菜|菇|茄|椒|筍|瓜|葉|豆|蘿蔔|洋蔥|蔥|蒜|番茄|花椰|薑|檸檬|薯|芋|玉米|九層塔|香菜|沙拉|果|蘋|蕉|梨|桃|橙|橘|百合|山藥|秋葵|蓮藕|蘆筍|羅勒|迷迭香|百里香|酪梨/)) return "🥦 蔬果區";
+                
+                // 3. Grains
+                if (n.match(/米|麵|飯|冬粉|藜麥|燕麥|吐司|麵包|饅頭|餃|皮|餅|粉條|意麵|烏龍|寬粉/)) return "🍚 穀物澱粉";
+                
+                // 4. Seasoning & Others (Catch-all)
+                if (n.match(/油|醬|鹽|糖|醋|酒|粉|胡椒|香料|味淋|味噌|高湯|罐頭|堅果|芝麻|蜜|茶|水|七味|辣椒|咖哩|湯塊|義大利香料/)) return "🧂 調味與雜貨";
+                
+                return "🧂 調味與雜貨"; // Default
+            },
+
+            // --- 請更新 renderShopping 函式 ---
+
+            renderShopping: () => {
+                const container = document.getElementById('shopping-list-container');
+                
+                // 1. 收集所有食材 (Aggregation)
+                const aggMap = {};
+                Object.values(app.state.plan).forEach(rid => {
+                    const r = recipes.find(x => x.id === rid);
+                    if (r) {
+                        if (r.structured_ingredients) {
+                            r.structured_ingredients.forEach(item => {
+                                const name = item.name.trim();
+                                if (!aggMap[name]) aggMap[name] = { type: item.type, qtys: [] };
+                                aggMap[name].qtys.push(item.qty);
+                            });
+                        } else if (r.ingredients) {
+                            r.ingredients.forEach(str => {
+                                aggMap[str] = { type: "雜貨", qtys: ["1份"] }; 
+                            });
+                        }
+                    }
+                });
+
+                if(Object.keys(aggMap).length === 0) {
+                    // 進度條歸零
+                    document.getElementById('shop-progress-bar').style.width = '0%';
+                    return container.innerHTML = `<div class="text-center text-gray-300 py-10 text-xs">暫無清單</div>`;
+                }
+                
+                // 2. 建立分類對應
+                const typeMapping = {
+                    "生鮮": "🥩 生鮮冷藏", "肉類": "🥩 生鮮冷藏", "海鮮": "🥩 生鮮冷藏",
+                    "蔬果": "🥦 蔬果區", "蔬菜": "🥦 蔬果區",
+                    "澱粉": "🍚 穀物澱粉",
+                    "雜貨": "🧂 調味與雜貨", "乾料": "🧂 調味與雜貨"
+                };
+
+                const cats = { "🥦 蔬果區": [], "🥩 生鮮冷藏": [], "🍚 穀物澱粉": [], "🧂 調味與雜貨": [] };
+                
+                let totalItems = 0;
+                let checkedItems = 0;
+
+                // 3. 分配與統計
+                Object.keys(aggMap).forEach(name => {
+                    const itemData = aggMap[name];
+                    let targetCat = typeMapping[itemData.type] || "🧂 調味與雜貨";
+                    
+                    const qtyStr = itemData.qtys.join(' + ');
+                    const displayName = `${name} <span class="text-xs text-brand-500 ml-1">(${qtyStr})</span>`;
+                    const key = name;
+
+                    cats[targetCat].push({ displayName, key });
+                    
+                    totalItems++;
+                    if (app.state.shopping[key]) checkedItems++;
+                });
+
+                // 4. 更新進度條 (移除文字更新邏輯)
+                // document.getElementById('shop-progress-text').innerText = ... (這行已移除)
+                const percent = totalItems > 0 ? (checkedItems/totalItems)*100 : 0;
+                document.getElementById('shop-progress-bar').style.width = `${percent}%`;
+
+                // 5. 渲染畫面 (與之前相同)
+                container.innerHTML = '';
+                Object.keys(cats).forEach(catName => {
+                    if(cats[catName].length > 0) {
+                        const items = cats[catName];
+                        // 排序：未買的在前
+                        items.sort((a,b) => {
+                            const cA = app.state.shopping[a.key] ? 1 : 0;
+                            const cB = app.state.shopping[b.key] ? 1 : 0;
+                            return cA - cB || a.key.localeCompare(b.key, 'zh-Hant');
+                        });
+
+                        const grp = document.createElement('div');
+                        grp.className = "mb-6";
+                        grp.innerHTML = `<h3 class="text-xs font-bold text-gray-400 mb-3 px-1 tracking-wider border-b border-gray-100 pb-1">${catName}</h3>`;
+                        
+                        const listDiv = document.createElement('div');
+                        listDiv.className = "flex flex-col gap-2"; 
+                        
+                        items.forEach(obj => {
+                            const checked = app.state.shopping[obj.key];
+                            const row = document.createElement('label');
+                            row.className = `flex items-center gap-4 py-2 px-2 cursor-pointer group transition-all duration-300 ${checked ? 'opacity-30' : 'opacity-100'}`;
+                            row.innerHTML = `
+                                <input type="checkbox" class="hidden custom-checkbox" ${checked?'checked':''} onchange="app.toggleShop('${obj.key}')">
+                                <div class="w-6 h-6 rounded border-2 border-gray-300 flex items-center justify-center transition-colors shrink-0 text-white text-xs">
+                                    <i class="fa-solid fa-check ${checked?'':'hidden'}"></i>
+                                </div>
+                                <span class="text-base font-medium ${checked?'line-through':''} text-gray-700 flex-1">${obj.displayName}</span>
+                            `;
+                            listDiv.appendChild(row);
+                        });
+                        grp.appendChild(listDiv);
+                        container.appendChild(grp);
+                    }
+                });
+            },
+            toggleShop: (item) => {
+                app.state.shopping[item] = !app.state.shopping[item];
+                localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
+                app.renderShopping();
+            },
+
+            clearShoppingList: () => {
+                for(let k in app.state.shopping) { if(app.state.shopping[k]) delete app.state.shopping[k]; }
+                localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
+                app.renderShopping();
+            },
+
+        // --- 請替換 app 物件中的 copyShoppingList ---
+        copyShoppingList: async () => {
+            // 1. 準備資料
+            const needed = app.getAggregatedIngredients(); // Set
+            const items = Array.from(needed);
+            
+            // 定義分類籃子
+            const cats = {
+                "🥩 生鮮冷藏": [],
+                "🥦 蔬果區": [],
+                "🍚 穀物澱粉": [],
+                "🧂 調味與雜貨": []
+            };
+
+            let hasItems = false;
+
+            // 2. 分類並過濾已買項目
+            items.forEach(name => {
+                if(!app.state.shopping[name]) { // 只列出未買
+                    const cat = app.getCategory(name);
+                    // 確保分類存在，不然丟雜貨
+                    const target = cats[cat] ? cats[cat] : cats["🧂 調味與雜貨"];
+                    target.push(name);
+                    hasItems = true;
+                }
+            });
+
+            if (!hasItems) return app.showToast('🎉 所有食材都買齊囉！');
+
+            // 3. 組合文字
+            let text = "🛒 Bento Fit 採買清單\n──────────────────\n";
+            
+            Object.keys(cats).forEach(catName => {
+                if (cats[catName].length > 0) {
+                    text += `\n${catName}\n`;
+                    cats[catName].forEach(i => text += `⬜ ${i}\n`);
+                }
+            });
+            
+            text += `\n📅 ${new Date().toLocaleDateString()} 生成`;
+
+            // 4. 分享或複製
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: 'Bento Fit 採買清單', text: text });
+                } catch (err) { console.log('取消分享'); }
+            } else {
+                navigator.clipboard.writeText(text);
+                app.showToast('✅ 已複製分區清單');
+            }
+        },
+            // --- History ---
+            renderHistory: () => {
+                const list = document.getElementById('history-list');
+                const empty = document.getElementById('history-empty');
+                list.innerHTML = '';
+                
+                if(app.state.history.length === 0) {
+                    list.classList.add('hidden');
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                
+                list.classList.remove('hidden');
+                empty.classList.add('hidden');
+
+                app.state.history.forEach((h, idx) => {
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-4 rounded-2xl border border-gray-100 flex justify-between items-center cursor-pointer hover:bg-gray-50";
+                    div.onclick = () => app.openHistoryDetail(idx);
+                    div.innerHTML = `
+                        <div>
+                            <div class="text-[10px] font-bold text-brand-500 uppercase mb-1">${h.date}</div>
+                            <div class="text-sm font-bold text-gray-700">週菜單紀錄 #${app.state.history.length - idx}</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    `;
+                    list.appendChild(div);
+                });
+            },
+
+            openHistoryDetail: (idx) => {
+                const h = app.state.history[idx];
+                const head = document.getElementById('history-header');
+                const body = document.getElementById('history-content');
+                
+                head.innerHTML = `
+                    <h3 class="font-bold text-gray-800">紀錄 ${h.date}</h3>
+                    <div class="flex gap-2">
+                        <button onclick="app.restoreHistory(${idx})" class="text-xs bg-brand-100 text-brand-600 px-3 py-1.5 rounded-full font-bold">套用</button>
+                        <button onclick="app.closeModal('modal-history')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center"><i class="fa-solid fa-times text-gray-400"></i></button>
+                    </div>
+                `;
+                
+                body.innerHTML = '';
+                days.forEach(d => {
+                    const rid = h.plan[d];
+                    const r = h.recipes.find(x => x.id === rid);
+                    const row = document.createElement('div');
+                    row.className = "flex items-center gap-3 p-2 border-b border-gray-50 last:border-0";
+                    if(r) {
+                        row.innerHTML = `<span class="text-xs font-mono text-gray-400 w-6">${d}</span><span class="text-sm font-medium text-gray-700">${r.name}</span>`;
+                    } else {
+                        row.innerHTML = `<span class="text-xs font-mono text-gray-400 w-6">${d}</span><span class="text-sm text-gray-300">--</span>`;
+                    }
+                    body.appendChild(row);
+                });
+                
+                document.getElementById('modal-history').classList.remove('hidden');
+            },
+
+            restoreHistory: async (idx) => { // ⚠️ 記得加 async
+                // ✅ 修改處
+                if(!(await app.showModal('確定要還原此紀錄嗎？目前的規劃將被覆蓋。', "還原確認"))) return;
+                
+                const h = app.state.history[idx];
+                recipes = h.recipes;
+                localStorage.setItem('bento_recipes', JSON.stringify(recipes));
+                app.state.plan = h.plan;
+                localStorage.setItem('bento_plan', JSON.stringify(app.state.plan));
+                app.state.shopping = {};
+                localStorage.setItem('bento_shopping', JSON.stringify({}));
+                
+                app.closeModal('modal-history');
+                app.showToast('✅ 已還原歷史菜單');
+                app.renderPlanner();
+            },
+
+            // --- Helpers ---
+            // --- 請新增/替換 app 物件中的以下函式 ---
+
+            // 1. 新增：切換收藏狀態
+            toggleFavorite: (id) => {
+                const r = recipes.find(x => x.id === id);
+                if(r) {
+                    r.favorite = !r.favorite; // 切換 boolean
+                    localStorage.setItem('bento_recipes', JSON.stringify(recipes));
+                    
+                    // 更新 UI 按鈕狀態
+                    const btn = document.getElementById('btn-fav-toggle');
+                    if(btn) {
+                        btn.innerHTML = r.favorite ? '<i class="fa-solid fa-heart text-red-500 text-lg"></i>' : '<i class="fa-regular fa-heart"></i>';
+                        btn.classList.toggle('bg-white', r.favorite); // 高亮背景
+                        btn.classList.toggle('bg-white/20', !r.favorite);
+                    }
+                    
+                    app.showToast(r.favorite ? '❤️ 已加入收藏' : '💔 已取消收藏');
+                }
+            },
+
+            // --- 請替換 app.openDetail 函式 ---
+            openDetail: (r) => {
+                if(!r) return;
+                document.getElementById('detail-title').innerText = r.name;
+                document.getElementById('detail-cal').innerText = `${r.cal} Kcal`;
+                document.getElementById('detail-p').innerText = r.p + 'g';
+                document.getElementById('detail-c').innerText = r.c + 'g';
+                document.getElementById('detail-f').innerText = r.f + 'g';
+                
+                const favBtn = document.getElementById('btn-fav-toggle');
+                favBtn.onclick = () => app.toggleFavorite(r.id);
+                
+                if(r.favorite) {
+                    favBtn.innerHTML = '<i class="fa-solid fa-heart text-red-500 text-lg"></i>';
+                    favBtn.className = "absolute top-4 right-16 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm transition active:scale-90";
+                } else {
+                    favBtn.innerHTML = '<i class="fa-regular fa-heart text-white"></i>';
+                    favBtn.className = "absolute top-4 right-16 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition active:scale-90";
+                }
+
+                const ingEl = document.getElementById('detail-ingredients');
+                ingEl.innerHTML = '';
+                // 容錯處理：如果 ingredients 不是陣列 (例如 AI 回傳錯誤)，嘗試轉回陣列或顯示錯誤
+                const ingredientsList = Array.isArray(r.ingredients) ? r.ingredients : (r.ingredients ? [r.ingredients] : []);
+                ingredientsList.forEach(i => { 
+                    const li = document.createElement('li'); 
+                    li.innerText = i; 
+                    ingEl.appendChild(li); 
+                });
+
+                const stepContainer = document.getElementById('detail-instructions');
+                stepContainer.innerHTML = ''; 
+                stepContainer.className = "space-y-3"; 
+
+                // 加入「開始烹飪」按鈕
+                const startCookBtn = document.createElement('button');
+                startCookBtn.className = "w-full bg-brand-500 text-white font-bold py-3 rounded-xl shadow-lg mb-4 flex items-center justify-center gap-2 active:scale-95 transition-transform";
+                startCookBtn.innerHTML = '<i class="fa-solid fa-fire-burner"></i> 開始沉浸式烹飪';
+                startCookBtn.onclick = () => app.startCooking(r.id);
+                stepContainer.appendChild(startCookBtn);
+
+                if (r.instructions) {
+                    // ✅ 修正：更強大的步驟解析邏輯
+                    let raw = r.instructions;
+                    // 1. 先將 \\n (字串的換行) 轉為真正的 \n
+                    raw = raw.replace(/\\n/g, '\n');
+                    
+                    // 2. 如果內容完全沒有換行，但有 "1. ", "2. " 這種結構，手動補換行
+                    if (!raw.includes('\n') && raw.match(/\d+\./)) {
+                        raw = raw.replace(/(\d+\.)/g, '\n$1');
+                    }
+                    
+                    // 3. 切割並過濾空行
+                    let steps = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+
+                    steps.forEach((step, idx) => {
+                        const stepDiv = document.createElement('div');
+                        stepDiv.className = "flex gap-3 items-start p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors group";
+                        stepDiv.onclick = function() {
+                            const cb = this.querySelector('input');
+                            const txt = this.querySelector('p');
+                            cb.checked = !cb.checked;
+                            if(cb.checked) {
+                                txt.classList.add('line-through', 'text-gray-300');
+                                this.classList.replace('bg-gray-50', 'bg-green-50');
+                            } else {
+                                txt.classList.remove('line-through', 'text-gray-300');
+                                this.classList.replace('bg-green-50', 'bg-gray-50');
+                            }
+                        };
+                        stepDiv.innerHTML = `
+                            <div class="mt-0.5 relative"><input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-brand-500 focus:ring-brand-400 pointer-events-none"></div>
+                            <p class="text-sm text-gray-700 leading-6 select-none flex-1">${step}</p>
+                        `;
+                        stepContainer.appendChild(stepDiv);
+                    });
+                } else {
+                    stepContainer.innerHTML += '<div class="text-gray-400 text-center py-4">暫無步驟資料</div>';
+                }
+
+                document.getElementById('modal-detail').classList.remove('hidden');
+            },
+            // 3. 替換：filterRecipes (支援 'fav' 篩選)
+            filterRecipes: (tag) => {
+                let list;
+                if (tag === 'all') {
+                    list = recipes;
+                } else if (tag === 'fav') {
+                    // 篩選出收藏的菜色
+                    list = recipes.filter(r => r.favorite);
+                } else {
+                    list = recipes.filter(r => r.tags.some(t => t.includes(tag)));
+                }
+                app.renderSelectorList(list);
+            },
+            openSelector: (d) => {
+                app.state.selectedDay = d;
+                app.renderSelectorList(recipes);
+                document.getElementById('modal-selector').classList.remove('hidden');
+            },
+            renderSelectorList: (list) => {
+                const el = document.getElementById('selector-list');
+                el.innerHTML = '';
+                list.forEach(r => {
+                    const d = document.createElement('div');
+                    d.className = "flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer";
+                    d.onclick = () => {
+                        app.state.plan[app.state.selectedDay] = r.id;
+                        localStorage.setItem('bento_plan', JSON.stringify(app.state.plan));
+                        app.renderPlanner();
+                        app.closeModal('modal-selector');
+                    };
+                    d.innerHTML = `
+                        <div class="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center text-brand-400 shrink-0"><i class="fa-solid fa-utensils"></i></div>
+                        <div><div class="text-sm font-bold text-gray-800">${r.name}</div><div class="text-xs text-gray-400">${r.cal} Kcal</div></div>
+                    `;
+                    el.appendChild(d);
+                });
+            },
+            openDetailById: (id) => app.openDetail(recipes.find(r => r.id === id)),
+            // --- 新增：一鍵過濾常備品 ---
+            filterStaples: () => {
+                // 定義常備品關鍵字
+                const staples = ['油', '鹽', '糖', '醬油', '醋', '胡椒', '米酒', '太白粉', '蒜', '薑', '蔥', '水', '香料', '芝麻', '日式醬油(低鈉)'];
+                let count = 0;
+                
+                // 取得所有需要的食材名稱
+                const needed = app.getAggregatedIngredients(); // 呼叫既有的 helper
+                
+                needed.forEach(name => {
+                    // 如果食材名稱包含常備品關鍵字 (例如 "橄欖油" 包含 "油")
+                    if (staples.some(s => name.includes(s))) {
+                        // 將其設為已購買 (true)
+                        if (!app.state.shopping[name]) {
+                            app.state.shopping[name] = true;
+                            count++;
+                        }
+                    }
+                });
+                
+                // 存檔並重繪
+                localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
+                app.renderShopping();
+                
+                if(count > 0) app.showToast(`已自動隱藏 ${count} 項常備調味品`);
+                else app.showToast('沒有發現未勾選的常備品');
+            },
+
+            closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+            showToast: (msg) => {
+                const t = document.getElementById('toast');
+                document.getElementById('toast-msg').innerText = msg;
+                t.classList.remove('opacity-0', 'translate-y-4');
+                setTimeout(() => t.classList.add('opacity-0', 'translate-y-4'), 2000);
+            },
+            // --- 請新增此函式到 app 物件中 ---
+            showModal: (msg, title = "提示", type = "confirm") => {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('modal-general');
+                    const titleEl = document.getElementById('modal-title');
+                    const msgEl = document.getElementById('modal-msg');
+                    const btnConfirm = document.getElementById('modal-btn-confirm');
+                    const btnCancel = document.getElementById('modal-btn-cancel');
+                    const iconEl = document.getElementById('modal-icon');
+                    const iconBg = document.getElementById('modal-icon-bg');
+
+                    // 設定文字
+                    titleEl.innerText = title;
+                    msgEl.innerText = msg;
+                    modal.classList.remove('hidden');
+
+                    // 根據類型設定樣式 (confirm: 雙按鈕, alert: 單按鈕, error: 紅色單按鈕)
+                    if (type === 'alert' || type === 'error') {
+                        btnCancel.classList.add('hidden');
+                        btnConfirm.innerText = "知道了";
+                        // 單按鈕時寬度全滿
+                        btnConfirm.className = "w-full bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95";
+                    } else {
+                        btnCancel.classList.remove('hidden');
+                        btnConfirm.innerText = "確定";
+                        // 雙按鈕時各佔一半
+                        btnConfirm.className = "flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95";
+                    }
+                    
+                    // 設定圖示與顏色
+                    if (type === 'error') {
+                        iconEl.className = "fa-solid fa-circle-exclamation";
+                        iconBg.className = "w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
+                        if(type === 'error') btnConfirm.classList.replace('bg-brand-500', 'bg-red-500'); // 按鈕變紅
+                    } else if (type === 'confirm') {
+                        iconEl.className = "fa-solid fa-circle-question";
+                        iconBg.className = "w-16 h-16 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
+                    } else {
+                        iconEl.className = "fa-solid fa-circle-info";
+                        iconBg.className = "w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
+                    }
+
+                    // 事件處理 (使用 Promise resolve 回傳 true/false)
+                    const close = (val) => {
+                        modal.classList.add('hidden');
+                        // 還原按鈕樣式 (避免下次開啟殘留紅色)
+                        btnConfirm.classList.replace('bg-red-500', 'bg-brand-500'); 
+                        resolve(val);
+                    };
+
+                    // 覆蓋舊的 onclick，避免重複綁定
+                    btnConfirm.onclick = () => close(true);
+                    btnCancel.onclick = () => close(false);
+                });
+            },
+            exportData: () => {
+                const data = {
+                    user: localStorage.getItem('bento_user'),
+                    plan: localStorage.getItem('bento_plan'),
+                    shopping: localStorage.getItem('bento_shopping'),
+                    recipes: localStorage.getItem('bento_recipes'),
+                    history: localStorage.getItem('bento_history')
+                };
+                const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bento_backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            },
+            importData: (input) => {
+                const file = input.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async(e) => {
+                    try {
+                        const d = JSON.parse(e.target.result);
+                        if(d.user) localStorage.setItem('bento_user', d.user);
+                        if(d.plan) localStorage.setItem('bento_plan', d.plan);
+                        if(d.shopping) localStorage.setItem('bento_shopping', d.shopping);
+                        if(d.recipes) localStorage.setItem('bento_recipes', d.recipes);
+                        if(d.history) localStorage.setItem('bento_history', d.history);
+                        app.showToast("✅ 資料匯入成功！");
+                        setTimeout(() => location.reload(), 1000);
+                    } catch(err) { await app.showModal("檔案格式錯誤，無法讀取。", "匯入失敗", "error"); }
+                };
+                reader.readAsText(file);
+            },
+            resetData: async () => { // ⚠️ 記得加 async
+                // ✅ 修改處：使用紅色的 error 類型彈窗警告
+                if(await app.showModal("確定要重置所有資料嗎？此動作無法復原。", "危險操作", "error")) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            },
+        };
+
+        window.addEventListener('DOMContentLoaded', app.init);
+        // ✅ 新增這段：註冊 PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered: ', reg.scope))
+                    .catch(err => console.log('SW reg failed: ', err));
+            });
+        }
+    </script>
+</body>
+</html>
