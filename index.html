@@ -194,17 +194,17 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">身高 (cm)</label>
-                            <input type="number" id="input-height" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="170" required>
+                            <input type="number" id="input-height" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="160" required enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">體重 (kg)</label>
-                            <input type="number" id="input-weight" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="60" required>
+                            <input type="number" id="input-weight" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="50" required enterkeyhint="next">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">年齡</label>
-                            <input type="number" id="input-age" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="25" required>
+                            <input type="number" id="input-age" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="25" required enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">性別</label>
@@ -235,47 +235,47 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 / 過敏原 (AI 避開)</label>
-                        <textarea id="input-exclude" rows="2" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-200 transition" placeholder="例如：香菜、蝦子、青椒..."></textarea>
+                        <textarea id="input-exclude" rows="2" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-200 transition" placeholder="例如：香菜、蝦子、青椒..." enterkeyhint="next"></textarea>
                     </div>
                     <h3 class="text-xs font-bold text-gray-400 border-l-4 border-blue-400 pl-2 mt-2">身體組成 (體脂計數據)</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">體脂率 (%)</label>
-                            <input type="number" step="0.1" id="input-bf" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                            <input type="number" step="0.1" id="input-bf" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填"  enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">肌肉量 (kg)</label>
-                            <input type="number" step="0.1" id="input-muscle" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                            <input type="number" step="0.1" id="input-muscle" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">內臟脂肪等級</label>
-                            <input type="number" step="0.5" id="input-vfat" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                            <input type="number" step="0.5" id="input-vfat" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">基礎代謝 (體脂計)</label>
-                            <input type="number" id="input-scale-bmr" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                            <input type="number" id="input-scale-bmr" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">水分含量 (%)</label>
-                            <input type="number" step="0.1" id="input-water" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                            <input type="number" step="0.1" id="input-water" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">蛋白質 (%)</label>
-                            <input type="number" step="0.1" id="input-protein" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                            <input type="number" step="0.1" id="input-protein" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">骨量 (kg)</label>
-                            <input type="number" step="0.1" id="input-bone" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填">
+                            <input type="number" step="0.1" id="input-bone" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">BMI (選填)</label>
-                            <input type="number" step="0.1" id="input-bmi" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="自動計算">
+                            <input type="number" step="0.1" id="input-bmi" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="自動計算" enterkeyhint="next">
                         </div>
                     </div>
 
                     <div class="pt-2">
                         <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY (AI 功能必填)</label>
-                        <input type="password" id="input-apikey" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="AIzaSy...">
+                        <input type="password" id="input-apikey" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="AIzaSy..." enterkeyhint="next">
                     </div>
                     
                     <button type="submit" class="w-full bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition-transform hover:bg-brand-600">儲存個人與身體數值</button>
@@ -495,7 +495,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1">清冰箱 (優先用)</label>
-                        <input type="text" id="ai-opt-fridge" class="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-300">
+                        <input type="text" id="ai-opt-fridge" class="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-300" >
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-red-300 mb-1">排除食材</label>
@@ -601,6 +601,22 @@
             } else {
                 app.navigateTo('dashboard');
             }
+            document.querySelectorAll('input').forEach((input, index, inputs) => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const nextInput = inputs[index + 1];
+                        if (nextInput) {
+                            nextInput.focus();
+                        } else {
+                            // 如果是最後一個，嘗試收起鍵盤 (blur) 或提交
+                            input.blur();
+                            // 如果是在 profile form 裡，也可以觸發儲存
+                            if(input.id === 'input-apikey') app.saveProfile();
+                        }
+                    }
+                });
+            });
         },
         // --- 請替換 app 物件中的 renderDashboard 函式 ---
 
@@ -1094,12 +1110,9 @@
 
             app.showToast(`設定已儲存！目標：${goal}`);
             
-            // 如果是從個人頁面按儲存，通常停留在當前頁面看圖表會比較好，
-            // 但如果您希望跳轉回首頁，請保留下面這行；若想留下來看圖表，可註解掉。
-            // app.navigateTo('dashboard'); 
-            
-            // 為了讓使用者看到圖表，我們先不跳轉，改為滾動到圖表位置
-            document.getElementById('chart-container').scrollIntoView({ behavior: 'smooth' });
+            // 🔴 修正重點：儲存成功後，強制顯示導覽列並跳轉首頁
+            document.querySelector('nav').classList.remove('hidden');
+            app.navigateTo('dashboard');
         },
         // --- 請替換 app 物件中的 fillProfile 函式 ---
 
@@ -1380,12 +1393,35 @@
                 const user = app.state.user;
                 const targetCal = Math.round(user.tdee * 0.35);
                 
+                // 🔴 新增：身體數據判讀邏輯 (讓數據說話)
+                let bodyNote = "";
+                if (user.bodyComp) {
+                    const { bf, muscle } = user.bodyComp;
+                    
+                    // 體脂率判斷 (簡單標準：男>25/女>32 為高，男<15/女<22 為低)
+                    // 這裡用一個通用的 25% 作為分界，或是您可以根據性別寫更細
+                    if (bf) {
+                        if (bf > 28) {
+                            bodyNote += "★ 使用者體脂率偏高，請嚴格控制「精緻澱粉」攝取，優先推薦低GI食材（如糙米、地瓜、南瓜），並增加膳食纖維。";
+                        } else if (bf < 18) {
+                            bodyNote += "★ 使用者體脂率較低，代謝可能較快，可適度增加優質澱粉與健康脂肪（如酪梨、堅果）以維持能量。";
+                        }
+                    }
+                    
+                    // 肌肉量/目標判斷
+                    if (user.goal.includes('增肌') || (muscle && muscle > 30)) {
+                        bodyNote += "★ 使用者目標為增肌或肌肉量較高，請確保蛋白質來源多樣化且容易吸收，並適當搭配碳水幫助合成。";
+                    }
+                }
+
                 // 🔴 統一的高品質 Prompt (週計畫)
                 const aiPrompt = `
                     你是一位五星級健康餐盒設計師。請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
                     目標：${user.goal}。
                     料理風格：${cuisine}。
-                    ${batchNote}
+                    使用者身體狀況特別指示】
+                    ${bodyNote || "無特殊身體狀況，請依均衡飲食設計。"}
+                    ${batchPrompt}
                     ${fridgeNote}
                     ${excludeNote}
                     
@@ -1428,7 +1464,7 @@
                 }));
                 
                 localStorage.setItem('bento_recipes', JSON.stringify(recipes));
-                // 🔴 修正重點：由程式邏輯來分配「懶人」或「豐富」
+                // 由程式邏輯來分配「懶人」或「豐富」
                 // AI 負責給 10 個選擇，我們負責決定怎麼吃  
                 if (isBatch) {
                     // 懶人模式：只用前 3 道菜填滿 5 天 (A, A, B, B, C)
@@ -1454,7 +1490,7 @@
                     localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
 
                     const msgType = isBatch ? "懶人 (已預留7道替換菜)" : "豐富 (已預留5道替換菜)";
-                    app.showToast(`🎉 已生成「${cuisine}」${msgType}清單！`);
+                    app.showToast(`🎉 已根據您的身體數據生成「${cuisine}」${msgType}清單！`);
                     app.renderPlanner();
 
                 } catch (e) {
@@ -1758,57 +1794,80 @@
                 app.renderShopping();
             },
 
-        // --- 請替換 app 物件中的 copyShoppingList ---
-        copyShoppingList: async () => {
-            // 1. 準備資料
-            const needed = app.getAggregatedIngredients(); // Set
-            const items = Array.from(needed);
-            
-            // 定義分類籃子
-            const cats = {
-                "🥩 生鮮冷藏": [],
-                "🥦 蔬果區": [],
-                "🍚 穀物澱粉": [],
-                "🧂 調味與雜貨": []
-            };
+            // --- 請替換 app.copyShoppingList ---
+            copyShoppingList: async () => {
+                // 1. 建立分類對應表 (與 renderShopping 保持一致)
+                const typeMapping = {
+                    "生鮮": "🥩 生鮮冷藏", "肉類": "🥩 生鮮冷藏", "海鮮": "🥩 生鮮冷藏",
+                    "蔬果": "🥦 蔬果區", "蔬菜": "🥦 蔬果區",
+                    "澱粉": "🍚 穀物澱粉",
+                    "雜貨": "🧂 調味與雜貨", "乾料": "🧂 調味與雜貨"
+                };
 
-            let hasItems = false;
+                const cats = { 
+                    "🥩 生鮮冷藏": [], 
+                    "🥦 蔬果區": [], 
+                    "🍚 穀物澱粉": [], 
+                    "🧂 調味與雜貨": [] 
+                };
 
-            // 2. 分類並過濾已買項目
-            items.forEach(name => {
-                if(!app.state.shopping[name]) { // 只列出未買
-                    const cat = app.getCategory(name);
-                    // 確保分類存在，不然丟雜貨
-                    const target = cats[cat] ? cats[cat] : cats["🧂 調味與雜貨"];
-                    target.push(name);
-                    hasItems = true;
+                let hasItems = false;
+
+                // 2. 遍歷本週計畫，收集未買清單
+                Object.values(app.state.plan).forEach(rid => {
+                    const r = recipes.find(x => x.id === rid);
+                    if (r) {
+                        // 優先使用結構化資料 (AI 生成的都有這個)
+                        const ingredients = r.structured_ingredients || 
+                            (r.ingredients ? r.ingredients.map(s => ({name: s, qty: '', type: '雜貨'})) : []);
+
+                        ingredients.forEach(item => {
+                            const name = item.name.trim();
+                            
+                            // 只處理未打勾(未買)的項目
+                            // 注意：這裡使用 name 作為 key，需與 toggleShop 的 key 邏輯一致
+                            if (!app.state.shopping[name]) {
+                                // 判斷分類
+                                let targetCat = typeMapping[item.type] || "🧂 調味與雜貨";
+                                
+                                // 為了避免重複列出 (例如: 雞胸肉 100g, 雞胸肉 50g)，我們先存字串
+                                // 這裡做個簡單處理：直接列出 "品名 (數量)"
+                                const displayStr = item.qty ? `${name} (${item.qty})` : name;
+                                
+                                cats[targetCat].push(displayStr);
+                                hasItems = true;
+                            }
+                        });
+                    }
+                });
+
+                if (!hasItems) return app.showToast('🎉 所有食材都買齊囉！');
+
+                // 3. 組合文字
+                let text = "🛒 Bento Fit 採買清單\n──────────────────\n";
+                
+                Object.keys(cats).forEach(catName => {
+                    // 去除重複並排序
+                    const uniqueItems = [...new Set(cats[catName])].sort();
+                    
+                    if (uniqueItems.length > 0) {
+                        text += `\n${catName}\n`;
+                        uniqueItems.forEach(i => text += `⬜ ${i}\n`);
+                    }
+                });
+                
+                text += `\n📅 ${new Date().toLocaleDateString()} 生成`;
+
+                // 4. 分享或複製
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ title: 'Bento Fit 採買清單', text: text });
+                    } catch (err) { console.log('取消分享'); }
+                } else {
+                    navigator.clipboard.writeText(text);
+                    app.showToast('✅ 已複製分區清單');
                 }
-            });
-
-            if (!hasItems) return app.showToast('🎉 所有食材都買齊囉！');
-
-            // 3. 組合文字
-            let text = "🛒 Bento Fit 採買清單\n──────────────────\n";
-            
-            Object.keys(cats).forEach(catName => {
-                if (cats[catName].length > 0) {
-                    text += `\n${catName}\n`;
-                    cats[catName].forEach(i => text += `⬜ ${i}\n`);
-                }
-            });
-            
-            text += `\n📅 ${new Date().toLocaleDateString()} 生成`;
-
-            // 4. 分享或複製
-            if (navigator.share) {
-                try {
-                    await navigator.share({ title: 'Bento Fit 採買清單', text: text });
-                } catch (err) { console.log('取消分享'); }
-            } else {
-                navigator.clipboard.writeText(text);
-                app.showToast('✅ 已複製分區清單');
-            }
-        },
+            },
             // --- History ---
             renderHistory: () => {
                 const list = document.getElementById('history-list');
