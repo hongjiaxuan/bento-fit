@@ -2,9 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Bento Fit 健康餐盒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8bc34a">
@@ -515,14 +513,15 @@
             <h3 class="text-lg font-bold text-gray-800 mb-1">今天的便當好吃嗎？</h3>
             <p class="text-xs text-gray-400 mb-6">您的回饋將讓 AI 下次更懂您的胃口</p>
             
-            <div class="flex gap-2 mb-6">
-                <button onclick="app.submitRating(1)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-red-50 hover:text-red-500 text-xl transition"><i class="fa-solid fa-star"></i></button>
-                <button onclick="app.submitRating(2)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-orange-50 hover:text-orange-400 text-xl transition"><i class="fa-solid fa-star"></i></button>
-                <button onclick="app.submitRating(3)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-yellow-50 hover:text-yellow-400 text-xl transition"><i class="fa-solid fa-star"></i></button>
-                <button onclick="app.submitRating(4)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-brand-50 hover:text-brand-400 text-xl transition"><i class="fa-solid fa-star"></i></button>
-                <button onclick="app.submitRating(5)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 hover:bg-brand-50 hover:text-brand-500 text-xl transition"><i class="fa-solid fa-star"></i></button>
+            <div class="flex gap-2 mb-6" id="star-container">
+                <button id="star-1" onclick="app.previewRating(1)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button id="star-2" onclick="app.previewRating(2)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button id="star-3" onclick="app.previewRating(3)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button id="star-4" onclick="app.previewRating(4)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 text-xl transition"><i class="fa-solid fa-star"></i></button>
+                <button id="star-5" onclick="app.previewRating(5)" class="w-10 h-10 rounded-full bg-gray-50 text-gray-300 text-xl transition"><i class="fa-solid fa-star"></i></button>
             </div>
-
+            
+            <button id="btn-submit-rating" onclick="app.confirmRating()" class="w-full bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float mb-3 hidden">送出評分</button>
             <button onclick="app.closeModal('modal-rating')" class="text-xs text-gray-400 underline">略過</button>
         </div>
     </div>
@@ -557,50 +556,74 @@
         const app = {
             state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
 
-        // --- 請替換 app.init ---
-
+        // --- [優化版] app.init (加入 safeParse 防呆機制) ---
         init: () => {
             const ls = localStorage;
-            // 1. 讀取原有資料
-            if(ls.getItem('bento_user')) app.state.user = JSON.parse(ls.getItem('bento_user'));
-            if(ls.getItem('bento_plan')) app.state.plan = JSON.parse(ls.getItem('bento_plan'));
-            if(ls.getItem('bento_shopping')) app.state.shopping = JSON.parse(ls.getItem('bento_shopping'));
-            if(ls.getItem('bento_recipes')) recipes = JSON.parse(ls.getItem('bento_recipes'));
-            if(ls.getItem('bento_history')) app.state.history = JSON.parse(ls.getItem('bento_history'));
-            if(ls.getItem('bento_prep')) app.state.prep = JSON.parse(ls.getItem('bento_prep'));
-            else app.state.prep = {};
-            if(ls.getItem('bento_body_log')) app.state.bodyLog = JSON.parse(ls.getItem('bento_body_log'));
-            else app.state.bodyLog = [];
 
-            // 2. 飲水初始化 (跨日重置)
+            // 🛡️ 定義安全解析 Helper (防止 JSON 格式錯誤導致當機)
+            const safeParse = (key, defaultVal) => {
+                try {
+                    const item = ls.getItem(key);
+                    // 如果有資料則解析，沒資料則回傳預設值
+                    return item ? JSON.parse(item) : defaultVal;
+                } catch (e) {
+                    console.warn(`⚠️ 載入 ${key} 失敗 (資料可能損毀)，已重置為預設值。`, e);
+                    // 若解析失敗 (例如 JSON 格式壞掉)，直接回傳預設值，讓 App 能繼續運作
+                    return defaultVal;
+                }
+            };
+
+            // 1. 讀取原有資料 (全部改用 safeParse)
+            app.state.user = safeParse('bento_user', null);
+            
+            app.state.plan = safeParse('bento_plan', { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null });
+            
+            app.state.shopping = safeParse('bento_shopping', {});
+            
+            // recipes 是全域變數，若讀取失敗則使用預設的示範資料
+            recipes = safeParse('bento_recipes', [
+                { id: 1, name: "日式鹽烤鯖魚", cal: 420, p: 25, c: 5, f: 30, tags: ["魚"], ingredients: ["鯖魚片", "白蘿蔔", "檸檬"], instructions: "1. 鯖魚抹鹽靜置。\n2. 乾煎至兩面金黃。\n3. 搭配蘿蔔泥食用。" },
+                { id: 2, name: "蔥爆牛肉便當", cal: 480, p: 30, c: 45, f: 20, tags: ["牛"], ingredients: ["牛肉片", "青蔥", "洋蔥", "醬油"], instructions: "1. 爆香蔥段。\n2. 下牛肉大火快炒。\n3. 加入調味快速起鍋。" },
+                { id: 3, name: "鮮蝦酪梨沙拉", cal: 350, p: 25, c: 15, f: 22, tags: ["海鮮","輕食"], ingredients: ["鮮蝦", "酪梨", "生菜", "番茄"], instructions: "1. 蝦仁燙熟冷卻。\n2. 酪梨切塊。\n3. 淋上油醋醬拌勻。" },
+                { id: 4, name: "照燒雞腿排", cal: 500, p: 35, c: 40, f: 25, tags: ["雞肉"], ingredients: ["去骨雞腿", "照燒醬", "花椰菜"], instructions: "1. 雞腿排皮朝下煎。\n2. 倒入醬汁收乾。\n3. 切塊擺盤。" },
+                { id: 5, name: "清炒時蔬豆腐", cal: 320, p: 18, c: 20, f: 15, tags: ["素"], ingredients: ["板豆腐", "香菇", "紅蘿蔔", "荷蘭豆"], instructions: "1. 豆腐切片煎黃。\n2. 加入蔬菜拌炒。\n3. 鹽巴調味即可。" }
+            ]);
+
+            app.state.history = safeParse('bento_history', []);
+            app.state.prep = safeParse('bento_prep', {});
+            app.state.ratings = safeParse('bento_ratings', {});
+            app.state.bodyLog = safeParse('bento_body_log', []);
+            
+            // 遊戲化數據 (Streak/Badges)
+            app.state.game = safeParse('bento_game', { streak: 0, lastLogin: '', badges: [] });
+
+            // 2. 飲水初始化 (跨日重置邏輯)
             const today = new Date().toLocaleDateString('zh-TW');
             const lastDate = ls.getItem('bento_last_date');
             
             if (lastDate !== today) {
                 app.state.water = 0;
                 localStorage.setItem('bento_water', 0);
+                localStorage.setItem('bento_last_date', today);
             } else {
-                app.state.water = parseInt(ls.getItem('bento_water') || 0);
+                // 水量也要轉型防呆
+                const savedWater = ls.getItem('bento_water');
+                app.state.water = savedWater ? parseInt(savedWater) : 0;
             }
 
-            // 3. ✅ 新增：遊戲化數據初始化
-            if(ls.getItem('bento_game')) {
-                app.state.game = JSON.parse(ls.getItem('bento_game'));
-            } else {
-                app.state.game = { streak: 0, lastLogin: '', badges: [] };
-            }
-            
-            // 4. ✅ 執行：檢查連續登入與徽章
+            // 3. 執行檢查 (連續登入與徽章)
             app.checkStreak(today);
             app.checkBadges();
 
-            // 5. 導航
+            // 4. 導航邏輯
             if (!app.state.user) {
                 app.navigateTo('profile');
                 document.querySelector('nav').classList.add('hidden');
             } else {
                 app.navigateTo('dashboard');
             }
+            
+            // 5. 優化鍵盤體驗 (按 Enter 自動跳下一格)
             document.querySelectorAll('input').forEach((input, index, inputs) => {
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
@@ -609,9 +632,7 @@
                         if (nextInput) {
                             nextInput.focus();
                         } else {
-                            // 如果是最後一個，嘗試收起鍵盤 (blur) 或提交
                             input.blur();
-                            // 如果是在 profile form 裡，也可以觸發儲存
                             if(input.id === 'input-apikey') app.saveProfile();
                         }
                     }
@@ -666,7 +687,7 @@
                 }
             }
 
-            // 3. ✅ 新增：飲水追蹤卡片 (插入在「今日目標」與「今日便當」之間)
+            // 3. 飲水追蹤卡片 (插入在「今日目標」與「今日便當」之間)
             // 檢查是否已經存在，不存在則建立
             let waterCard = document.getElementById('dash-water-card');
             if (!waterCard) {
@@ -711,6 +732,29 @@
                 document.getElementById('bar-carb').style.width = Math.min((r.c/60)*100, 100) + '%'; 
                 document.getElementById('bar-fat').style.width = Math.min((r.f/25)*100, 100) + '%'; 
 
+                // 1. 檢查今日是否已評分
+                const todayStr = new Date().toLocaleDateString('zh-TW');
+                const myRating = app.state.ratings ? app.state.ratings[todayStr] : 0;
+                
+                // 2. 決定評分按鈕的樣式 (黃色實心 vs 灰色空心)
+                let ratingBtnHtml = '';
+                if (myRating) {
+                    // 已評分：顯示黃色星星與分數
+                    ratingBtnHtml = `
+                        <button onclick="app.openRating('${todayKey}')" class="text-[10px] font-bold text-yellow-500 bg-yellow-50 border border-yellow-100 px-2 py-1 rounded-full transition" ${event ? 'onclick="event.stopPropagation(); app.openRating(\''+todayKey+'\')"' : ''}>
+                            <i class="fa-solid fa-star"></i> ${myRating} 分
+                        </button>
+                    `;
+                } else {
+                    // 未評分：顯示灰色「評分」按鈕
+                    ratingBtnHtml = `
+                        <button onclick="app.openRating('${todayKey}')" class="text-[10px] font-bold text-gray-400 hover:text-yellow-500 flex items-center gap-1 border border-gray-100 px-2 py-1 rounded-full transition bg-white" ${event ? 'onclick="event.stopPropagation(); app.openRating(\''+todayKey+'\')"' : ''}>
+                            <i class="fa-regular fa-star"></i> 評分
+                        </button>
+                    `;
+                }
+
+                // 3. 渲染卡片 (注意：原本的 button 標籤已替換為 ${ratingBtnHtml})
                 document.getElementById('today-meal-card').innerHTML = `
                         <div class="flex items-center gap-4 p-4 text-left">
                             <div class="w-20 h-20 rounded-xl bg-brand-100 flex items-center justify-center text-brand-500 shrink-0">
@@ -723,9 +767,7 @@
                                     <div class="flex gap-1">
                                         ${r.tags.map(t => `<span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full">${t}</span>`).join('')}
                                     </div>
-                                    <button onclick="app.openRating('${todayKey}')" class="text-[10px] font-bold text-gray-400 hover:text-yellow-500 flex items-center gap-1 border border-gray-100 px-2 py-1 rounded-full transition bg-white" ${event ? 'onclick="event.stopPropagation(); app.openRating(\''+todayKey+'\')"' : ''}>
-                                        <i class="fa-regular fa-star"></i> 評分
-                                    </button>
+                                    ${ratingBtnHtml}
                                 </div>
                             </div>
                         </div>
@@ -799,9 +841,60 @@
         },
         // --- 請新增這些函式到 app 物件中 ---
 
+        // --- 評分邏輯大升級 ---
+
         openRating: (dayKey) => {
-            app.state.ratingDay = dayKey; // 暫存正在評分哪一天
+            app.state.ratingDay = dayKey; 
+            
+            // 檢查是否已經評分過，若有則預先顯示星星
+            const todayStr = new Date().toLocaleDateString('zh-TW');
+            const savedRating = app.state.ratings[todayStr] || 0;
+            
+            app.updateStarVisuals(savedRating);
+            app.state.tempRating = savedRating; // 暫存使用者現在點選的分數
+            
+            // 如果還沒評分，隱藏送出按鈕；已評分則顯示
+            const btn = document.getElementById('btn-submit-rating');
+            if(savedRating > 0) {
+                btn.innerText = "更新評分";
+                btn.classList.remove('hidden');
+            } else {
+                btn.innerText = "送出評分";
+                btn.classList.add('hidden');
+            }
+
             document.getElementById('modal-rating').classList.remove('hidden');
+        },
+
+        // 使用者點擊星星時的預覽效果 (連動 1~N 顆星)
+        previewRating: (score) => {
+            app.state.tempRating = score;
+            app.updateStarVisuals(score);
+            
+            // 顯示送出按鈕
+            const btn = document.getElementById('btn-submit-rating');
+            btn.classList.remove('hidden');
+        },
+
+        // 更新星星顏色的 UI 邏輯
+        updateStarVisuals: (score) => {
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`star-${i}`);
+                if (i <= score) {
+                    // 亮起：黃色、背景微黃
+                    btn.className = "w-10 h-10 rounded-full bg-yellow-50 text-yellow-400 text-xl transition transform scale-110";
+                } else {
+                    // 熄滅：灰色
+                    btn.className = "w-10 h-10 rounded-full bg-gray-50 text-gray-300 text-xl transition";
+                }
+            }
+        },
+
+        // 按下「送出」才真正儲存
+        confirmRating: () => {
+            const score = app.state.tempRating;
+            if (!score) return;
+            app.submitRating(score);
         },
 
         submitRating: (score) => {
@@ -812,37 +905,72 @@
 
             if (!r) return;
 
+            // 1. 儲存評分紀錄 (這是最關鍵的數據)
+            const todayStr = new Date().toLocaleDateString('zh-TW');
+            if(!app.state.ratings) app.state.ratings = {}; // 防呆初始化
+            app.state.ratings[todayStr] = score;
+            localStorage.setItem('bento_ratings', JSON.stringify(app.state.ratings));
+
+            // 2. 收藏邏輯修正 (包含自動移除)
             if (score >= 4) {
-                // 高分：自動收藏
+                // --- 高分：自動加入收藏 ---
                 if (!r.favorite) {
                     r.favorite = true;
-                    localStorage.setItem('bento_recipes', JSON.stringify(recipes));
-                    app.showToast(`⭐ 感謝評分！已將「${r.name}」加入收藏`);
+                    app.showToast(`⭐ 已評 ${score} 星並加入收藏！`);
                 } else {
-                    app.showToast(`⭐ 感謝您的喜愛！`);
-                }
-            } else if (score <= 2) {
-                // 低分：加入排除名單 (可選：是否要詢問?)
-                // 這裡我們簡單做：將「菜名」加入排除關鍵字，避免未來再出現完全一樣的菜
-                const user = app.state.user;
-                const newExclude = r.name.split('佐')[0]; // 簡單抓主菜名
-                
-                if (!user.exclude.includes(newExclude)) {
-                    user.exclude = user.exclude ? `${user.exclude}、${newExclude}` : newExclude;
-                    // 更新並存檔
-                    app.state.user = user;
-                    localStorage.setItem('bento_user', JSON.stringify(user));
-                    
-                    // 同步更新介面上的輸入框 (如果剛好在設定頁)
-                    const inputEx = document.getElementById('input-exclude');
-                    if(inputEx) inputEx.value = user.exclude;
-                    
-                    app.showToast(`💔 已收到回饋，未來將減少推薦此類菜色`);
-                } else {
-                    app.showToast(`💔 謝謝回饋，我們會改進！`);
+                    app.showToast(`⭐ 感謝您的 ${score} 星好評！`);
                 }
             } else {
-                app.showToast(`✅ 評分已紀錄`);
+                // --- 低分 (3分以下)：若原本是收藏，自動移除 ---
+                if (r.favorite) {
+                    r.favorite = false;
+                    app.showToast(`💔 評分降為 ${score} 星，已從收藏移除`);
+                } else {
+                    app.showToast(`✅ 評分已更新為 ${score} 星`);
+                }
+            }
+            // 存檔食譜狀態 (收藏變更)
+            localStorage.setItem('bento_recipes', JSON.stringify(recipes));
+
+            // 🔥 關鍵修正：在這裡就直接強制渲染畫面 (優先級提升)
+            // 這樣可以確保按鈕顏色立刻變更，不會被後面的邏輯延誤
+            app.renderDashboard();
+
+            // 3. 排除邏輯 (2分以下，加入黑名單)
+            // (這段邏輯較複雜，放在渲染畫面之後執行，避免卡住 UI)
+            if (score <= 2) {
+                try {
+                    const user = app.state.user;
+                    const newExclude = r.name.split('佐')[0]; // 簡單抓主菜名
+                    
+                    if (!user.exclude.includes(newExclude)) {
+                        user.exclude = user.exclude ? `${user.exclude}、${newExclude}` : newExclude;
+                        app.state.user = user;
+                        localStorage.setItem('bento_user', JSON.stringify(user));
+                        
+                        const inputEx = document.getElementById('input-exclude');
+                        if(inputEx) inputEx.value = user.exclude;
+                        
+                        setTimeout(() => app.showToast(`📉 將減少推薦「${newExclude}」類菜色`), 1000);
+                    }
+                } catch(e) {
+                    console.log("排除邏輯執行輕微錯誤 (不影響評分):", e);
+                }
+            }
+            
+            // 4. 同步更新詳情頁的愛心 (如果使用者是在詳情頁點評分的話)
+            const favBtn = document.getElementById('btn-fav-toggle');
+            const detailModal = document.getElementById('modal-detail');
+            if(favBtn && detailModal && !detailModal.classList.contains('hidden')) {
+                if(r.favorite) {
+                    favBtn.innerHTML = '<i class="fa-solid fa-heart text-red-500 text-lg"></i>';
+                    favBtn.classList.remove('bg-white/20');
+                    favBtn.classList.add('bg-white');
+                } else {
+                    favBtn.innerHTML = '<i class="fa-regular fa-heart text-white"></i>';
+                    favBtn.classList.add('bg-white/20');
+                    favBtn.classList.remove('bg-white');
+                }
             }
         },
         // --- 請替換 app.startCooking 函式 ---
@@ -953,15 +1081,22 @@
                 const history = app.state.history || [];
                 const bodyLog = app.state.bodyLog || [];
 
-                // 定義所有徽章
+                // 定義所有徽章 (已更新難度條件)
                 const allBadges = [
+                    // 新手上路：條件不變 (只要開啟 App)
                     { id: 'newbie', icon: 'fa-seedling', name: '新手上路', color: 'text-green-500', bg: 'bg-green-100', cond: () => true },
-                    { id: 'planner', icon: 'fa-calendar-check', name: '規劃達人', color: 'text-blue-500', bg: 'bg-blue-100', cond: () => history.length >= 1 },
-                    { id: 'streak3', icon: 'fa-fire', name: '熱度燃燒', color: 'text-orange-500', bg: 'bg-orange-100', cond: () => game.streak >= 3 },
-                    { id: 'tracker', icon: 'fa-weight-scale', name: '數據控', color: 'text-purple-500', bg: 'bg-purple-100', cond: () => bodyLog.length >= 3 }
+                    
+                    // 規劃達人：條件改為歷史紀錄 >= 10 筆
+                    { id: 'planner', icon: 'fa-calendar-check', name: '規劃達人', color: 'text-blue-500', bg: 'bg-blue-100', cond: () => history.length >= 10 },
+                    
+                    // 熱度燃燒：條件改為連續登入 >= 30 天
+                    { id: 'streak3', icon: 'fa-fire', name: '熱度燃燒', color: 'text-orange-500', bg: 'bg-orange-100', cond: () => game.streak >= 30 },
+                    
+                    // 數據控：條件改為身體紀錄 >= 10 筆
+                    { id: 'tracker', icon: 'fa-weight-scale', name: '數據控', color: 'text-purple-500', bg: 'bg-purple-100', cond: () => bodyLog.length >= 10 }
                 ];
 
-                // 檢查解鎖
+                // 檢查解鎖 (以下邏輯不變)
                 let newUnlock = false;
                 allBadges.forEach(b => {
                     if (!game.badges.includes(b.id) && b.cond()) {
@@ -972,13 +1107,14 @@
                 });
                 if(newUnlock) localStorage.setItem('bento_game', JSON.stringify(game));
 
-                // 渲染 Profile 徽章列表
+                // 渲染 Profile 徽章列表 (增加未解鎖時的提示 tooltip 或是灰色狀態)
                 const container = document.getElementById('badge-container');
                 if(container) {
                     container.innerHTML = allBadges.map(b => {
                         const unlocked = game.badges.includes(b.id);
+                        // 這裡可以稍微優化 UI，未解鎖時顯示灰色
                         return `
-                            <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${unlocked ? b.bg : 'bg-gray-50 opacity-40 grayscale'} transition-all">
+                            <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${unlocked ? b.bg : 'bg-gray-50 opacity-40 grayscale'} transition-all relative group" title="${unlocked ? '已解鎖' : '尚未達成'}">
                                 <i class="fa-solid ${b.icon} text-xl ${unlocked ? b.color : 'text-gray-400'}"></i>
                                 <span class="text-[9px] font-bold text-gray-600">${b.name}</span>
                             </div>
@@ -1393,7 +1529,7 @@
                 const user = app.state.user;
                 const targetCal = Math.round(user.tdee * 0.35);
                 
-                // 🔴 新增：身體數據判讀邏輯 (讓數據說話)
+                // 身體數據判讀邏輯 (讓數據說話)
                 let bodyNote = "";
                 if (user.bodyComp) {
                     const { bf, muscle } = user.bodyComp;
@@ -1421,12 +1557,12 @@
                     料理風格：${cuisine}。
                     使用者身體狀況特別指示】
                     ${bodyNote || "無特殊身體狀況，請依均衡飲食設計。"}
-                    ${batchPrompt}
+                    ${batchNote}
                     ${fridgeNote}
                     ${excludeNote}
                     
                     【嚴格 JSON 格式要求】
-                    請回傳一個 JSON Array，包含 10 個物件 (請確保每道菜名都不一樣，供使用者替換選擇)。
+                    請回傳一個 JSON Array，包含 10 個物件 (請確保每道菜名都不一樣，供使用者替換選擇)。**不要包含任何 Markdown 標記 (如 \`\`\`json) 或開頭結尾的解釋文字**。
                     ⚠️ 重要：無論是否為懶人模式，都必須給足 10 個不同的物件，不要偷懶只給 2 個。
                     每個物件必須包含以下欄位（Key 名稱必須完全一致）：
                     - "name": (字串) 菜色名稱 (例如 "香煎迷迭香雞腿排佐時蔬")
@@ -1458,9 +1594,13 @@
                     id: Date.now() + i, 
                     tags: [r.main_tag || '一般'], 
                     favorite: false,
-                    // 相容性處理：生成簡單字串列表供顯示，同時保留結構化資料供採買用
-                    ingredients: r.ingredients.map(ing => `${ing.name} ${ing.qty}`),
-                    structured_ingredients: r.ingredients
+                    
+                    // ✅ 加強防呆：確保 ingredients 是陣列，否則給空陣列，避免 map 報錯
+                    ingredients: Array.isArray(r.ingredients) 
+                        ? r.ingredients.map(ing => `${ing.name} ${ing.qty}`) 
+                        : [],
+                        
+                    structured_ingredients: Array.isArray(r.ingredients) ? r.ingredients : []
                 }));
                 
                 localStorage.setItem('bento_recipes', JSON.stringify(recipes));
@@ -1528,7 +1668,7 @@
                     ${avoidNote}
 
                     【嚴格 JSON 格式要求】
-                    請回傳包含 1 個物件的 JSON Array。欄位必須完全一致：
+                    請回傳包含 1 個物件的 JSON Array。**不要包含任何 Markdown 標記 (如 \`\`\`json) 或開頭結尾的解釋文字**。欄位必須完全一致：
                     - "name": (字串) 菜色名稱
                     - "main_tag": (字串) "雞肉", "牛肉", "海鮮", "素食"
                     - "cal": (數字)
@@ -1573,28 +1713,103 @@
                 card.innerHTML = originalContent;
             }
         },
-        // --- 4. 抽取共用 API 呼叫邏輯 (讓程式碼更乾淨) ---
+// --- [修復版] 2. 共用 API 呼叫邏輯 (移除無效模型) ---
         callGeminiAPI: async (promptText) => {
             const key = app.state.user.apiKey;
-            const models = ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
             
+            if (!key) {
+                alert("錯誤：未填寫 API Key");
+                throw new Error("No API Key");
+            }
+
+            // ✅ 修正：只使用您帳號支援的模型 (移除 gemini-pro 避免 404 錯誤)
+            // 順序：優先嘗試 2.0 Flash，失敗時備援 1.5 Flash
+            const models = ['gemini-flash-latest', 'gemini-2.0-flash' ];
+            
+            let lastErrorMsg = "";
+
             for (const model of models) {
                 try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    console.log(`🚀 正在嘗試模型: ${model}...`);
+                    
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                    
+                    const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                        body: JSON.stringify({ 
+                            contents: [{ parts: [{ text: promptText }] }],
+                            generationConfig: { 
+                                response_mime_type: "application/json" 
+                            },
+                            // 安全設定：防止食譜被誤判為暴力
+                            safetySettings: [
+                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                            ]
+                        })
                     });
-                    if(!res.ok) throw new Error();
+
+                    if(!res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        const errMsg = errData.error?.message || `Status ${res.status}`;
+                        console.warn(`❌ 模型 ${model} 失敗: ${errMsg}`);
+                        lastErrorMsg = `(${model}) ${errMsg}`;
+                        
+                        // 400 (Key 錯誤) 或 404 (模型找不到) 直接跳過或報錯
+                        if (res.status === 400) throw new Error("API Key 無效，請檢查 Key 是否正確。");
+                        
+                        continue; 
+                    }
+
                     const data = await res.json();
-                    let text = data.candidates[0].content.parts[0].text;
-                    text = text.replace(/```json|```/g, '').trim();
-                    const start = text.indexOf('[');
-                    const end = text.lastIndexOf(']');
-                    return JSON.parse(text.substring(start, end+1));
-                } catch(e) { continue; }
+                    
+                    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+                        lastErrorMsg = "API 回傳內容為空 (可能被阻擋)";
+                        continue;
+                    }
+
+                    const rawText = data.candidates[0].content.parts[0].text;
+                    
+                    // JSON 清洗
+                    let jsonString = rawText.trim();
+                    jsonString = jsonString.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '');
+                    
+                    const firstBracket = jsonString.indexOf('[');
+                    const lastBracket = jsonString.lastIndexOf(']');
+                    
+                    if (firstBracket !== -1 && lastBracket !== -1) {
+                        jsonString = jsonString.substring(firstBracket, lastBracket + 1);
+                    } else {
+                         // 容錯：如果是單一物件 { ... } 則包成陣列
+                        const firstBrace = jsonString.indexOf('{');
+                        const lastBrace = jsonString.lastIndexOf('}');
+                        if (firstBrace !== -1 && lastBrace !== -1) {
+                            jsonString = `[${jsonString.substring(firstBrace, lastBrace + 1)}]`;
+                        }
+                    }
+
+                    try {
+                        const parsed = JSON.parse(jsonString);
+                        console.log(`✅ ${model} 生成成功！`);
+                        return Array.isArray(parsed) ? parsed : [parsed];
+                    } catch (e) {
+                        console.error("解析失敗:", rawText);
+                        lastErrorMsg = "JSON 解析失敗";
+                        continue;
+                    }
+
+                } catch(e) {
+                    console.error(e);
+                    lastErrorMsg = e.message;
+                    if (e.message.includes("API Key")) break;
+                }
             }
-            throw new Error("所有模型忙碌中，請檢查 Key");
+
+            alert(`生成失敗！\n\n原因：${lastErrorMsg}\n\n請確認網路連線或 API Key。`);
+            throw new Error(lastErrorMsg);
         },
         // --- 請替換 app 物件中的 renderPlanner ---
         renderPlanner: () => {
@@ -2220,14 +2435,32 @@
         };
 
         window.addEventListener('DOMContentLoaded', app.init);
-        // ✅ 新增這段：註冊 PWA Service Worker
+        // ✅ 優化後的 Service Worker 註冊
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW registered: ', reg.scope))
-                    .catch(err => console.log('SW reg failed: ', err));
-            });
+            // 只在 http 或 https 協議下註冊 (避開 file:// 的報錯)
+            if (window.location.protocol.startsWith('http')) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js')
+                        .then(reg => console.log('SW registered: ', reg.scope))
+                        .catch(err => console.log('SW reg failed: ', err));
+                });
+            }
         }
+        // 放在 <script> 的最後面，監聽螢幕可見度變化
+        document.addEventListener('visibilitychange', async () => {
+            // 如果正在烹飪模式 (modal-cooking 沒被隱藏) 且 回到畫面 (visible)
+            const cookingModal = document.getElementById('modal-cooking');
+            if (cookingModal && !cookingModal.classList.contains('hidden') && document.visibilityState === 'visible') {
+                try {
+                    if ('wakeLock' in navigator) {
+                        app.wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('螢幕恆亮已自動恢復');
+                    }
+                } catch (err) {
+                    console.log('無法恢復 Wake Lock:', err);
+                }
+            }
+        });
     </script>
 </body>
 </html>
