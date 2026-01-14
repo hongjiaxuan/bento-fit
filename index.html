@@ -2,7 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">    
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Bento Fit 健康餐盒</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8bc34a">
@@ -1630,6 +1631,8 @@
                         Fri: recipes[4].id 
                     };
                 }
+                    localStorage.setItem('bento_plan', JSON.stringify(app.state.plan));
+                    
                     app.state.shopping = {};
                     localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
 
