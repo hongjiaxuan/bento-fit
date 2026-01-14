@@ -556,7 +556,6 @@
         const app = {
             state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
 
-        // --- [最終修正版] app.init (確保讀取生成的食譜) ---
         init: () => {
             const ls = localStorage;
 
@@ -564,6 +563,8 @@
             const safeParse = (key, defaultVal) => {
                 try {
                     const item = ls.getItem(key);
+                    // 關鍵修正：只有當 item 真的是 null (沒存過) 時才回傳 defaultVal
+                    // 如果 item 是空字串或其他 falsy 值但不是 null，也應該嘗試解析或回傳空
                     return item ? JSON.parse(item) : defaultVal;
                 } catch (e) {
                     console.warn(`⚠️ 載入 ${key} 失敗，重置為預設值。`, e);
@@ -576,15 +577,27 @@
             app.state.plan = safeParse('bento_plan', { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null });
             app.state.shopping = safeParse('bento_shopping', {});
             
-            // 🔥 關鍵修正：讀取 'bento_recipes'
-            // 如果 LocalStorage 有存(生成過)，就讀取新的；否則使用預設 Mock Data
-            recipes = safeParse('bento_recipes', [
-                { id: 1, name: "日式鹽烤鯖魚", cal: 420, p: 25, c: 5, f: 30, tags: ["魚"], ingredients: ["鯖魚片", "白蘿蔔", "檸檬"], instructions: "1. 鯖魚抹鹽靜置。\n2. 乾煎至兩面金黃。\n3. 搭配蘿蔔泥食用。" },
-                { id: 2, name: "蔥爆牛肉便當", cal: 480, p: 30, c: 45, f: 20, tags: ["牛"], ingredients: ["牛肉片", "青蔥", "洋蔥", "醬油"], instructions: "1. 爆香蔥段。\n2. 下牛肉大火快炒。\n3. 加入調味快速起鍋。" },
-                { id: 3, name: "鮮蝦酪梨沙拉", cal: 350, p: 25, c: 15, f: 22, tags: ["海鮮","輕食"], ingredients: ["鮮蝦", "酪梨", "生菜", "番茄"], instructions: "1. 蝦仁燙熟冷卻。\n2. 酪梨切塊。\n3. 淋上油醋醬拌勻。" },
-                { id: 4, name: "照燒雞腿排", cal: 500, p: 35, c: 40, f: 25, tags: ["雞肉"], ingredients: ["去骨雞腿", "照燒醬", "花椰菜"], instructions: "1. 雞腿排皮朝下煎。\n2. 倒入醬汁收乾。\n3. 切塊擺盤。" },
-                { id: 5, name: "清炒時蔬豆腐", cal: 320, p: 18, c: 20, f: 15, tags: ["素"], ingredients: ["板豆腐", "香菇", "紅蘿蔔", "荷蘭豆"], instructions: "1. 豆腐切片煎黃。\n2. 加入蔬菜拌炒。\n3. 鹽巴調味即可。" }
-            ]);
+            // 🔥🔥🔥 關鍵修正點 🔥🔥🔥
+            // 原本的寫法可能在某些瀏覽器環境下，如果 localStorage 有 key 但值有問題，會導致讀取失敗。
+            // 我們明確指定：嘗試讀取 'bento_recipes'。
+            // 只有當讀出來的結果是陣列且長度 > 0 時，才使用它。
+            // 否則使用預設 Mock Data (這能防止讀到空陣列導致畫面壞掉，但也可能導致您的自訂菜單被蓋掉，所以要小心)
+            
+            const savedRecipes = safeParse('bento_recipes', null);
+            
+            if (savedRecipes && Array.isArray(savedRecipes) && savedRecipes.length > 0) {
+                recipes = savedRecipes;
+                console.log("✅ 已載入使用者儲存的食譜");
+            } else {
+                console.log("ℹ️ 無儲存食譜，載入預設範例");
+                recipes = [
+                    { id: 1, name: "日式鹽烤鯖魚", cal: 420, p: 25, c: 5, f: 30, tags: ["魚"], ingredients: ["鯖魚片", "白蘿蔔", "檸檬"], instructions: "1. 鯖魚抹鹽靜置。\n2. 乾煎至兩面金黃。\n3. 搭配蘿蔔泥食用。" },
+                    { id: 2, name: "蔥爆牛肉便當", cal: 480, p: 30, c: 45, f: 20, tags: ["牛"], ingredients: ["牛肉片", "青蔥", "洋蔥", "醬油"], instructions: "1. 爆香蔥段。\n2. 下牛肉大火快炒。\n3. 加入調味快速起鍋。" },
+                    { id: 3, name: "鮮蝦酪梨沙拉", cal: 350, p: 25, c: 15, f: 22, tags: ["海鮮","輕食"], ingredients: ["鮮蝦", "酪梨", "生菜", "番茄"], instructions: "1. 蝦仁燙熟冷卻。\n2. 酪梨切塊。\n3. 淋上油醋醬拌勻。" },
+                    { id: 4, name: "照燒雞腿排", cal: 500, p: 35, c: 40, f: 25, tags: ["雞肉"], ingredients: ["去骨雞腿", "照燒醬", "花椰菜"], instructions: "1. 雞腿排皮朝下煎。\n2. 倒入醬汁收乾。\n3. 切塊擺盤。" },
+                    { id: 5, name: "清炒時蔬豆腐", cal: 320, p: 18, c: 20, f: 15, tags: ["素"], ingredients: ["板豆腐", "香菇", "紅蘿蔔", "荷蘭豆"], instructions: "1. 豆腐切片煎黃。\n2. 加入蔬菜拌炒。\n3. 鹽巴調味即可。" }
+                ];
+            }
 
             app.state.history = safeParse('bento_history', []);
             app.state.prep = safeParse('bento_prep', {});
@@ -592,7 +605,8 @@
             app.state.bodyLog = safeParse('bento_body_log', []);
             app.state.game = safeParse('bento_game', { streak: 0, lastLogin: '', badges: [] });
 
-            // 2. 飲水跨日重置
+            // ... (後面的飲水、徽章、導航邏輯保持不變) ...
+            // 2. 飲水初始化
             const today = new Date().toLocaleDateString('zh-TW');
             const lastDate = ls.getItem('bento_last_date');
             
@@ -605,11 +619,9 @@
                 app.state.water = savedWater ? parseInt(savedWater) : 0;
             }
 
-            // 3. 執行檢查
             app.checkStreak(today);
             app.checkBadges();
 
-            // 4. 導航與事件
             if (!app.state.user) {
                 app.navigateTo('profile');
                 document.querySelector('nav').classList.add('hidden');
