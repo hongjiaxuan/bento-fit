@@ -1,5 +1,5 @@
 // Bento Fit Service Worker v1.0
-const CACHE_NAME = 'bento-fit-v1.2';
+const CACHE_NAME = 'bento-fit-v1.3';
 const urlsToCache = [
   './',
   './index.html',

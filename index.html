@@ -556,31 +556,28 @@
         const app = {
             state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
 
-        // --- [優化版] app.init (加入 safeParse 防呆機制) ---
+        // --- [最終修正版] app.init (確保讀取生成的食譜) ---
         init: () => {
             const ls = localStorage;
 
-            // 🛡️ 定義安全解析 Helper (防止 JSON 格式錯誤導致當機)
+            // 🛡️ 定義安全解析 Helper
             const safeParse = (key, defaultVal) => {
                 try {
                     const item = ls.getItem(key);
-                    // 如果有資料則解析，沒資料則回傳預設值
                     return item ? JSON.parse(item) : defaultVal;
                 } catch (e) {
-                    console.warn(`⚠️ 載入 ${key} 失敗 (資料可能損毀)，已重置為預設值。`, e);
-                    // 若解析失敗 (例如 JSON 格式壞掉)，直接回傳預設值，讓 App 能繼續運作
+                    console.warn(`⚠️ 載入 ${key} 失敗，重置為預設值。`, e);
                     return defaultVal;
                 }
             };
 
-            // 1. 讀取原有資料 (全部改用 safeParse)
+            // 1. 讀取資料
             app.state.user = safeParse('bento_user', null);
-            
             app.state.plan = safeParse('bento_plan', { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null });
-            
             app.state.shopping = safeParse('bento_shopping', {});
             
-            // recipes 是全域變數，若讀取失敗則使用預設的示範資料
+            // 🔥 關鍵修正：讀取 'bento_recipes'
+            // 如果 LocalStorage 有存(生成過)，就讀取新的；否則使用預設 Mock Data
             recipes = safeParse('bento_recipes', [
                 { id: 1, name: "日式鹽烤鯖魚", cal: 420, p: 25, c: 5, f: 30, tags: ["魚"], ingredients: ["鯖魚片", "白蘿蔔", "檸檬"], instructions: "1. 鯖魚抹鹽靜置。\n2. 乾煎至兩面金黃。\n3. 搭配蘿蔔泥食用。" },
                 { id: 2, name: "蔥爆牛肉便當", cal: 480, p: 30, c: 45, f: 20, tags: ["牛"], ingredients: ["牛肉片", "青蔥", "洋蔥", "醬油"], instructions: "1. 爆香蔥段。\n2. 下牛肉大火快炒。\n3. 加入調味快速起鍋。" },
@@ -593,11 +590,9 @@
             app.state.prep = safeParse('bento_prep', {});
             app.state.ratings = safeParse('bento_ratings', {});
             app.state.bodyLog = safeParse('bento_body_log', []);
-            
-            // 遊戲化數據 (Streak/Badges)
             app.state.game = safeParse('bento_game', { streak: 0, lastLogin: '', badges: [] });
 
-            // 2. 飲水初始化 (跨日重置邏輯)
+            // 2. 飲水跨日重置
             const today = new Date().toLocaleDateString('zh-TW');
             const lastDate = ls.getItem('bento_last_date');
             
@@ -606,16 +601,15 @@
                 localStorage.setItem('bento_water', 0);
                 localStorage.setItem('bento_last_date', today);
             } else {
-                // 水量也要轉型防呆
                 const savedWater = ls.getItem('bento_water');
                 app.state.water = savedWater ? parseInt(savedWater) : 0;
             }
 
-            // 3. 執行檢查 (連續登入與徽章)
+            // 3. 執行檢查
             app.checkStreak(today);
             app.checkBadges();
 
-            // 4. 導航邏輯
+            // 4. 導航與事件
             if (!app.state.user) {
                 app.navigateTo('profile');
                 document.querySelector('nav').classList.add('hidden');
@@ -623,15 +617,13 @@
                 app.navigateTo('dashboard');
             }
             
-            // 5. 優化鍵盤體驗 (按 Enter 自動跳下一格)
             document.querySelectorAll('input').forEach((input, index, inputs) => {
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         const nextInput = inputs[index + 1];
-                        if (nextInput) {
-                            nextInput.focus();
-                        } else {
+                        if (nextInput) nextInput.focus();
+                        else {
                             input.blur();
                             if(input.id === 'input-apikey') app.saveProfile();
                         }
@@ -2392,21 +2384,36 @@
                     btnCancel.onclick = () => close(false);
                 });
             },
+            // --- [修正版] 匯出資料 (包含所有新功能數據) ---
             exportData: () => {
+                const ls = localStorage;
                 const data = {
-                    user: localStorage.getItem('bento_user'),
-                    plan: localStorage.getItem('bento_plan'),
-                    shopping: localStorage.getItem('bento_shopping'),
-                    recipes: localStorage.getItem('bento_recipes'),
-                    history: localStorage.getItem('bento_history')
+                    // 核心資料
+                    user: ls.getItem('bento_user'),
+                    plan: ls.getItem('bento_plan'),
+                    shopping: ls.getItem('bento_shopping'),
+                    recipes: ls.getItem('bento_recipes'),
+                    history: ls.getItem('bento_history'),
+                    
+                    // 🔥 新增：遺漏的擴充資料
+                    prep: ls.getItem('bento_prep'),           // 備料狀態
+                    ratings: ls.getItem('bento_ratings'),     // 評分紀錄
+                    bodyLog: ls.getItem('bento_body_log'),    // 體態趨勢紀錄
+                    game: ls.getItem('bento_game'),           // 遊戲化 (徽章/連續登入)
+                    water: ls.getItem('bento_water'),         // 飲水紀錄
+                    lastDate: ls.getItem('bento_last_date')   // 最後登入日 (用於飲水重置判斷)
                 };
+                
                 const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `bento_backup_${new Date().toISOString().slice(0,10)}.json`;
+                // 加入日期時間，方便辨識備份版本
+                const dateStr = new Date().toISOString().slice(0,10).replace(/-/g, "");
+                a.download = `bento_backup_${dateStr}.json`;
                 a.click();
             },
+            // --- [修正版] 匯入資料 (支援新舊版本備份) ---
             importData: (input) => {
                 const file = input.files[0];
                 if (!file) return;
@@ -2414,16 +2421,34 @@
                 reader.onload = async(e) => {
                     try {
                         const d = JSON.parse(e.target.result);
-                        if(d.user) localStorage.setItem('bento_user', d.user);
-                        if(d.plan) localStorage.setItem('bento_plan', d.plan);
-                        if(d.shopping) localStorage.setItem('bento_shopping', d.shopping);
-                        if(d.recipes) localStorage.setItem('bento_recipes', d.recipes);
-                        if(d.history) localStorage.setItem('bento_history', d.history);
-                        app.showToast("✅ 資料匯入成功！");
-                        setTimeout(() => location.reload(), 1000);
-                    } catch(err) { await app.showModal("檔案格式錯誤，無法讀取。", "匯入失敗", "error"); }
+                        const ls = localStorage;
+
+                        // 核心資料還原
+                        if(d.user) ls.setItem('bento_user', d.user);
+                        if(d.plan) ls.setItem('bento_plan', d.plan);
+                        if(d.shopping) ls.setItem('bento_shopping', d.shopping);
+                        if(d.recipes) ls.setItem('bento_recipes', d.recipes);
+                        if(d.history) ls.setItem('bento_history', d.history);
+
+                        // 🔥 新增：擴充資料還原 (加入 undefined 檢查，相容舊版備份)
+                        if(d.prep) ls.setItem('bento_prep', d.prep);
+                        if(d.ratings) ls.setItem('bento_ratings', d.ratings);
+                        if(d.bodyLog) ls.setItem('bento_body_log', d.bodyLog);
+                        if(d.game) ls.setItem('bento_game', d.game);
+                        if(d.water) ls.setItem('bento_water', d.water);
+                        if(d.lastDate) ls.setItem('bento_last_date', d.lastDate);
+
+                        await app.showModal("✅ 資料匯入成功！頁面將自動重新整理。", "還原完成");
+                        location.reload();
+
+                    } catch(err) { 
+                        console.error(err);
+                        await app.showModal("檔案格式錯誤或損毀，無法讀取。", "匯入失敗", "error"); 
+                    }
                 };
                 reader.readAsText(file);
+                // 重置 input value，確保重複選同一個檔案也能觸發 onchange
+                input.value = '';
             },
             resetData: async () => { // ⚠️ 記得加 async
                 // ✅ 修改處：使用紅色的 error 類型彈窗警告
