@@ -1,5 +1,5 @@
 // Bento Fit Service Worker v1.0
-const CACHE_NAME = 'bento-fit-v1.4';
+const CACHE_NAME = 'bento-fit-v1.5';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,30 +9,30 @@ const urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
+// 安裝時強制跳過等待 (Skip Waiting)
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // 🔥 這行很重要，讓新版立刻就緒
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(urlsToCache))
   );
-  self.skipWaiting();
 });
 
+// 啟用時刪除舊快取
 self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim()); // 🔥 這行很重要，讓新版立刻接管頁面
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // 刪除舊版本的快取，確保使用者更新到最新版
           if (cacheName !== CACHE_NAME) {
+            console.log('刪除舊快取:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
