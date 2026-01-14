@@ -1730,8 +1730,7 @@
             }
 
             // ✅ 修正：只使用您帳號支援的模型 (移除 gemini-pro 避免 404 錯誤)
-            // 順序：優先嘗試 2.0 Flash，失敗時備援 1.5 Flash
-            const models = ['gemini-flash-latest', 'gemini-2.0-flash' ];
+            const models = ['gemini-2.5-flash'];
             
             let lastErrorMsg = "";
 
