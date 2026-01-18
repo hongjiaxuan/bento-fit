@@ -175,8 +175,33 @@
             </button>
             
             <div id="shopping-list-container" class="space-y-8 pb-32"></div>
+            <div id="shopping-list-container" class="space-y-8 pb-32"></div>
+            
+            <div class="fixed bottom-24 left-0 w-full px-6 z-10 pointer-events-none">
+                <button onclick="app.openBatchPrep()" class="pointer-events-auto w-full bg-gray-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 transform transition active:scale-95 hover:bg-gray-800 border border-gray-700">
+                    <i class="fa-solid fa-kitchen-set"></i> 進入週末備料模式
+                </button>
+            </div>
         </section>
-        
+        <div id="modal-batch-prep" class="fixed inset-0 z-[90] hidden bg-white flex flex-col animate-fade-in">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+            <div>
+                <h3 id="batch-prep-title" class="text-xl font-bold text-gray-800">週末備料</h3>
+                <p id="batch-prep-indicator" class="text-xs text-brand-500 font-bold mt-1">Step 1 / 3</p>
+            </div>
+            <button onclick="app.closeModal('modal-batch-prep')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div id="batch-prep-content" class="flex-1 overflow-y-auto p-6 space-y-4 pb-32">
+            </div>
+
+        <div class="p-6 border-t border-gray-100 bg-white safe-pb flex gap-3">
+            <button id="btn-batch-prev" class="flex-1 bg-gray-100 text-gray-500 font-bold py-4 rounded-xl hidden">上一步</button>
+            <button id="btn-batch-next" class="flex-[2] bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float">下一步</button>
+        </div>
+    </div>
         <section id="view-history" class="view-section fade-in hidden">
             <h2 class="text-lg font-bold text-gray-800 mb-4 ml-1">歷史紀錄</h2>
             <div id="history-list" class="space-y-4"></div>
@@ -277,7 +302,16 @@
                         <input type="password" id="input-apikey" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="AIzaSy..." enterkeyhint="next">
                     </div>
                     
-                    <button type="submit" class="w-full bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition-transform hover:bg-brand-600">儲存個人與身體數值</button>
+                    <label class="flex items-center gap-3 p-3 bg-gray-100 rounded-xl cursor-pointer border border-gray-200 mt-2">
+                        <input type="checkbox" id="input-dev-mode" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400 border-gray-300">
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-gray-700">啟用開發模式 (使用假資料)</div>
+                            <div class="text-[10px] text-gray-500">開啟後不會呼叫 API，節省額度</div>
+                        </div>
+                        <i class="fa-solid fa-code text-gray-400"></i>
+                    </label>
+
+                    <button type="submit" class="w-full bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition-transform hover:bg-brand-600 mt-4">儲存個人與身體數值</button>
                 </form>
                 <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-6">
                     <div class="flex justify-between items-center mb-2">
@@ -482,6 +516,52 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2"><i class="fa-solid fa-user-doctor"></i> AI 營養師風格</label>
+                    
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                        
+                        <label class="cursor-pointer min-w-[120px] flex-1">
+                            <input type="radio" name="ai-persona" value="lazy" class="peer hidden" checked>
+                            <div class="h-full p-3 rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-orange-100 peer-checked:text-orange-600 border border-transparent peer-checked:border-orange-200 transition flex flex-col items-center justify-center text-center gap-2 relative">
+                                <div class="absolute top-2 right-2 text-orange-500 opacity-0 peer-checked:opacity-100 transition-opacity"><i class="fa-solid fa-circle-check"></i></div>
+                                
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-lg shadow-sm shrink-0"><i class="fa-solid fa-couch"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold leading-tight">懶人達人</div>
+                                    <div class="text-[9px] font-normal opacity-80 mt-1 leading-tight">極致省時<br>高顏值擺盤</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer min-w-[120px] flex-1">
+                            <input type="radio" name="ai-persona" value="pro" class="peer hidden">
+                            <div class="h-full p-3 rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-blue-100 peer-checked:text-blue-600 border border-transparent peer-checked:border-blue-200 transition flex flex-col items-center justify-center text-center gap-2 relative">
+                                <div class="absolute top-2 right-2 text-blue-500 opacity-0 peer-checked:opacity-100 transition-opacity"><i class="fa-solid fa-circle-check"></i></div>
+                                
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-lg shadow-sm shrink-0"><i class="fa-solid fa-user-nurse"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold leading-tight">專業營養師</div>
+                                    <div class="text-[9px] font-normal opacity-80 mt-1 leading-tight">科學均衡<br>清淡健康</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="cursor-pointer min-w-[120px] flex-1">
+                            <input type="radio" name="ai-persona" value="fitness" class="peer hidden">
+                            <div class="h-full p-3 rounded-xl bg-gray-50 text-gray-400 peer-checked:bg-green-100 peer-checked:text-green-600 border border-transparent peer-checked:border-green-200 transition flex flex-col items-center justify-center text-center gap-2 relative">
+                                <div class="absolute top-2 right-2 text-green-500 opacity-0 peer-checked:opacity-100 transition-opacity"><i class="fa-solid fa-circle-check"></i></div>
+                                
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-lg shadow-sm shrink-0"><i class="fa-solid fa-dumbbell"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold leading-tight">健身教練</div>
+                                    <div class="text-[9px] font-normal opacity-80 mt-1 leading-tight">高蛋白<br>增肌減脂</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <label class="flex items-center gap-3 p-3 bg-orange-50 rounded-xl cursor-pointer border border-orange-100">
                     <input type="checkbox" id="ai-opt-batch" class="w-5 h-5 text-orange-500 rounded focus:ring-orange-400 border-gray-300">
                     <div class="flex-1">
@@ -557,15 +637,13 @@
         const app = {
             state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
 
-        init: () => {
+init: () => {
             const ls = localStorage;
 
             // 🛡️ 定義安全解析 Helper
             const safeParse = (key, defaultVal) => {
                 try {
                     const item = ls.getItem(key);
-                    // 關鍵修正：只有當 item 真的是 null (沒存過) 時才回傳 defaultVal
-                    // 如果 item 是空字串或其他 falsy 值但不是 null，也應該嘗試解析或回傳空
                     return item ? JSON.parse(item) : defaultVal;
                 } catch (e) {
                     console.warn(`⚠️ 載入 ${key} 失敗，重置為預設值。`, e);
@@ -578,19 +656,14 @@
             app.state.plan = safeParse('bento_plan', { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null });
             app.state.shopping = safeParse('bento_shopping', {});
             
-            // 🔥🔥🔥 關鍵修正點 🔥🔥🔥
-            // 原本的寫法可能在某些瀏覽器環境下，如果 localStorage 有 key 但值有問題，會導致讀取失敗。
-            // 我們明確指定：嘗試讀取 'bento_recipes'。
-            // 只有當讀出來的結果是陣列且長度 > 0 時，才使用它。
-            // 否則使用預設 Mock Data (這能防止讀到空陣列導致畫面壞掉，但也可能導致您的自訂菜單被蓋掉，所以要小心)
-            
+            // 檢查食譜
             const savedRecipes = safeParse('bento_recipes', null);
-            
             if (savedRecipes && Array.isArray(savedRecipes) && savedRecipes.length > 0) {
                 recipes = savedRecipes;
                 console.log("✅ 已載入使用者儲存的食譜");
             } else {
                 console.log("ℹ️ 無儲存食譜，載入預設範例");
+                // 預設 Mock Data 保持不變
                 recipes = [
                     { id: 1, name: "日式鹽烤鯖魚", cal: 420, p: 25, c: 5, f: 30, tags: ["魚"], ingredients: ["鯖魚片", "白蘿蔔", "檸檬"], instructions: "1. 鯖魚抹鹽靜置。\n2. 乾煎至兩面金黃。\n3. 搭配蘿蔔泥食用。" },
                     { id: 2, name: "蔥爆牛肉便當", cal: 480, p: 30, c: 45, f: 20, tags: ["牛"], ingredients: ["牛肉片", "青蔥", "洋蔥", "醬油"], instructions: "1. 爆香蔥段。\n2. 下牛肉大火快炒。\n3. 加入調味快速起鍋。" },
@@ -606,23 +679,15 @@
             app.state.bodyLog = safeParse('bento_body_log', []);
             app.state.game = safeParse('bento_game', { streak: 0, lastLogin: '', badges: [] });
 
-            // ... (後面的飲水、徽章、導航邏輯保持不變) ...
-            // 2. 飲水初始化
+            // 🔥🔥🔥 關鍵修正：補回 today 變數定義 🔥🔥🔥
+            // 雖然刪除了飲水初始化，但下方的 checkStreak 仍需要這個變數！
             const today = new Date().toLocaleDateString('zh-TW');
-            const lastDate = ls.getItem('bento_last_date');
-            
-            if (lastDate !== today) {
-                app.state.water = 0;
-                localStorage.setItem('bento_water', 0);
-                localStorage.setItem('bento_last_date', today);
-            } else {
-                const savedWater = ls.getItem('bento_water');
-                app.state.water = savedWater ? parseInt(savedWater) : 0;
-            }
 
+            // 執行檢查
             app.checkStreak(today);
             app.checkBadges();
 
+            // 導航邏輯
             if (!app.state.user) {
                 app.navigateTo('profile');
                 document.querySelector('nav').classList.add('hidden');
@@ -630,6 +695,7 @@
                 app.navigateTo('dashboard');
             }
             
+            // 鍵盤優化
             document.querySelectorAll('input').forEach((input, index, inputs) => {
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
@@ -691,34 +757,6 @@
                     statsContainer.classList.add('hidden');
                 }
             }
-
-            // 3. 飲水追蹤卡片 (插入在「今日目標」與「今日便當」之間)
-            // 檢查是否已經存在，不存在則建立
-            let waterCard = document.getElementById('dash-water-card');
-            if (!waterCard) {
-                waterCard = document.createElement('div');
-                waterCard.id = 'dash-water-card';
-                // 插入在 dashboardCard (今日目標) 的後面
-                dashboardCard.parentNode.insertBefore(waterCard, dashboardCard.nextSibling);
-            }
-
-            // 渲染飲水卡片內容
-            waterCard.className = "bg-blue-50/50 p-4 rounded-[24px] border border-blue-100 flex justify-between items-center";
-            waterCard.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center">
-                        <i class="fa-solid fa-glass-water text-lg"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs text-blue-400 font-bold mb-0.5">每日飲水</div>
-                        <div class="text-sm font-bold text-gray-700">${currentWater} <span class="text-xs text-gray-400 font-normal">/ ${waterTarget}ml</span></div>
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="app.updateWater(-250)" class="w-8 h-8 rounded-full bg-white text-blue-300 hover:text-blue-500 shadow-sm flex items-center justify-center transition active:scale-95"><i class="fa-solid fa-minus"></i></button>
-                    <button onclick="app.updateWater(250)" class="w-8 h-8 rounded-full bg-blue-500 text-white shadow-float hover:bg-blue-600 flex items-center justify-center transition active:scale-95"><i class="fa-solid fa-plus"></i></button>
-                </div>
-            `;
 
             // 4. 日期與便當邏輯 (維持不變)
             const dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -1127,16 +1165,7 @@
                     }).join('');
                 }
             },
-            // --- 請新增此函式到 app 物件中 ---
-            updateWater: (amount) => {
-                let current = app.state.water || 0;
-                let newAmount = current + amount;
-                if(newAmount < 0) newAmount = 0; // 不能小於 0
-                
-                app.state.water = newAmount;
-                localStorage.setItem('bento_water', newAmount);
-                app.renderDashboard(); // 重新渲染畫面以更新數值
-            },
+
             // --- 新增：切換備料狀態 ---
             togglePrep: (dayKey, event) => {
                 // 阻止冒泡，避免觸發卡片的 onclick (進入詳情頁)
@@ -1193,6 +1222,7 @@
             const goal = document.getElementById('input-goal').value;
             const key = document.getElementById('input-apikey').value.trim();
             const exclude = document.getElementById('input-exclude').value.trim();
+            const isDev = document.getElementById('input-dev-mode').checked;
             if (!h || !w || !age) return app.showToast('請填寫基本身高體重資料');
 
             // 2. 獲取身體組成欄位
@@ -1226,6 +1256,7 @@
                 height: h, weight: w, age: age, gender: gender, activity: activity,
                 goal: goal, tdee: tdee, apiKey: key,
                 exclude: exclude, // 儲存排除食材
+                isDev: isDev, // 儲存狀態
                 bodyComp: { bmi, bf: bf||null, muscle: muscle||null, vfat: vfat||null, water: water||null, protein: protein||null, bone: bone||null, scaleBmr: scaleBmr||null }
             };
             localStorage.setItem('bento_user', JSON.stringify(app.state.user));
@@ -1248,8 +1279,9 @@
             
             // 重新繪製圖表
             app.renderBodyChart();
-
-            app.showToast(`設定已儲存！目標：${goal}`);
+            // 提示訊息區分
+            if(isDev) app.showToast('⚠️ 已啟用開發模式 (不消耗額度)');
+            else app.showToast(`設定已儲存！目標：${goal}`);
             
             // 🔴 修正重點：儲存成功後，強制顯示導覽列並跳轉首頁
             document.querySelector('nav').classList.remove('hidden');
@@ -1269,6 +1301,8 @@
             document.getElementById('input-goal').value = u.goal || '均衡飲食';
             document.getElementById('input-exclude').value = u.exclude || '';
             if (u.apiKey) document.getElementById('input-apikey').value = u.apiKey;
+            // 新增：回填開發模式開關
+            document.getElementById('input-dev-mode').checked = u.isDev
 
             if (u.bodyComp) {
                 document.getElementById('input-bf').value = u.bodyComp.bf || '';
@@ -1512,6 +1546,10 @@
             // 獲取懶人模式
             const isBatch = document.getElementById('ai-opt-batch').checked;
 
+            // ✅ 新增：獲取 AI 營養師風格
+            const personaEl = document.querySelector('input[name="ai-persona"]:checked');
+            const persona = personaEl ? personaEl.value : "lazy";
+
             // 2. 組合 Prompt
             const fridgeNote = fridgeItems ? `★ 優先使用冰箱食材：${fridgeItems}` : "";
             const excludeNote = tempExclude ? `★ 絕對避開食材：${tempExclude}` : "";
@@ -1555,41 +1593,76 @@
                     }
                 }
 
-                // 🔴 統一的高品質 Prompt (週計畫)
-                const aiPrompt = `
-                    你是一位五星級健康餐盒設計師。請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
+
+            // 🔥 核心：根據風格決定 AI 人設 🔥
+            let personaPrompt = "";
+            
+            if (persona === "pro") {
+                // --- 風格 A：專業營養師 ---
+                personaPrompt = `
+                    你是一位擁有 20 年經驗的**資深臨床營養師**。
+                    請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
                     目標：${user.goal}。
                     料理風格：${cuisine}。
-                    使用者身體狀況特別指示】
-                    ${bodyNote || "無特殊身體狀況，請依均衡飲食設計。"}
-                    ${batchNote}
-                    ${fridgeNote}
-                    ${excludeNote}
                     
-                    【嚴格 JSON 格式要求】
-                    請回傳一個 JSON Array，包含 10 個物件 (請確保每道菜名都不一樣，供使用者替換選擇)。**不要包含任何 Markdown 標記 (如 \`\`\`json) 或開頭結尾的解釋文字**。
-                    ⚠️ 重要：無論是否為懶人模式，都必須給足 10 個不同的物件，不要偷懶只給 2 個。
-                    每個物件必須包含以下欄位（Key 名稱必須完全一致）：
-                    - "name": (字串) 菜色名稱 (例如 "香煎迷迭香雞腿排佐時蔬")
-                    - "main_tag": (字串) 四選一: "雞肉", "牛肉", "海鮮", "素食"
-                    - "cal": (數字) 熱量
-                    - "p": (數字) 蛋白質
-                    - "c": (數字) 碳水
-                    - "f": (數字) 脂肪
-                    - "ingredients": (物件陣列) 食材清單，格式為 [{"name":"食材名", "qty":"數量(如 100g)", "type":"生鮮/蔬果/澱粉/雜貨"}]。請列出所有調味與配菜。
-                    - "instructions": (字串) 烹飪步驟。**重要：步驟之間請務必使用 \\n 換行**，並標示 1. 2. 3.，描述需詳細（包含火候、時間）。
-
-                    範例：
-                    [
-                    {
-                        "name": "示範菜色",
-                        "main_tag": "雞肉",
-                        "cal": 500, "p": 30, "c": 50, "f": 15,
-                        "ingredients": [{"name":"雞胸肉","qty":"150g","type":"生鮮"}, {"name":"花椰菜","qty":"100g","type":"蔬果"}],
-                        "instructions": "1. 備料：雞肉切塊...\\n2. 烹調：熱鍋後放入..."
-                    }
-                    ]
+                    【設計風格要求 - 專業科學系】
+                    1. **營養黃金比例**：請嚴格遵守三大營養素平衡，並特別注重「膳食纖維」與「微量營養素 (維生素/礦物質)」的攝取。
+                    2. **健康烹調**：拒絕高油、高糖、油炸。優先使用蒸、煮、烤、涼拌等低負擔烹調法。
+                    3. **食材多樣性**：請選用「彩虹飲食法」原則，確保每餐有多種顏色的蔬菜搭配。
+                    4. **步驟描述**：請加入專業的小叮嚀 (例如：這個食材富含維他命C，建議不要煮太久)。
                 `;
+            } else if (persona === "fitness") {
+                // --- 風格 B：健身教練 ---
+                personaPrompt = `
+                    你是一位嚴格的**專業健身備餐教練**。
+                    請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
+                    目標：${user.goal}。
+                    料理風格：${cuisine}。
+                    
+                    【設計風格要求 - 增肌減脂系】
+                    1. **蛋白質優先**：確保每道菜都有充足的優質蛋白質 (雞胸、魚、瘦牛、蛋、豆製品)。
+                    2. **乾淨飲食 (Clean Eating)**：拒絕加工食品 (如香腸、丸子)，只使用原型食物。
+                    3. **優質碳水**：優先使用低 GI 澱粉 (地瓜、糙米、燕麥、南瓜)，避免精緻白米或麵食。
+                    4. **油脂控制**：嚴格控制脂肪量，僅使用健康油脂 (橄欖油、酪梨、堅果)。
+                `;
+            } else {
+                // --- 風格 C：懶人達人 (預設 IG 風) ---
+                personaPrompt = `
+                    你是一位在 Instagram 上擁有百萬追蹤的**「懶人帶便當達人」**。
+                    請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
+                    目標：${user.goal}。
+                    料理風格：${cuisine}。
+                    
+                    【設計風格要求 - IG 網紅懶人系】
+                    1. **做法極度簡單**：優先使用「一鍋到底」、「氣炸鍋」、「微波」或「免開火」料理。拒絕繁瑣工序。
+                    2. **高顏值配色**：便當配色要鮮豔豐富 (紅黃綠)，適合拍照打卡 (Instagrammable)。
+                    3. **美味至上**：使用網路上熱門的簡單調味 (如鹽蔥、蒜香、韓式)，在簡單中創造美味。
+                `;
+            }
+
+            // 組合最終 Prompt
+            const aiPrompt = `
+                ${personaPrompt}
+
+                使用者身體狀況特別指示】
+                ${bodyNote || "無特殊身體狀況。"}
+                ${batchNote}
+                ${fridgeNote}
+                ${excludeNote}
+                
+                【嚴格 JSON 格式要求】
+                請回傳一個 JSON Array，包含 10 個物件。**不要包含 Markdown**。
+                每個物件必須包含以下欄位 (Key 名稱必須完全一致)：
+                - "name": (字串) 菜色名稱
+                - "main_tag": (字串) "雞肉", "牛肉", "海鮮", "素食"
+                - "cal": (數字)
+                - "p": (數字)
+                - "c": (數字)
+                - "f": (數字)
+                - "ingredients": [{"name":"食材","qty":"數量","type":"生鮮/蔬果/澱粉/雜貨"}]
+                - "instructions": (字串) 烹飪步驟 (用 \\n 分隔)。
+                - "prep_guide": (字串) **週末備料指南**。請以「肉類：... | 蔬菜：...」的格式撰寫。
+                   範例："肉類：雞腿切塊，用醬油膏、米酒抓醃20分鐘後分裝冷凍。 | 蔬菜：花椰菜洗淨切小朵，燙過瀝乾冷藏；紅蘿蔔切片。"            `;
 
                 const data = await app.callGeminiAPI(aiPrompt);
                 
@@ -1720,8 +1793,71 @@
                 card.innerHTML = originalContent;
             }
         },
+// --- [修正版] 假資料產生器 (修復替換按鈕失效問題) ---
+        getMockData: (promptText) => {
+            console.log("🚧 開發模式啟動");
+            
+            // 判斷邏輯優化：
+            // 檢查是否包含 "10 個物件" (這是週計畫的特徵)
+            // 如果沒有，我們就預設它是 "單日重骰" (因為重骰只要求 1 個物件)
+            const isBatch = promptText.includes("10 個物件");
+            
+            // 共用的假食材
+            const mockIngredients = [
+                {name: "開發用雞胸肉", qty: "150g", type: "生鮮"},
+                {name: "測試花椰菜", qty: "100g", type: "蔬果"},
+                {name: "虛擬糙米飯", qty: "1碗", type: "澱粉"},
+                {name: "除錯荷包蛋", qty: "1顆", type: "生鮮"}
+            ];
+
+            if (!isBatch) {
+                // --- 情境 A：單日重骰 (替換按鈕) ---
+                console.log("📦 生成單日假資料");
+                return [{
+                    name: "【測試】開發專用牛排 #" + Math.floor(Math.random() * 999),
+                    main_tag: "牛肉",
+                    cal: 500 + Math.floor(Math.random() * 100), 
+                    p: 40, c: 20, f: 30,
+                    ingredients: mockIngredients,
+                    instructions: "1. 這是【替換按鈕】的測試資料。\n2. 如果您看到這道菜，代表開發模式運作正常！\n3. 數值是隨機生成的。"
+                }];
+            } else {
+                // --- 情境 B：週計畫生成 ---
+                console.log("📦 生成週計畫假資料");
+                const mockBatch = [];
+                const tags = ["雞肉", "牛肉", "海鮮", "素食"];
+                
+                for(let i=1; i<=10; i++) {
+                    mockBatch.push({
+                        name: `【測試】開發營養餐盒 #${i}`,
+                        main_tag: tags[i % 4],
+                        cal: 400 + (i * 10),
+                        p: 20 + i, c: 50, f: 15,
+                        ingredients: mockIngredients,
+                        instructions: `1. 這是第 ${i} 道假菜色。\n2. 用於測試懶人/豐富模式分配。\n3. 請檢查 UI 顯示是否正確。`
+                    });
+                }
+                return mockBatch;
+            }
+        },
 // --- [修復版] 2. 共用 API 呼叫邏輯 (移除無效模型) ---
         callGeminiAPI: async (promptText) => {
+            // 1. 攔截：檢查開發模式
+            // 確保 app.state.user 存在，且 isDev 為 true
+            if (app.state.user && app.state.user.isDev) {
+                console.log("⚡ 攔截 API 請求，轉接至假資料產生器...");
+                
+                // 模擬網路延遲 (0.5秒)，讓 UI 轉圈圈一下，感覺比較真實
+                await new Promise(r => setTimeout(r, 500)); 
+                
+                // 呼叫假資料函式
+                if (typeof app.getMockData === 'function') {
+                    return app.getMockData(promptText);
+                } else {
+                    console.error("找不到 getMockData 函式！請確認程式碼是否正確貼上。");
+                    throw new Error("Dev Mode Error: getMockData missing");
+                }
+            }   
             const key = app.state.user.apiKey;
             
             if (!key) {
@@ -2014,7 +2150,248 @@
                 localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
                 app.renderShopping();
             },
+        // --- 🍱 新增：週末批量備料模式 (Batch Prep) ---
+        openBatchPrep: () => {
+            // 1. 統計本週菜色出現次數
+            const plan = app.state.plan;
+            const counts = {}; 
 
+            Object.values(plan).forEach(rid => {
+                if (rid) counts[rid] = (counts[rid] || 0) + 1;
+            });
+
+            const meatList = [];
+            const vegList = [];
+            
+            // 2. 遍歷「不重複」的菜色
+            Object.keys(counts).forEach(ridStr => {
+                const rid = parseInt(ridStr);
+                const r = recipes.find(x => x.id === rid);
+                
+                if (r) {
+                    const prepItem = { ...r, _count: counts[rid] };
+                    const guide = r.prep_guide || "";
+
+                    // A. 加入肉類清單條件 (維持不變)
+                    const isMeatDish = ['雞肉', '牛肉', '海鮮', '豬肉', '羊肉'].includes(r.main_tag);
+                    if (isMeatDish) {
+                        meatList.push(prepItem);
+                    }
+
+                    // B. 加入蔬菜清單條件 (🔥 新增判斷邏輯)
+                    // 條件 1: 食材結構裡有「蔬果」
+                    let hasVeg = false;
+                    if (r.structured_ingredients) {
+                        hasVeg = r.structured_ingredients.some(i => i.type === '蔬果' || i.type === '蔬菜');
+                    } else {
+                        hasVeg = r.ingredients.some(str => app.getCategory(str).includes('蔬果'));
+                    }
+
+                    // 條件 2 (🔥 關鍵修正): 如果 AI 在備料指南裡明確寫了 "蔬菜："，那也算有蔬菜
+                    if (!hasVeg && guide.includes("蔬菜：")) {
+                        hasVeg = true;
+                    }
+
+                    if (hasVeg) {
+                        vegList.push(prepItem);
+                    }
+                }
+            });
+
+            if (meatList.length === 0 && vegList.length === 0) return app.showToast("本週尚未安排菜單，無法備料");
+
+            // 3. 初始化並開啟
+            app.batchPrepState = { step: 1, meat: meatList, veg: vegList };
+            document.getElementById('modal-batch-prep').classList.remove('hidden');
+            app.renderBatchPrepStep();
+        },
+
+        renderBatchPrepStep: () => {
+            const state = app.batchPrepState;
+            const container = document.getElementById('batch-prep-content');
+            const titleEl = document.getElementById('batch-prep-title');
+            const stepInd = document.getElementById('batch-prep-indicator');
+            const btnPrev = document.getElementById('btn-batch-prev');
+            const btnNext = document.getElementById('btn-batch-next');
+
+            container.innerHTML = ''; // 清空
+
+            // --- 階段 1: 肉類處理 ---
+            if (state.step === 1) {
+                titleEl.innerText = "🥩 階段一：肉類與海鮮醃製";
+                stepInd.innerText = "Step 1 / 3";
+                btnPrev.classList.add('hidden'); // 第一步隱藏上一步
+                btnNext.innerText = "下一步：處理蔬菜";
+                btnNext.onclick = () => { app.batchPrepState.step++; app.renderBatchPrepStep(); };
+
+                if (state.meat.length === 0) {
+                    container.innerHTML = `<div class="text-center text-gray-400 py-10">本週沒有肉類料理，請直接下一步。</div>`;
+                } else {
+                    state.meat.forEach(r => {
+                        app.createPrepItem(container, r);
+                    });
+                }
+            }
+            // --- 階段 2: 蔬菜處理 ---
+            else if (state.step === 2) {
+                titleEl.innerText = "🥦 階段二：蔬菜清洗與分裝";
+                stepInd.innerText = "Step 2 / 3";
+                btnPrev.classList.remove('hidden');
+                btnNext.innerText = "完成備料";
+                btnPrev.onclick = () => { app.batchPrepState.step--; app.renderBatchPrepStep(); };
+                btnNext.onclick = () => { app.batchPrepState.step++; app.renderBatchPrepStep(); };
+
+                if (state.veg.length === 0) {
+                    container.innerHTML = `<div class="text-center text-gray-400 py-10">本週沒有需特別處理的蔬食，請直接下一步。</div>`;
+                } else {
+                    state.veg.forEach(r => {
+                        app.createPrepItem(container, r);
+                    });
+                }
+            }
+            // --- 階段 3: 完成確認 ---
+            else if (state.step === 3) {
+                titleEl.innerText = "🎉 備料完成！";
+                stepInd.innerText = "Step 3 / 3";
+                btnPrev.classList.remove('hidden');
+                btnNext.innerText = "打勾並回首頁";
+                btnPrev.onclick = () => { app.batchPrepState.step--; app.renderBatchPrepStep(); };
+                btnNext.onclick = () => app.finishBatchPrep();
+
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 animate-bounce">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">辛苦了！</h3>
+                        <p class="text-gray-500 text-sm px-4">
+                            您已經完成了本週的食材預處理。<br>
+                            接下來的週間晚上，您只需要簡單加熱或烹煮即可上菜！
+                        </p>
+                    </div>
+                `;
+            }
+        },
+
+        // 輔助：建立單個備料項目 UI (智慧顯示配方含份量標籤)
+        createPrepItem: (container, r) => {
+            const currentStep = app.batchPrepState.step; // 1=肉, 2=菜
+            
+            // --- 1. 自動抓取相關食材與標題 (維持不變) ---
+            let displayIngredients = [];
+            let subTitle = "";
+            let icon = "";
+
+            if (r.structured_ingredients) {
+                if (currentStep === 1) {
+                    // 肉類階段：抓取生鮮與調味
+                    const meats = r.structured_ingredients.filter(i => i.type === '生鮮' || i.type === '肉類');
+                    const seasonings = r.structured_ingredients.filter(i => i.type === '雜貨' || i.type === '調味');
+                    const mainMeat = meats.length > 0 ? meats.map(m => m.name).join('、') : r.name;
+                    const marinade = seasonings.length > 0 ? seasonings.map(s => `${s.name}${s.qty}`).join('、') : "鹽、胡椒 (基本醃漬)";
+                    
+                    subTitle = `<span class="text-gray-700 font-bold text-base">${mainMeat}</span>`;
+                    displayIngredients = [`<span class="text-xs text-gray-500">建議醃料：</span><span class="text-xs text-brand-600">${marinade}</span>`];
+                    icon = "🥩";
+                } else if (currentStep === 2) {
+                    // 蔬菜階段：抓取蔬果
+                    const vegs = r.structured_ingredients.filter(i => i.type === '蔬果' || i.type === '蔬菜');
+                    if (vegs.length > 0) {
+                        subTitle = "需處理蔬菜：";
+                        displayIngredients = vegs.map(v => `<span class="inline-block bg-green-50 text-green-700 text-xs px-2 py-1 rounded mr-1 mb-1 border border-green-100">${v.name} ${v.qty}</span>`);
+                    } else {
+                        // 如果這裡沒抓到食材，但在清單中，可能是因為 prep_guide 判斷進來的
+                        displayIngredients = [`<span class="text-xs text-gray-400">請參考下方處理指南</span>`];
+                    }
+                    icon = "🥦";
+                }
+            } else {
+                displayIngredients = [`<span class="text-xs text-gray-400">無詳細分類資料</span>`];
+            }
+            
+            // --- 2. 🔥 核心修正：備料指南智慧拆分 ---
+            let fullGuide = r.prep_guide || "";
+            let filteredGuide = "";
+
+            // 嘗試根據 " | " 或 "｜" (全形) 進行切割
+            const parts = fullGuide.split(/\||｜/); 
+            
+            if (parts.length > 1) {
+                // 如果 AI 乖乖用了分隔線，我們就來找對應的段落
+                if (currentStep === 1) {
+                    // 找包含 "肉" 或 "Meat" 的段落，找不到就預設拿第一段
+                    const meatPart = parts.find(p => p.includes("肉") || p.includes("Meat")) || parts[0];
+                    filteredGuide = meatPart.trim();
+                } else {
+                    // 找包含 "蔬" 或 "Veg" 的段落
+                    const vegPart = parts.find(p => p.includes("蔬") || p.includes("Veg"));
+                    filteredGuide = vegPart ? vegPart.trim() : "本步驟無特定指南"; 
+                }
+            } else {
+                // 如果 AI 沒有用分隔線，或者是舊資料，就顯示全部，但我們可以嘗試高亮關鍵字
+                filteredGuide = fullGuide;
+            }
+            
+            // 清理掉開頭的 "肉類：" 或 "蔬菜：" 標籤，讓閱讀更順暢
+            filteredGuide = filteredGuide.replace(/^(肉類|蔬菜|Meat|Veg)[:：]\s*/, "");
+
+            // 份量標籤
+            const countBadge = (r._count > 1) 
+                ? `<span class="ml-2 bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full font-bold border border-red-200">x${r._count} 天份</span>` 
+                : "";
+
+            const div = document.createElement('div');
+            div.className = "bg-white p-4 rounded-xl border border-gray-100 flex gap-3 items-start shadow-sm";
+            div.innerHTML = `
+                <div class="pt-1">
+                    <input type="checkbox" class="w-5 h-5 rounded text-brand-500 focus:ring-brand-400 cursor-pointer" id="prep-chk-${r.id}">
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-gray-800 text-sm mb-1 flex items-center flex-wrap">
+                            ${icon} ${r.name} ${countBadge}
+                        </h4>
+                    </div>
+                    
+                    <div class="mb-2 text-sm">
+                        ${subTitle}
+                        <div class="mt-1 flex flex-wrap gap-1">
+                            ${displayIngredients.join('')}
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-lg mt-2 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${currentStep === 1 ? 'bg-red-400' : 'bg-green-400'}"></div>
+                        <p class="text-[10px] text-gray-400 font-bold mb-1 pl-2">
+                            <i class="fa-solid fa-clipboard-list"></i> ${currentStep === 1 ? '肉類處理' : '蔬菜處理'}
+                        </p>
+                        <p class="text-xs text-gray-700 leading-relaxed pl-2 font-medium">${filteredGuide}</p>
+                    </div>
+                </div>
+            `;
+            
+            div.onclick = (e) => {
+                if(e.target.type !== 'checkbox') {
+                    const chk = div.querySelector('input');
+                    chk.checked = !chk.checked;
+                }
+            };
+            container.appendChild(div);
+        },
+
+        finishBatchPrep: () => {
+            // 將週一到週五的 prep 狀態全部設為 true
+            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].forEach(d => {
+                if(app.state.plan[d]) {
+                    app.state.prep[d] = true;
+                }
+            });
+            localStorage.setItem('bento_prep', JSON.stringify(app.state.prep));
+            
+            app.closeModal('modal-batch-prep');
+            app.renderDashboard(); // 更新首頁卡片顏色
+            app.showToast("✅ 已標記本週備料完成！");
+        },
             // --- 請替換 app.copyShoppingList ---
             copyShoppingList: async () => {
                 // 1. 建立分類對應表 (與 renderShopping 保持一致)
@@ -2414,7 +2791,6 @@
                     ratings: ls.getItem('bento_ratings'),     // 評分紀錄
                     bodyLog: ls.getItem('bento_body_log'),    // 體態趨勢紀錄
                     game: ls.getItem('bento_game'),           // 遊戲化 (徽章/連續登入)
-                    water: ls.getItem('bento_water'),         // 飲水紀錄
                     lastDate: ls.getItem('bento_last_date')   // 最後登入日 (用於飲水重置判斷)
                 };
                 
@@ -2449,7 +2825,6 @@
                         if(d.ratings) ls.setItem('bento_ratings', d.ratings);
                         if(d.bodyLog) ls.setItem('bento_body_log', d.bodyLog);
                         if(d.game) ls.setItem('bento_game', d.game);
-                        if(d.water) ls.setItem('bento_water', d.water);
                         if(d.lastDate) ls.setItem('bento_last_date', d.lastDate);
 
                         await app.showModal("✅ 資料匯入成功！頁面將自動重新整理。", "還原完成");
