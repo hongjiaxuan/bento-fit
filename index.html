@@ -301,7 +301,11 @@
                         <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY (AI 功能必填)</label>
                         <input type="password" id="input-apikey" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="AIzaSy..." enterkeyhint="next">
                     </div>
-                    
+                     <div class="pt-2">
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">Google Apps Script URL (雲端同步用)</label>
+                        <input type="text" id="input-sync-url" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-blue-400 transition" placeholder="https://script.google.com/macros/s/..." enterkeyhint="next">
+                        <p class="text-[9px] text-gray-400 mt-1 pl-1">貼上部署網址，即可啟用自動雲端備份</p>
+                    </div>
                     <label class="flex items-center gap-3 p-3 bg-gray-100 rounded-xl cursor-pointer border border-gray-200 mt-2">
                         <input type="checkbox" id="input-dev-mode" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400 border-gray-300">
                         <div class="flex-1">
@@ -637,7 +641,88 @@
         const app = {
             state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
 
-init: () => {
+
+            // --- ☁️ 雲端同步模組 ---
+        cloudSync: {
+            // 上傳資料到雲端
+            upload: async () => {
+                const u = app.state.user;
+                if (!u || !u.syncUrl) return; // 沒設定網址就不動作
+
+                // 準備整包資料 (加上時間戳記)
+                const payload = {
+                    timestamp: Date.now(), // 標記存檔時間
+                    user: localStorage.getItem('bento_user'),
+                    plan: localStorage.getItem('bento_plan'),
+                    shopping: localStorage.getItem('bento_shopping'),
+                    recipes: localStorage.getItem('bento_recipes'),
+                    history: localStorage.getItem('bento_history'),
+                    prep: localStorage.getItem('bento_prep'),
+                    ratings: localStorage.getItem('bento_ratings'),
+                    bodyLog: localStorage.getItem('bento_body_log'),
+                    game: localStorage.getItem('bento_game'),
+                    lastDate: localStorage.getItem('bento_last_date')
+                };
+
+                console.log("☁️ 正在背景上傳備份...");
+                try {
+                    // 使用 no-cors 模式發送 (GAS 特性)
+                    await fetch(u.syncUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    console.log("✅ 雲端備份完成");
+                    app.showToast("☁️ 資料已自動備份至雲端");
+                } catch (e) {
+                    console.error("備份失敗", e);
+                }
+            },
+
+            // 從雲端下載資料
+            download: async () => {
+                const u = app.state.user;
+                if (!u || !u.syncUrl) return;
+
+                console.log("☁️ 正在檢查雲端存檔...");
+                try {
+                    const res = await fetch(u.syncUrl);
+                    const data = await res.json();
+
+                    if (!data || !data.timestamp) return; // 雲端是空的
+
+                    // 比較時間：如果雲端比較新，才詢問還原
+                    // 我們簡單用 "如果雲端有資料" 就詢問，或比較 timestamp
+                    const localTime = parseInt(localStorage.getItem('bento_timestamp') || '0');
+                    
+                    if (data.timestamp > localTime) {
+                        if (confirm(`☁️ 發現雲端有較新的備份 (${new Date(data.timestamp).toLocaleString()})！\n\n是否要同步還原？`)) {
+                            // 還原所有 LocalStorage
+                            if(data.user) localStorage.setItem('bento_user', data.user);
+                            if(data.plan) localStorage.setItem('bento_plan', data.plan);
+                            if(data.shopping) localStorage.setItem('bento_shopping', data.shopping);
+                            if(data.recipes) localStorage.setItem('bento_recipes', data.recipes);
+                            if(data.history) localStorage.setItem('bento_history', data.history);
+                            if(data.prep) localStorage.setItem('bento_prep', data.prep);
+                            if(data.ratings) localStorage.setItem('bento_ratings', data.ratings);
+                            if(data.bodyLog) localStorage.setItem('bento_body_log', data.bodyLog);
+                            if(data.game) localStorage.setItem('bento_game', data.game);
+                            if(data.lastDate) localStorage.setItem('bento_last_date', data.lastDate);
+                            
+                            // 更新本地時間戳
+                            localStorage.setItem('bento_timestamp', data.timestamp);
+                            
+                            alert("✅ 同步成功！App 將重新整理。");
+                            location.reload();
+                        }
+                    }
+                } catch (e) {
+                    console.error("雲端讀取失敗", e);
+                }
+            }
+        },
+        init: () => {
             const ls = localStorage;
 
             // 🛡️ 定義安全解析 Helper
@@ -709,6 +794,11 @@ init: () => {
                     }
                 });
             });
+            setTimeout(() => {
+                if(app.state.user && app.state.user.syncUrl) {
+                    app.cloudSync.download();
+                }
+            }, 1000);
         },
         // --- 請替換 app 物件中的 renderDashboard 函式 ---
 
@@ -938,6 +1028,7 @@ init: () => {
             const score = app.state.tempRating;
             if (!score) return;
             app.submitRating(score);
+            app.cloudSync.upload();
         },
 
         submitRating: (score) => {
@@ -1223,6 +1314,7 @@ init: () => {
             const key = document.getElementById('input-apikey').value.trim();
             const exclude = document.getElementById('input-exclude').value.trim();
             const isDev = document.getElementById('input-dev-mode').checked;
+            const syncUrl = document.getElementById('input-sync-url').value.trim();
             if (!h || !w || !age) return app.showToast('請填寫基本身高體重資料');
 
             // 2. 獲取身體組成欄位
@@ -1254,16 +1346,17 @@ init: () => {
             // 4. 更新 User State
             app.state.user = {
                 height: h, weight: w, age: age, gender: gender, activity: activity,
-                goal: goal, tdee: tdee, apiKey: key,
+                goal: goal, tdee: tdee, apiKey: key,syncUrl: syncUrl,
                 exclude: exclude, // 儲存排除食材
                 isDev: isDev, // 儲存狀態
                 bodyComp: { bmi, bf: bf||null, muscle: muscle||null, vfat: vfat||null, water: water||null, protein: protein||null, bone: bone||null, scaleBmr: scaleBmr||null }
             };
             localStorage.setItem('bento_user', JSON.stringify(app.state.user));
+            localStorage.setItem('bento_timestamp', Date.now());
 
             // 5. ✅ 新增：自動記錄體態趨勢 (Body Log)
             const todayDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' }); // 例如 "1/15"
-            
+            app.cloudSync.upload();
             // 檢查今天是否已經記錄過 (避免重複)
             const existingIndex = app.state.bodyLog.findIndex(log => log.date === todayDate);
             const logEntry = { date: todayDate, weight: w, bf: bf || 0 };
@@ -1276,7 +1369,9 @@ init: () => {
                 if (app.state.bodyLog.length > 30) app.state.bodyLog.shift();
             }
             localStorage.setItem('bento_body_log', JSON.stringify(app.state.bodyLog));
-            
+            // ✅ 觸發雲端備份
+            app.cloudSync.upload();
+
             // 重新繪製圖表
             app.renderBodyChart();
             // 提示訊息區分
@@ -1720,6 +1815,7 @@ init: () => {
                     if(btn) btn.classList.remove('hidden');
                     if(list) list.classList.remove('hidden');
                 }
+                app.cloudSync.upload();
             },
         // --- 3. 新增 rerollDay (單日重骰) ---
         rerollDay: async (dayKey) => {
@@ -2256,7 +2352,7 @@ init: () => {
                 btnPrev.classList.remove('hidden');
                 btnNext.innerText = "打勾並回首頁";
                 btnPrev.onclick = () => { app.batchPrepState.step--; app.renderBatchPrepStep(); };
-                btnNext.onclick = () => app.finishBatchPrep();
+                btnNext.onclick = () => app.finishBatchPrep();app.cloudSync.upload();
 
                 container.innerHTML = `
                     <div class="text-center py-8">
