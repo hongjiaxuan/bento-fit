@@ -208,151 +208,209 @@
             <div id="history-empty" class="hidden text-center text-gray-400 py-10"><p class="text-sm">暫無紀錄</p></div>
         </section>
 
-        <section id="view-profile" class="view-section fade-in hidden">
-            <div class="bg-white p-6 rounded-[24px] shadow-soft mb-6">
-                <h2 class="text-lg font-bold text-gray-800 mb-6 text-center">個人設定</h2>
+<section id="view-profile" class="view-section fade-in hidden">
+            
+            <div class="bg-white rounded-[30px] p-6 shadow-soft mb-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-bl-full -mr-10 -mt-10 z-0"></div>
+                
+                <div class="relative z-10 flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-3xl shadow-sm">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800" id="disp-goal">載入中...</h2>
+                        <div class="text-xs text-gray-500 mt-1 flex gap-2">
+                            <span class="bg-gray-100 px-2 py-0.5 rounded text-gray-600" id="disp-basic">--歲 / --cm</span>
+                        </div>
+                    </div>
+                    <button onclick="app.openEditProfile()" class="ml-auto w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center shadow-lg active:scale-90 transition">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </div>
 
-                <form id="profile-form" class="space-y-5" onsubmit="event.preventDefault(); app.saveProfile();">
-                    <div class="bg-blue-50/80 p-4 rounded-xl border border-blue-100 mb-4">
-                        <h3 class="text-xs font-bold text-blue-500 mb-3 flex items-center gap-2">
-                            <i class="fa-solid fa-cloud-arrow-down"></i> 老手登入 / 雲端還原
-                        </h3>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">Google Apps Script URL (備份網址)</label>
-                            <input type="text" id="input-sync-url" class="w-full bg-white rounded-xl px-4 py-3 text-[10px] outline-none focus:ring-2 focus:ring-blue-400 transition font-mono text-gray-600" placeholder="https://script.google.com/macros/s/..." enterkeyhint="done">
-                        </div>
-                        <button type="button" onclick="app.cloudSync.loginAndRestore()" class="w-full mt-3 bg-blue-500 text-white font-bold py-3 rounded-xl shadow-sm text-xs hover:bg-blue-600 transition active:scale-95 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-download"></i> 讀取雲端備份並還原
-                        </button>
-                        <p class="text-[9px] text-gray-400 mt-2 text-center">
-                            ⚠️ 換手機或重灌時，請務必先按此按鈕抓回資料，<br>切勿直接按最下方的儲存，以免覆蓋備份。
-                        </p>
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="bg-gray-50 rounded-2xl p-3 text-center">
+                        <div class="text-[10px] text-gray-400 mb-1">體重</div>
+                        <div class="text-lg font-bold text-gray-800"><span id="disp-weight">--</span> <span class="text-xs font-normal">kg</span></div>
                     </div>
-                  </form>
-                    
-                    <h3 class="text-xs font-bold text-gray-400 border-l-4 border-brand-500 pl-2">基本資料</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">身高 (cm)</label>
-                            <input type="number" id="input-height" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="160" required enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">體重 (kg)</label>
-                            <input type="number" id="input-weight" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="50" required enterkeyhint="next">
-                        </div>
+                    <div class="bg-gray-50 rounded-2xl p-3 text-center">
+                        <div class="text-[10px] text-gray-400 mb-1">體脂率</div>
+                        <div class="text-lg font-bold text-brand-500"><span id="disp-bf">--</span> <span class="text-xs font-normal">%</span></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">年齡</label>
-                            <input type="number" id="input-age" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="25" required enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">性別</label>
-                            <select id="input-gender" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition">
-                                <option value="male">男性</option>
-                                <option value="female">女性</option>
-                            </select>
-                        </div>
+                    <div class="bg-gray-50 rounded-2xl p-3 text-center">
+                        <div class="text-[10px] text-gray-400 mb-1">BMI</div>
+                        <div class="text-lg font-bold text-blue-500"><span id="disp-bmi">--</span></div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-400 mb-1">日常活動量</label>
-                        <select id="input-activity" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition">
-                            <option value="1.2">久坐不動 (辦公室工作)</option>
-                            <option value="1.375">輕度活動 (每週運動1-3天)</option>
-                            <option value="1.55">中度活動 (每週運動3-5天)</option>
-                            <option value="1.725">高度活動 (每週運動6-7天)</option>
-                            <option value="1.9">超高度活動 (勞力工作/運動員)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-400 mb-1">飲食目標 (AI 參考用)</label>
-                        <select id="input-goal" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition">
-                            <option value="均衡飲食">🥗 均衡飲食 (維持健康)</option>
-                            <option value="增肌高蛋白">💪 增肌 (高蛋白/中碳水)</option>
-                            <option value="減脂低碳">🔥 減脂 (低碳水/高纖)</option>
-                            <option value="低GI飲食">📉 低GI (穩定血糖)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 / 過敏原 (AI 避開)</label>
-                        <textarea id="input-exclude" rows="2" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-200 transition" placeholder="例如：香菜、蝦子、青椒..." enterkeyhint="next"></textarea>
-                    </div>
-                    <h3 class="text-xs font-bold text-gray-400 border-l-4 border-blue-400 pl-2 mt-2">身體組成 (體脂計數據)</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">體脂率 (%)</label>
-                            <input type="number" step="0.1" id="input-bf" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填"  enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">肌肉量 (kg)</label>
-                            <input type="number" step="0.1" id="input-muscle" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">內臟脂肪等級</label>
-                            <input type="number" step="0.5" id="input-vfat" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">基礎代謝 (體脂計)</label>
-                            <input type="number" id="input-scale-bmr" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">水分含量 (%)</label>
-                            <input type="number" step="0.1" id="input-water" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">蛋白質 (%)</label>
-                            <input type="number" step="0.1" id="input-protein" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">骨量 (kg)</label>
-                            <input type="number" step="0.1" id="input-bone" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="選填" enterkeyhint="next">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">BMI (選填)</label>
-                            <input type="number" step="0.1" id="input-bmi" class="w-full bg-blue-50/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-300 transition" placeholder="自動計算" enterkeyhint="next">
-                        </div>
-                    </div>
-                    <div class="pt-2">
-                        <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY (AI 功能必填)</label>
-                        <input type="password" id="input-apikey" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-400 transition" placeholder="AIzaSy..." enterkeyhint="next">
-                    </div>
-                    
-                    <label class="flex items-center gap-3 p-3 bg-gray-100 rounded-xl cursor-pointer border border-gray-200 mt-2">
-                        <input type="checkbox" id="input-dev-mode" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400 border-gray-300">
-                        <div class="flex-1">
-                            <div class="text-sm font-bold text-gray-700">啟用開發模式 (使用假資料)</div>
-                            <div class="text-[10px] text-gray-500">開啟後不會呼叫 API，節省額度</div>
-                        </div>
-                    </label>
+                </div>
 
-                    <button type="submit" class="w-full bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition-transform hover:bg-brand-600 mt-4">儲存個人與身體數值</button>
-                </form>
-                <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-line text-brand-500"></i> 體重趨勢
-                        </h3>
-                        <span class="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">最近 30 筆</span>
-                    </div>
-                    <svg id="body-chart-svg" viewBox="0 0 300 120" class="w-full h-32 text-brand-500" style="min-height: 150px;">
-                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#ccc" font-size="12">儲存 2 筆以上資料後顯示</text>
-                    </svg>
+                <div class="flex gap-2">
+                    <button onclick="app.cloudSync.loginAndRestore()" class="flex-1 bg-blue-50 text-blue-600 py-3 rounded-xl text-xs font-bold hover:bg-blue-100 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> 雲端還原
+                    </button>
+                    <button onclick="app.exportData()" class="flex-1 bg-gray-50 text-gray-600 py-3 rounded-xl text-xs font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-export"></i> 備份
+                    </button>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-[24px] shadow-soft mb-6">
+
+            <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-brand-500"></i> 體重趨勢
+                    </h3>
+                    <span class="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">最近 30 筆</span>
+                </div>
+                <svg id="body-chart-svg" viewBox="0 0 300 120" class="w-full h-32 text-brand-500" style="min-height: 150px;">
+                    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#ccc" font-size="12">尚無數據</text>
+                </svg>
+            </div>
+
+            <div class="bg-white p-6 rounded-[24px] shadow-soft mb-24">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-gray-800">成就與挑戰</h2>
                     <span class="text-xs bg-orange-100 text-orange-600 px-3 py-1 rounded-full font-bold">🔥 連續 <span id="streak-count">0</span> 天</span>
                 </div>
-                <div id="badge-container" class="grid grid-cols-4 gap-2">
-                    </div>
+                <div id="badge-container" class="grid grid-cols-4 gap-2"></div>
             </div>
-            <div class="flex gap-3 mb-8">
-                <button onclick="app.exportData()" class="flex-1 bg-white border border-gray-200 text-gray-600 font-bold py-3 rounded-xl text-xs hover:bg-gray-50"><i class="fa-solid fa-download mr-1"></i> 備份</button>
-                <label class="flex-1 bg-white border border-gray-200 text-gray-600 font-bold py-3 rounded-xl text-xs hover:bg-gray-50 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-upload mr-1"></i> 匯入<input type="file" class="hidden" onchange="app.importData(this)"></label>
-            </div>
-            <div class="text-center"><button onclick="app.resetData()" class="text-xs text-red-300 hover:text-red-500 underline">重置所有資料</button></div>
         </section>
+
+        <div id="modal-profile-edit" class="fixed inset-0 z-[100] hidden bg-gray-900/50 backdrop-blur-sm flex items-end sm:items-center sm:justify-center">
+            <div class="bg-white w-full h-[90vh] sm:h-[700px] sm:w-[450px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
+                
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-white">
+                    <h3 class="font-bold text-lg text-gray-800">編輯個人資料</h3>
+                    <button onclick="app.closeModal('modal-profile-edit')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="flex px-5 border-b border-gray-100">
+                    <button onclick="app.switchProfileTab('basic')" id="tab-btn-basic" class="flex-1 py-3 text-sm font-bold text-brand-500 border-b-2 border-brand-500 transition-colors">👤 基本</button>
+                    <button onclick="app.switchProfileTab('body')" id="tab-btn-body" class="flex-1 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-colors">💪 身體</button>
+                    <button onclick="app.switchProfileTab('system')" id="tab-btn-system" class="flex-1 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-colors">⚙️ 設定</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+                    
+                    <div id="tab-content-basic" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">身高 (cm)</label>
+                                <input type="number" id="input-height" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none" placeholder="160">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">體重 (kg)</label>
+                                <input type="number" id="input-weight" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none" placeholder="60">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">年齡</label>
+                                <input type="number" id="input-age" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none" placeholder="25">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">性別</label>
+                                <select id="input-gender" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none">
+                                    <option value="male">男性</option>
+                                    <option value="female">女性</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">日常活動量</label>
+                            <select id="input-activity" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none">
+                                <option value="1.2">久坐不動 (辦公室工作)</option>
+                                <option value="1.375">輕度活動 (每週運動1-3天)</option>
+                                <option value="1.55">中度活動 (每週運動3-5天)</option>
+                                <option value="1.725">高度活動 (每週運動6-7天)</option>
+                                <option value="1.9">超高度活動 (勞力工作/運動員)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">飲食目標</label>
+                            <select id="input-goal" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none">
+                                <option value="均衡飲食">🥗 均衡飲食 (維持健康)</option>
+                                <option value="增肌高蛋白">💪 增肌 (高蛋白/中碳水)</option>
+                                <option value="減脂低碳">🔥 減脂 (低碳水/高纖)</option>
+                                <option value="低GI飲食">📉 低GI (穩定血糖)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="tab-content-body" class="space-y-4 hidden">
+                         <div class="p-3 bg-blue-50 text-blue-600 text-xs rounded-xl mb-2 flex gap-2">
+                            <i class="fa-solid fa-circle-info mt-0.5"></i>
+                            <span>請依照您的體脂計數值填寫，若無可留空，AI 將自動推算。</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">體脂率 (%)</label>
+                                <input type="number" step="0.1" id="input-bf" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">肌肉量 (kg)</label>
+                                <input type="number" step="0.1" id="input-muscle" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">內臟脂肪</label>
+                                <input type="number" step="0.5" id="input-vfat" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">基礎代謝</label>
+                                <input type="number" id="input-scale-bmr" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">水分 (%)</label>
+                                <input type="number" step="0.1" id="input-water" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">蛋白質 (%)</label>
+                                <input type="number" step="0.1" id="input-protein" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">骨量 (kg)</label>
+                                <input type="number" step="0.1" id="input-bone" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">BMI</label>
+                                <input type="number" step="0.1" id="input-bmi" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="自動計算">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-content-system" class="space-y-5 hidden">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY (必填)</label>
+                            <input type="password" id="input-apikey" class="w-full bg-gray-800 text-white rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-brand-400 transition font-mono" placeholder="AIzaSy...">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">Google Script URL (雲端備份)</label>
+                            <input type="text" id="input-sync-url" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-brand-500 transition font-mono" placeholder="https://script.google.com...">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 (AI 避開)</label>
+                            <textarea id="input-exclude" rows="2" class="w-full bg-white border border-red-100 rounded-xl px-4 py-3 text-sm outline-none focus:border-red-300 transition" placeholder="例如：香菜、蝦子..."></textarea>
+                        </div>
+                        <label class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer">
+                            <input type="checkbox" id="input-dev-mode" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400 border-gray-300">
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-gray-700">啟用開發模式</div>
+                                <div class="text-[10px] text-gray-500">使用假資料不消耗額度</div>
+                            </div>
+                        </label>
+                        <div class="pt-4 border-t border-gray-200">
+                            <button onclick="app.resetData()" class="w-full text-red-400 text-xs py-2 hover:bg-red-50 rounded-lg transition">重置所有資料 (危險)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 border-t border-gray-100 bg-white safe-pb">
+                    <button type="button" onclick="app.saveProfile()" class="w-full bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition-transform hover:bg-brand-600">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i> 儲存並更新
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <nav class="bg-white px-6 pb-6 pt-2 shadow-[0_-5px_30px_rgba(0,0,0,0.03)] z-30 w-full rounded-t-[30px] fixed bottom-0 safe-pb">
@@ -651,10 +709,34 @@
         const app = {
             state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
 
+// --- ⚙️ 新增：開啟編輯個人資料彈窗 ---
+        openEditProfile: () => {
+            app.fillProfile(); // 先把現有資料填入 input
+            document.getElementById('modal-profile-edit').classList.remove('hidden');
+            app.switchProfileTab('basic'); // 預設打開第一頁
+        },
 
-// --- ☁️ 雲端同步模組 ---
+        // --- ⚙️ 新增：切換彈窗分頁 (Tab) ---
+        switchProfileTab: (tabName) => {
+            // 1. 重置所有按鈕樣式
+            ['basic', 'body', 'system'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const content = document.getElementById(`tab-content-${t}`);
+                
+                if (t === tabName) {
+                    btn.classList.add('text-brand-500', 'border-brand-500');
+                    btn.classList.remove('text-gray-400', 'border-transparent');
+                    content.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('text-brand-500', 'border-brand-500');
+                    btn.classList.add('text-gray-400', 'border-transparent');
+                    content.classList.add('hidden');
+                }
+            });
+        },
+// --- ☁️ 雲端同步模組 (修正補全版) ---
         cloudSync: {
-            // ✅ 新增：登入並強制還原 (Login & Restore)
+            // 登入並強制還原
             loginAndRestore: async () => {
                 const url = document.getElementById('input-sync-url').value.trim();
                 
@@ -663,9 +745,11 @@
 
                 // 顯示載入中
                 const btn = document.querySelector('button[onclick="app.cloudSync.loginAndRestore()"]');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 讀取中...';
-                btn.disabled = true;
+                const originalText = btn ? btn.innerHTML : '讀取雲端備份並還原';
+                if(btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 讀取中...';
+                    btn.disabled = true;
+                }
 
                 try {
                     console.log("☁️ 正在嘗試從雲端還原...");
@@ -674,8 +758,7 @@
 
                     if (!data || !data.timestamp) {
                         alert("⚠️ 雲端上似乎沒有備份資料，或是網址錯誤。");
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
+                        if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
                         return;
                     }
 
@@ -701,26 +784,87 @@
                         alert("✅ 還原成功！App 將重新啟動。");
                         location.reload();
                     } else {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
+                        if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
                     }
 
                 } catch (e) {
                     console.error("還原失敗", e);
                     alert("❌ 還原失敗，請檢查網址或網路連線。");
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
                 }
             },
 
-            // 上傳資料到雲端 (維持不變)
+            // ✅ 補全：上傳資料到雲端
             upload: async () => {
-                // ... (原本的 upload 程式碼) ...
+                const u = app.state.user;
+                if (!u || !u.syncUrl) return; // 沒設定網址就不動作
+
+                // 準備整包資料 (包含所有擴充功能)
+                const payload = {
+                    timestamp: Date.now(),
+                    user: localStorage.getItem('bento_user'),
+                    plan: localStorage.getItem('bento_plan'),
+                    shopping: localStorage.getItem('bento_shopping'),
+                    recipes: localStorage.getItem('bento_recipes'),
+                    history: localStorage.getItem('bento_history'),
+                    prep: localStorage.getItem('bento_prep'),
+                    ratings: localStorage.getItem('bento_ratings'),
+                    bodyLog: localStorage.getItem('bento_body_log'),
+                    game: localStorage.getItem('bento_game'),
+                    lastDate: localStorage.getItem('bento_last_date')
+                };
+
+                console.log("☁️ 正在背景上傳備份...");
+                try {
+                    await fetch(u.syncUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    console.log("✅ 雲端備份完成");
+                } catch (e) {
+                    console.error("備份失敗", e);
+                }
             },
 
-            // 從雲端下載 (自動同步用) (維持不變)
+            // ✅ 補全：從雲端下載資料 (自動同步用)
             download: async () => {
-                // ... (原本的 download 程式碼) ...
+                const u = app.state.user;
+                if (!u || !u.syncUrl) return;
+
+                console.log("☁️ 正在檢查雲端存檔...");
+                try {
+                    const res = await fetch(u.syncUrl);
+                    const data = await res.json();
+
+                    if (!data || !data.timestamp) return;
+
+                    // 比較時間：如果雲端比較新，才詢問還原
+                    const localTime = parseInt(localStorage.getItem('bento_timestamp') || '0');
+                    
+                    if (data.timestamp > localTime) {
+                        if (confirm(`☁️ 發現雲端有較新的備份 (${new Date(data.timestamp).toLocaleString()})！\n\n是否要同步還原？`)) {
+                            if(data.user) localStorage.setItem('bento_user', data.user);
+                            if(data.plan) localStorage.setItem('bento_plan', data.plan);
+                            if(data.shopping) localStorage.setItem('bento_shopping', data.shopping);
+                            if(data.recipes) localStorage.setItem('bento_recipes', data.recipes);
+                            if(data.history) localStorage.setItem('bento_history', data.history);
+                            if(data.prep) localStorage.setItem('bento_prep', data.prep);
+                            if(data.ratings) localStorage.setItem('bento_ratings', data.ratings);
+                            if(data.bodyLog) localStorage.setItem('bento_body_log', data.bodyLog);
+                            if(data.game) localStorage.setItem('bento_game', data.game);
+                            if(data.lastDate) localStorage.setItem('bento_last_date', data.lastDate);
+                            
+                            localStorage.setItem('bento_timestamp', data.timestamp);
+                            
+                            alert("✅ 同步成功！App 將重新整理。");
+                            location.reload();
+                        }
+                    }
+                } catch (e) {
+                    console.error("雲端讀取失敗", e);
+                }
             }
         },
         init: () => {
@@ -1275,6 +1419,7 @@
                 // 簡單的回饋
                 if(app.state.prep[dayKey]) {
                     app.showToast('✅ 已完成明日備料');
+                    app.cloudSync.upload();
                 }
             },
             navigateTo: (pageId) => {
@@ -1304,6 +1449,7 @@
 
         // --- 請替換 app 物件中的 saveProfile 函式 ---
 
+// --- [修正版] 儲存個人資料 ---
         saveProfile: () => {
             // 1. 獲取基本欄位
             const h = parseFloat(document.getElementById('input-height').value);
@@ -1312,76 +1458,103 @@
             const gender = document.getElementById('input-gender').value;
             const activity = parseFloat(document.getElementById('input-activity').value);
             const goal = document.getElementById('input-goal').value;
+            
+            // 2. 系統設定
             const key = document.getElementById('input-apikey').value.trim();
             const exclude = document.getElementById('input-exclude').value.trim();
             const isDev = document.getElementById('input-dev-mode').checked;
             const syncUrl = document.getElementById('input-sync-url').value.trim();
-            if (!h || !w || !age) return app.showToast('請填寫基本身高體重資料');
 
-            // 2. 獲取身體組成欄位
-            const bf = parseFloat(document.getElementById('input-bf').value);
-            const muscle = parseFloat(document.getElementById('input-muscle').value);
-            const vfat = parseFloat(document.getElementById('input-vfat').value);
-            const water = parseFloat(document.getElementById('input-water').value);
-            const protein = parseFloat(document.getElementById('input-protein').value);
-            const bone = parseFloat(document.getElementById('input-bone').value);
-            const scaleBmr = parseFloat(document.getElementById('input-scale-bmr').value);
-            let bmi = parseFloat(document.getElementById('input-bmi').value);
+            if (!h || !w || !age) return app.showToast('❌ 請填寫身高、體重與年齡');
 
-            if (!bmi && h && w) bmi = (w / ((h / 100) * (h / 100))).toFixed(1);
+            // 3. 獲取身體組成欄位 (防呆：若為空則給 null)
+            const getVal = (id) => document.getElementById(id).value ? parseFloat(document.getElementById(id).value) : null;
+            
+            const bf = getVal('input-bf');
+            const muscle = getVal('input-muscle');
+            const vfat = getVal('input-vfat');
+            const water = getVal('input-water');
+            const protein = getVal('input-protein');
+            const bone = getVal('input-bone');
+            const scaleBmr = getVal('input-scale-bmr');
+            let bmi = getVal('input-bmi');
 
-            // 3. 計算 BMR 與 TDEE
+            // 自動計算 BMI
+            if (!bmi && h && w) bmi = parseFloat((w / ((h / 100) * (h / 100))).toFixed(1));
+
+            // 4. 計算 BMR 與 TDEE
             let bmr = 0;
-            if (bf > 0) {
+            if (bf && bf > 0) {
+                // Katch-McArdle 公式 (有體脂率時較準)
                 const lbm = w * (1 - (bf / 100));
                 bmr = 370 + (21.6 * lbm);
-            } else if (scaleBmr > 0) {
+            } else if (scaleBmr && scaleBmr > 0) {
                 bmr = scaleBmr;
             } else {
+                // Mifflin-St Jeor 公式
                 if (gender === 'male') bmr = (10 * w) + (6.25 * h) - (5 * age) + 5;
                 else bmr = (10 * w) + (6.25 * h) - (5 * age) - 161;
             }
-
             const tdee = Math.round(bmr * activity);
 
-            // 4. 更新 User State
+            // 5. 更新 User State
             app.state.user = {
                 height: h, weight: w, age: age, gender: gender, activity: activity,
-                goal: goal, tdee: tdee, apiKey: key,syncUrl: syncUrl,
-                exclude: exclude, // 儲存排除食材
-                isDev: isDev, // 儲存狀態
-                bodyComp: { bmi, bf: bf||null, muscle: muscle||null, vfat: vfat||null, water: water||null, protein: protein||null, bone: bone||null, scaleBmr: scaleBmr||null }
+                goal: goal, tdee: tdee, apiKey: key, syncUrl: syncUrl,
+                exclude: exclude, isDev: isDev,
+                bodyComp: { bmi, bf, muscle, vfat, water, protein, bone, scaleBmr }
             };
+            
             localStorage.setItem('bento_user', JSON.stringify(app.state.user));
             localStorage.setItem('bento_timestamp', Date.now());
 
-            // 5. ✅ 新增：自動記錄體態趨勢 (Body Log)
-            const todayDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' }); // 例如 "1/15"
-            app.cloudSync.upload();
-            // 檢查今天是否已經記錄過 (避免重複)
+            // 6. 記錄體態趨勢 (Body Log)
+            const todayDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+            
+            // 初始化 bodyLog (防止為 null)
+            if (!Array.isArray(app.state.bodyLog)) app.state.bodyLog = [];
+            
             const existingIndex = app.state.bodyLog.findIndex(log => log.date === todayDate);
             const logEntry = { date: todayDate, weight: w, bf: bf || 0 };
 
             if (existingIndex >= 0) {
-                app.state.bodyLog[existingIndex] = logEntry; // 更新今天的
+                app.state.bodyLog[existingIndex] = logEntry;
             } else {
-                app.state.bodyLog.push(logEntry); // 新增
-                // 只保留最近 30 筆，避免資料過多
+                app.state.bodyLog.push(logEntry);
                 if (app.state.bodyLog.length > 30) app.state.bodyLog.shift();
             }
             localStorage.setItem('bento_body_log', JSON.stringify(app.state.bodyLog));
-            // ✅ 觸發雲端備份
-            app.cloudSync.upload();
 
-            // 重新繪製圖表
-            app.renderBodyChart();
-            // 提示訊息區分
-            if(isDev) app.showToast('⚠️ 已啟用開發模式 (不消耗額度)');
-            else app.showToast(`設定已儲存！目標：${goal}`);
+            // 7. 觸發動作
+            app.cloudSync.upload(); // 上傳備份
+            app.renderBodyChart();  // 重繪圖表
+            app.updateProfileDisplay(); // 更新儀表板文字
+            app.closeModal('modal-profile-edit'); // 關閉彈窗
             
-            // 🔴 修正重點：儲存成功後，強制顯示導覽列並跳轉首頁
+            // 顯示成功並顯示導覽列
+            if(isDev) app.showToast('✅ 儲存成功 (開發模式)');
+            else app.showToast(`✅ 設定已更新！TDEE: ${tdee}`);
+            
             document.querySelector('nav').classList.remove('hidden');
-            app.navigateTo('dashboard');
+        },
+        // --- ⚙️ 新增：更新個人頁面儀表板顯示 ---
+        updateProfileDisplay: () => {
+            const u = app.state.user;
+            if (!u) return;
+
+            // 更新儀表板文字
+            const dispGoal = document.getElementById('disp-goal');
+            const dispBasic = document.getElementById('disp-basic');
+            const dispWeight = document.getElementById('disp-weight');
+            const dispBf = document.getElementById('disp-bf');
+            const dispBmi = document.getElementById('disp-bmi');
+
+            if(dispGoal) dispGoal.innerText = u.goal || '尚未設定';
+            if(dispBasic) dispBasic.innerText = `${u.age}歲 / ${u.height}cm / ${u.gender === 'male' ? '男' : '女'}`;
+            if(dispWeight) dispWeight.innerText = u.weight || '--';
+            
+            if(dispBf) dispBf.innerText = (u.bodyComp && u.bodyComp.bf) ? u.bodyComp.bf : '--';
+            if(dispBmi) dispBmi.innerText = (u.bodyComp && u.bodyComp.bmi) ? u.bodyComp.bmi : '--';
         },
         // --- 請替換 app 物件中的 fillProfile 函式 ---
 
@@ -1412,6 +1585,7 @@
             }
 
             // ✅ 新增：進入頁面時繪製圖表
+            app.updateProfileDisplay(); 
             app.renderBodyChart();
         },
         // --- 請新增此函式到 app 物件中 ---
@@ -1883,6 +2057,7 @@
 
                 app.showToast('✨ 新菜色已上桌！');
                 app.renderPlanner();
+                app.cloudSync.upload(); // ✅ 新增這行：改了菜單要馬上存
 
             } catch (e) {
                 console.error(e);
@@ -2240,12 +2415,14 @@
                 app.state.shopping[item] = !app.state.shopping[item];
                 localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
                 app.renderShopping();
+                app.cloudSync.upload();
             },
 
             clearShoppingList: () => {
                 for(let k in app.state.shopping) { if(app.state.shopping[k]) delete app.state.shopping[k]; }
                 localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
                 app.renderShopping();
+                app.cloudSync.upload();
             },
         // --- 🍱 新增：週末批量備料模式 (Batch Prep) ---
         openBatchPrep: () => {
@@ -2659,6 +2836,7 @@
                     }
                     
                     app.showToast(r.favorite ? '❤️ 已加入收藏' : '💔 已取消收藏');
+                    app.cloudSync.upload();
                 }
             },
 
