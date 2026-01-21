@@ -2958,6 +2958,7 @@
                         localStorage.setItem('bento_plan', JSON.stringify(app.state.plan));
                         app.renderPlanner();
                         app.closeModal('modal-selector');
+                        app.cloudSync.upload();
                     };
                     d.innerHTML = `
                         <div class="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center text-brand-400 shrink-0"><i class="fa-solid fa-utensils"></i></div>
