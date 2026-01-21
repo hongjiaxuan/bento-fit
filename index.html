@@ -243,14 +243,6 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2">
-                    <button onclick="app.cloudSync.loginAndRestore()" class="flex-1 bg-blue-50 text-blue-600 py-3 rounded-xl text-xs font-bold hover:bg-blue-100 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-cloud-arrow-down"></i> 雲端還原
-                    </button>
-                    <button onclick="app.exportData()" class="flex-1 bg-gray-50 text-gray-600 py-3 rounded-xl text-xs font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-export"></i> 備份
-                    </button>
-                </div>
             </div>
 
             <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-6">
@@ -385,7 +377,12 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">Google Script URL (雲端備份)</label>
-                            <input type="text" id="input-sync-url" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-brand-500 transition font-mono" placeholder="https://script.google.com...">
+                            <div class="flex gap-2">
+                                <input type="text" id="input-sync-url" class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-brand-500 transition font-mono" placeholder="https://script.google.com...">
+                                <button onclick="app.cloudSync.loginAndRestore()" class="bg-blue-50 text-blue-500 px-3 rounded-xl hover:bg-blue-100 transition" title="立即還原">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 (AI 避開)</label>
@@ -734,72 +731,88 @@
                 }
             });
         },
-// --- ☁️ 雲端同步模組 (修正補全版) ---
+// --- ☁️ 雲端同步模組 (極簡無感化版) ---
         cloudSync: {
-            // 登入並強制還原
+            // 1. 手動登入並還原 (編輯資料頁面用 - 保持有 Loading 提示)
             loginAndRestore: async () => {
-                const url = document.getElementById('input-sync-url').value.trim();
+                const urlInput = document.getElementById('input-sync-url');
+                const url = urlInput ? urlInput.value.trim() : '';
                 
                 if (!url) return app.showToast('❌ 請先輸入雲端備份網址');
                 if (!url.includes('script.google.com')) return app.showToast('❌ 網址格式錯誤');
 
-                // 顯示載入中
-                const btn = document.querySelector('button[onclick="app.cloudSync.loginAndRestore()"]');
-                const originalText = btn ? btn.innerHTML : '讀取雲端備份並還原';
+                // 記憶網址
+                if (!app.state.user) app.state.user = {};
+                app.state.user.syncUrl = url;
+                localStorage.setItem('bento_user', JSON.stringify(app.state.user));
+
+                // 按鈕變更為讀取中
+                const btn = document.querySelector('button[title="立即還原"]');
+                const originalIcon = btn ? btn.innerHTML : '';
                 if(btn) {
-                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 讀取中...';
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
                     btn.disabled = true;
                 }
 
                 try {
-                    console.log("☁️ 正在嘗試從雲端還原...");
                     const res = await fetch(url);
                     const data = await res.json();
 
                     if (!data || !data.timestamp) {
-                        alert("⚠️ 雲端上似乎沒有備份資料，或是網址錯誤。");
-                        if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
+                        alert("⚠️ 雲端上沒有資料，或網址錯誤。");
+                        if(btn) { btn.innerHTML = originalIcon; btn.disabled = false; }
                         return;
                     }
 
-                    // 成功讀取到資料，詢問是否覆蓋
                     const dateStr = new Date(data.timestamp).toLocaleString();
-                    if (confirm(`☁️ 找到雲端備份！\n存檔時間：${dateStr}\n\n確定要還原到這台裝置嗎？\n(目前的設定將被覆蓋)`)) {
-                        
-                        // 1. 還原所有資料
-                        if(data.user) localStorage.setItem('bento_user', data.user);
-                        if(data.plan) localStorage.setItem('bento_plan', data.plan);
-                        if(data.shopping) localStorage.setItem('bento_shopping', data.shopping);
-                        if(data.recipes) localStorage.setItem('bento_recipes', data.recipes);
-                        if(data.history) localStorage.setItem('bento_history', data.history);
-                        if(data.prep) localStorage.setItem('bento_prep', data.prep);
-                        if(data.ratings) localStorage.setItem('bento_ratings', data.ratings);
-                        if(data.bodyLog) localStorage.setItem('bento_body_log', data.bodyLog);
-                        if(data.game) localStorage.setItem('bento_game', data.game);
-                        if(data.lastDate) localStorage.setItem('bento_last_date', data.lastDate);
-                        
-                        // 2. 更新時間戳
-                        localStorage.setItem('bento_timestamp', data.timestamp);
-
-                        alert("✅ 還原成功！App 將重新啟動。");
-                        location.reload();
+                    // 手動還原仍保留確認視窗
+                    if (confirm(`☁️ 找到雲端備份！\n時間：${dateStr}\n\n確定要還原嗎？`)) {
+                        app.cloudSync.applyRestore(data);
                     } else {
-                        if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
+                        if(btn) { btn.innerHTML = originalIcon; btn.disabled = false; }
                     }
 
                 } catch (e) {
                     console.error("還原失敗", e);
-                    alert("❌ 還原失敗，請檢查網址或網路連線。");
-                    if(btn) { btn.innerHTML = originalText; btn.disabled = false; }
+                    alert("❌ 連線失敗，請檢查網址。");
+                    if(btn) { btn.innerHTML = originalIcon; btn.disabled = false; }
                 }
             },
 
-            // ✅ 補全：上傳資料到雲端
+            // 2. 自動檢查 (App 啟動時用 - 🔕 完全靜音模式)
+            download: async () => {
+                const u = app.state.user;
+                if (!u || !u.syncUrl) return;
+
+                // console.log("☁️ 背景檢查中..."); // 僅在 Console 顯示，不打擾使用者
+                try {
+                    const res = await fetch(u.syncUrl);
+                    const data = await res.json();
+
+                    if (!data || !data.timestamp) return;
+
+                    const localTime = parseInt(localStorage.getItem('bento_timestamp') || '0');
+                    
+                    // 🔥 只有當「發現新版」才跳出視窗
+                    if (data.timestamp > localTime) {
+                        const dateStr = new Date(data.timestamp).toLocaleString();
+                        
+                        // 這是唯一會出現的視窗
+                        if (confirm(`📲 發現新版本備份！\n(${dateStr})\n\n是否立即同步更新？`)) {
+                            app.cloudSync.applyRestore(data);
+                        }
+                    }
+                } catch (e) {
+                    // 背景檢查失敗也不報錯，以免影響體驗
+                    console.error("背景同步略過", e);
+                }
+            },
+
+            // 3. 上傳 (保持不變)
             upload: async () => {
                 const u = app.state.user;
-                if (!u || !u.syncUrl) return; // 沒設定網址就不動作
+                if (!u || !u.syncUrl) return;
 
-                // 準備整包資料 (包含所有擴充功能)
                 const payload = {
                     timestamp: Date.now(),
                     user: localStorage.getItem('bento_user'),
@@ -814,57 +827,34 @@
                     lastDate: localStorage.getItem('bento_last_date')
                 };
 
-                console.log("☁️ 正在背景上傳備份...");
                 try {
                     await fetch(u.syncUrl, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    console.log("✅ 雲端備份完成");
-                } catch (e) {
-                    console.error("備份失敗", e);
-                }
+                    // console.log("✅ 上傳完成");
+                } catch (e) { console.error(e); }
             },
 
-            // ✅ 補全：從雲端下載資料 (自動同步用)
-            download: async () => {
-                const u = app.state.user;
-                if (!u || !u.syncUrl) return;
-
-                console.log("☁️ 正在檢查雲端存檔...");
-                try {
-                    const res = await fetch(u.syncUrl);
-                    const data = await res.json();
-
-                    if (!data || !data.timestamp) return;
-
-                    // 比較時間：如果雲端比較新，才詢問還原
-                    const localTime = parseInt(localStorage.getItem('bento_timestamp') || '0');
-                    
-                    if (data.timestamp > localTime) {
-                        if (confirm(`☁️ 發現雲端有較新的備份 (${new Date(data.timestamp).toLocaleString()})！\n\n是否要同步還原？`)) {
-                            if(data.user) localStorage.setItem('bento_user', data.user);
-                            if(data.plan) localStorage.setItem('bento_plan', data.plan);
-                            if(data.shopping) localStorage.setItem('bento_shopping', data.shopping);
-                            if(data.recipes) localStorage.setItem('bento_recipes', data.recipes);
-                            if(data.history) localStorage.setItem('bento_history', data.history);
-                            if(data.prep) localStorage.setItem('bento_prep', data.prep);
-                            if(data.ratings) localStorage.setItem('bento_ratings', data.ratings);
-                            if(data.bodyLog) localStorage.setItem('bento_body_log', data.bodyLog);
-                            if(data.game) localStorage.setItem('bento_game', data.game);
-                            if(data.lastDate) localStorage.setItem('bento_last_date', data.lastDate);
-                            
-                            localStorage.setItem('bento_timestamp', data.timestamp);
-                            
-                            alert("✅ 同步成功！App 將重新整理。");
-                            location.reload();
-                        }
-                    }
-                } catch (e) {
-                    console.error("雲端讀取失敗", e);
-                }
+            // 4. 執行還原 (🔕 移除成功提示，直接重整)
+            applyRestore: (data) => {
+                if(data.user) localStorage.setItem('bento_user', data.user);
+                if(data.plan) localStorage.setItem('bento_plan', data.plan);
+                if(data.shopping) localStorage.setItem('bento_shopping', data.shopping);
+                if(data.recipes) localStorage.setItem('bento_recipes', data.recipes);
+                if(data.history) localStorage.setItem('bento_history', data.history);
+                if(data.prep) localStorage.setItem('bento_prep', data.prep);
+                if(data.ratings) localStorage.setItem('bento_ratings', data.ratings);
+                if(data.bodyLog) localStorage.setItem('bento_body_log', data.bodyLog);
+                if(data.game) localStorage.setItem('bento_game', data.game);
+                if(data.lastDate) localStorage.setItem('bento_last_date', data.lastDate);
+                
+                localStorage.setItem('bento_timestamp', data.timestamp);
+                
+                // 🔥 優化：不再跳出 alert("還原成功")，直接重整畫面
+                // 這樣使用者按一次確定，畫面一閃就更新好了，最流暢
+                location.reload();
             }
         },
         init: () => {
@@ -940,10 +930,11 @@
                 });
             });
             setTimeout(() => {
+                // 只有當使用者有設定過 syncUrl 時才檢查
                 if(app.state.user && app.state.user.syncUrl) {
-                    app.cloudSync.download();
+                    app.cloudSync.download(); 
                 }
-            }, 1000);
+            }, 500);
         },
         // --- 請替換 app 物件中的 renderDashboard 函式 ---
 
@@ -1449,9 +1440,12 @@
 
         // --- 請替換 app 物件中的 saveProfile 函式 ---
 
-// --- [修正版] 儲存個人資料 ---
+// --- [優化版] 儲存個人資料 (含智慧還原判斷) ---
         saveProfile: () => {
-            // 1. 獲取基本欄位
+            // 0. 獲取舊網址 (用於比對)
+            const oldUrl = app.state.user ? app.state.user.syncUrl : '';
+
+            // 1. 獲取所有欄位值
             const h = parseFloat(document.getElementById('input-height').value);
             const w = parseFloat(document.getElementById('input-weight').value);
             const age = parseInt(document.getElementById('input-age').value);
@@ -1459,17 +1453,25 @@
             const activity = parseFloat(document.getElementById('input-activity').value);
             const goal = document.getElementById('input-goal').value;
             
-            // 2. 系統設定
             const key = document.getElementById('input-apikey').value.trim();
             const exclude = document.getElementById('input-exclude').value.trim();
             const isDev = document.getElementById('input-dev-mode').checked;
             const syncUrl = document.getElementById('input-sync-url').value.trim();
 
+            // 🔥🔥🔥 優化重點：智慧判斷還原意圖 🔥🔥🔥
+            // 如果使用者填了網址，但身高/體重/年齡有缺漏 -> 判定為「想還原」
+            if (syncUrl && (!h || !w || !age)) {
+                if(confirm("偵測到您輸入了備份網址，且尚未填寫完整身體數值。\n\n系統判斷您可能想要「還原備份」。\n是否直接執行還原？")) {
+                    app.cloudSync.loginAndRestore();
+                    return; // 中止後續的儲存動作
+                }
+            }
+
+            // 2. 正常驗證 (如果沒觸發還原，才檢查必填)
             if (!h || !w || !age) return app.showToast('❌ 請填寫身高、體重與年齡');
 
-            // 3. 獲取身體組成欄位 (防呆：若為空則給 null)
+            // 3. 獲取身體組成 (防呆)
             const getVal = (id) => document.getElementById(id).value ? parseFloat(document.getElementById(id).value) : null;
-            
             const bf = getVal('input-bf');
             const muscle = getVal('input-muscle');
             const vfat = getVal('input-vfat');
@@ -1479,25 +1481,22 @@
             const scaleBmr = getVal('input-scale-bmr');
             let bmi = getVal('input-bmi');
 
-            // 自動計算 BMI
             if (!bmi && h && w) bmi = parseFloat((w / ((h / 100) * (h / 100))).toFixed(1));
 
-            // 4. 計算 BMR 與 TDEE
+            // 4. 計算 BMR/TDEE
             let bmr = 0;
             if (bf && bf > 0) {
-                // Katch-McArdle 公式 (有體脂率時較準)
                 const lbm = w * (1 - (bf / 100));
                 bmr = 370 + (21.6 * lbm);
             } else if (scaleBmr && scaleBmr > 0) {
                 bmr = scaleBmr;
             } else {
-                // Mifflin-St Jeor 公式
                 if (gender === 'male') bmr = (10 * w) + (6.25 * h) - (5 * age) + 5;
                 else bmr = (10 * w) + (6.25 * h) - (5 * age) - 161;
             }
             const tdee = Math.round(bmr * activity);
 
-            // 5. 更新 User State
+            // 5. 建立新狀態物件
             app.state.user = {
                 height: h, weight: w, age: age, gender: gender, activity: activity,
                 goal: goal, tdee: tdee, apiKey: key, syncUrl: syncUrl,
@@ -1506,35 +1505,42 @@
             };
             
             localStorage.setItem('bento_user', JSON.stringify(app.state.user));
-            localStorage.setItem('bento_timestamp', Date.now());
 
-            // 6. 記錄體態趨勢 (Body Log)
+            // 6. 記錄體態 (BodyLog)
             const todayDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
-            
-            // 初始化 bodyLog (防止為 null)
             if (!Array.isArray(app.state.bodyLog)) app.state.bodyLog = [];
             
             const existingIndex = app.state.bodyLog.findIndex(log => log.date === todayDate);
             const logEntry = { date: todayDate, weight: w, bf: bf || 0 };
 
-            if (existingIndex >= 0) {
-                app.state.bodyLog[existingIndex] = logEntry;
-            } else {
-                app.state.bodyLog.push(logEntry);
-                if (app.state.bodyLog.length > 30) app.state.bodyLog.shift();
+            if (existingIndex >= 0) app.state.bodyLog[existingIndex] = logEntry;
+            else { 
+                app.state.bodyLog.push(logEntry); 
+                if (app.state.bodyLog.length > 30) app.state.bodyLog.shift(); 
             }
             localStorage.setItem('bento_body_log', JSON.stringify(app.state.bodyLog));
 
-            // 7. 觸發動作
-            app.cloudSync.upload(); // 上傳備份
-            app.renderBodyChart();  // 重繪圖表
-            app.updateProfileDisplay(); // 更新儀表板文字
-            app.closeModal('modal-profile-edit'); // 關閉彈窗
-            
-            // 顯示成功並顯示導覽列
-            if(isDev) app.showToast('✅ 儲存成功 (開發模式)');
-            else app.showToast(`✅ 設定已更新！TDEE: ${tdee}`);
-            
+            // 7. 判斷與上傳邏輯
+            if (oldUrl && oldUrl === syncUrl) {
+                // ✅ 這是 A 電腦：網址沒變，單純改資料 -> 自動備份
+                localStorage.setItem('bento_timestamp', Date.now()); // 更新本地時間戳
+                app.cloudSync.upload(); // 🔥 觸發上傳
+                
+                if(isDev) app.showToast('✅ 設定已儲存 (已雲端備份)');
+                else app.showToast(`✅ 設定已更新！TDEE: ${tdee}`);
+
+            } else if (!oldUrl && syncUrl) {
+                // 這是 B 手機 (初次)：剛填入網址，只存網址，不自動上傳覆蓋
+                app.showToast('✅ 網址已儲存，請按上方按鈕進行還原');
+                // 這裡不用 call upload，避免把空資料傳上去
+            } else {
+                // 純本地
+                app.showToast('✅ 設定已更新 (僅本地)');
+            }
+
+            app.renderBodyChart();
+            app.updateProfileDisplay();
+            app.closeModal('modal-profile-edit');
             document.querySelector('nav').classList.remove('hidden');
         },
         // --- ⚙️ 新增：更新個人頁面儀表板顯示 ---
@@ -2665,6 +2671,7 @@
             app.closeModal('modal-batch-prep');
             app.renderDashboard(); // 更新首頁卡片顏色
             app.showToast("✅ 已標記本週備料完成！");
+            app.cloudSync.upload();
         },
             // --- 請替換 app.copyShoppingList ---
             copyShoppingList: async () => {
