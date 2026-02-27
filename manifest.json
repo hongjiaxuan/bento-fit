@@ -1,21 +1,24 @@
 {
-  "name": "Bento Fit 健康餐盒",
+  "name": "Bento Fit 智能便當規劃",
   "short_name": "Bento Fit",
+  "description": "AI 智能備餐與健康數據追蹤應用程式",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f9faf9",
-  "theme_color": "#8bc34a",
+  "background_color": "#fcfcfb",
+  "theme_color": "#7a906f",
   "orientation": "portrait",
   "icons": [
     {
       "src": "icon.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

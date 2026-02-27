@@ -2,11 +2,15 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">    
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Bento Fit 健康餐盒</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">    
+    <title>Bento Fit</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#8bc34a">
+    
+    <meta name="theme-color" content="#7a906f">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Bento Fit">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -18,22 +22,25 @@
             theme: {
                 extend: {
                     colors: {
+                        // 全新的「抹茶/鼠尾草綠」色階 (低飽和、沉穩)
                         brand: {
-                            50: '#f1f8e9',
-                            100: '#dcedc8',
-                            400: '#9ccc65',
-                            500: '#8bc34a', // Fresh Green
-                            600: '#7cb342',
-                            900: '#33691e',
+                            50: '#f5f7f4',  // 極淡灰綠背景
+                            100: '#e6ebe3', // 邊框與次要背景
+                            400: '#9ab08f', // 輔助色
+                            500: '#7a906f', // 主視覺抹茶綠
+                            600: '#637858', // 點擊狀態
+                            900: '#3a4734', // 深色文字
                         },
+                        paper: '#fcfcfb', // 溫暖的紙張白背景
                         dark: '#2c3e50',
                     },
                     fontFamily: {
                         sans: ['Noto Sans TC', 'sans-serif'],
                     },
                     boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-                        'float': '0 10px 30px -5px rgba(139, 195, 74, 0.2)',
+                        // 極致輕柔的陰影，製造空氣感
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.03)',
+                        'float': '0 8px 25px -5px rgba(122, 144, 111, 0.15)',
                     },
                     animation: {
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -47,29 +54,30 @@
         body {
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
-            background-color: #f9faf9;
+            background-color: #fcfcfb; /* 溫暖紙張白 */
+            letter-spacing: 0.02em; /* 增加一點點字距，提升呼吸感 */
         }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Custom Checkbox */
+        /* Custom Checkbox (抹茶綠) */
         .custom-checkbox:checked + div {
-            background-color: #8bc34a;
-            border-color: #8bc34a;
+            background-color: #7a906f;
+            border-color: #7a906f;
         }
         .custom-checkbox:checked + div i {
             display: block;
         }
         .modal-backdrop {
-            background-color: rgba(0,0,0,0.3);
-            backdrop-filter: blur(4px);
+            background-color: rgba(30, 35, 30, 0.4); /* 帶有一點點綠意深灰的遮罩 */
+            backdrop-filter: blur(6px);
         }
         .shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
+            background: linear-gradient(90deg, #f5f7f4 25%, #e6ebe3 50%, #f5f7f4 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
@@ -78,12 +86,12 @@
 </head>
 <body class="text-gray-700 font-sans antialiased h-screen flex flex-col overflow-hidden">
 
-    <header class="bg-white/95 backdrop-blur-sm px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+    <header class="bg-paper/90 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100">
         <div>
-            <h1 id="page-title" class="text-xl font-bold text-gray-800 tracking-tight">Bento Fit</h1>
-            <p id="page-subtitle" class="text-[10px] text-gray-400 font-medium">今天也要吃得健康</p>
+            <h1 id="page-title" class="text-xl font-bold text-gray-800 tracking-wider">Bento Fit</h1>
+            <p id="page-subtitle" class="text-[10px] text-gray-400 font-medium tracking-widest mt-0.5">今天也要吃得健康</p>
         </div>
-        <div class="w-9 h-9 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 cursor-pointer hover:bg-brand-100 transition" onclick="app.navigateTo('profile')">
+        <div class="w-9 h-9 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 cursor-pointer hover:bg-brand-100 transition border border-brand-100" onclick="app.navigateTo('profile')">
             <i class="fa-solid fa-user text-sm"></i>
         </div>
     </header>
@@ -131,7 +139,7 @@
                 <div id="tomorrow-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-orange-100/50">
                     </div>
             </div>
-            <button onclick="app.navigateTo('planner')" class="w-full bg-white border border-brand-100 text-brand-600 font-bold py-3.5 rounded-2xl hover:bg-brand-50 transition active:scale-95 text-sm flex items-center justify-center gap-2 shadow-sm">
+            <button onclick="app.navigateTo('planner')" class="w-full bg-white border border-gray-200 text-gray-500 font-bold py-4 rounded-2xl hover:bg-brand-50 hover:text-brand-600 hover:border-brand-100 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2 tracking-widest">
                 <i class="fa-solid fa-calendar-plus"></i> 規劃下週便當
             </button>
         </section>
@@ -170,9 +178,14 @@
                 <button onclick="app.copyShoppingList()" class="text-xs text-brand-500 font-bold hover:text-brand-600 flex items-center gap-1"><i class="fa-regular fa-copy"></i> 複製清單</button>
                 <button onclick="app.clearShoppingList()" class="text-xs text-red-400 font-bold hover:text-red-500 flex items-center gap-1"><i class="fa-regular fa-trash-can"></i> 清除已買</button>
             </div>
-            <button onclick="app.filterStaples()" class="text-xs text-gray-400 font-bold hover:text-gray-600 flex items-center gap-1">
-                <i class="fa-solid fa-filter"></i> 隱藏常備品
-            </button>
+            <div class="flex justify-between items-center mb-6 mt-2 px-1">
+                <button onclick="app.filterStaples()" class="text-xs text-brand-600 font-bold hover:text-brand-700 flex items-center gap-1.5 bg-brand-50/80 px-4 py-2 rounded-full border border-brand-100 transition active:scale-95">
+                    <i class="fa-solid fa-eye-slash"></i> 一鍵隱藏常備庫
+                </button>
+                <button onclick="app.openStapleManager()" class="text-xs text-gray-400 font-bold hover:text-gray-600 flex items-center gap-1 px-2 py-1 transition active:scale-95">
+                    <i class="fa-solid fa-box-open"></i> 管理常備庫
+                </button>
+            </div>
             
             <div id="shopping-list-container" class="space-y-8 pb-32"></div>
             <div id="shopping-list-container" class="space-y-8 pb-32"></div>
@@ -410,12 +423,12 @@
         </div>
     </main>
 
-    <nav class="bg-white px-6 pb-6 pt-2 shadow-[0_-5px_30px_rgba(0,0,0,0.03)] z-30 w-full rounded-t-[30px] fixed bottom-0 safe-pb">
+    <nav class="bg-paper px-6 pb-6 pt-3 border-t border-gray-100 z-30 w-full fixed bottom-0 safe-pb">
         <ul class="flex justify-between items-center">
-            <li class="nav-item w-full" onclick="app.navigateTo('dashboard')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-brand-500 py-2" id="nav-dashboard"><i class="fa-solid fa-house text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">首頁</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('planner')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-gray-300 py-2" id="nav-planner"><i class="fa-solid fa-calendar-days text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">規劃</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('shopping')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-gray-300 py-2" id="nav-shopping"><i class="fa-solid fa-list-check text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">清單</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('history')"><div class="flex flex-col items-center gap-1 group cursor-pointer text-gray-300 py-2" id="nav-history"><i class="fa-solid fa-clock-rotate-left text-xl mb-0.5 transition-transform group-active:scale-90"></i><span class="text-[10px] font-medium">紀錄</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('dashboard')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-brand-500 py-1" id="nav-dashboard"><i class="fa-solid fa-house text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">首頁</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('planner')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-planner"><i class="fa-solid fa-calendar-days text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">規劃</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('shopping')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-shopping"><i class="fa-solid fa-list-check text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">清單</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('history')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-history"><i class="fa-solid fa-clock-rotate-left text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">紀錄</span></div></li>
         </ul>
     </nav>
 
@@ -481,25 +494,37 @@
     <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-800/90 backdrop-blur text-white px-5 py-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-[70] text-xs font-bold flex items-center gap-2">
         <i class="fa-solid fa-check text-brand-400"></i> <span id="toast-msg"></span>
     </div>
-    <div id="modal-cooking" class="fixed inset-0 z-[100] hidden bg-gray-900 text-white flex flex-col transition-opacity duration-300">
-        <div class="p-6 flex justify-between items-center">
-            <button onclick="app.exitCooking()" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-white/20"><i class="fa-solid fa-xmark"></i></button>
-            <div class="text-xs font-mono text-brand-400 border border-brand-400 px-3 py-1 rounded-full">Cooking Mode</div>
-            <div class="w-10"></div> </div>
+    <div id="modal-cooking" class="fixed inset-0 z-[100] hidden bg-[#0a0b0a] text-gray-100 flex flex-col transition-opacity duration-500">
+        
+        <div class="p-6 flex justify-between items-center relative z-10">
+            <button onclick="app.exitCooking()" class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/10 hover:text-white backdrop-blur-md transition-all active:scale-95 shadow-lg">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="text-[10px] font-mono text-brand-400 border border-brand-400/30 bg-brand-900/20 px-4 py-1.5 rounded-full tracking-widest backdrop-blur-sm">
+                IMMERSIVE COOKING
+            </div>
+            <div class="w-12"></div> </div>
 
-        <div class="flex-1 flex flex-col justify-center items-center px-8 text-center" onclick="app.nextCookingStep()">
-            <h2 id="cook-step-num" class="text-6xl font-bold text-brand-500 mb-8 opacity-20">01</h2>
-            <p id="cook-step-text" class="text-2xl font-bold leading-relaxed tracking-wide">載入中...</p>
-            <p class="text-gray-500 text-sm mt-8 animate-pulse">點擊畫面進入下一步</p>
+        <div class="flex-1 flex flex-col justify-center items-center px-10 text-center relative cursor-pointer group" onclick="app.nextCookingStep()">
+            
+            <h2 id="cook-step-num" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[15rem] font-bold text-white/[0.03] select-none pointer-events-none tracking-tighter">01</h2>
+            
+            <p id="cook-step-text" class="text-3xl font-bold leading-relaxed tracking-widest text-white drop-shadow-md z-10">載入中...</p>
+            
+            <p class="text-brand-400/60 text-xs mt-12 tracking-widest uppercase font-mono animate-pulse z-10 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <i class="fa-solid fa-hand-pointer"></i> 點擊畫面任意處繼續
+            </p>
         </div>
 
-        <div class="p-8 pb-12 safe-pb">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <button onclick="app.prevCookingStep(event)" class="text-gray-400 hover:text-white p-2"><i class="fa-solid fa-arrow-left"></i> 上一步</button>
-                <span id="cook-progress-text" class="text-xs text-gray-500 font-mono">1 / 5</span>
+        <div class="p-8 pb-12 safe-pb relative z-10 bg-gradient-to-t from-[#0a0b0a] to-transparent">
+            <div class="flex justify-between items-center mb-5 px-2">
+                <button onclick="app.prevCookingStep(event)" class="text-gray-500 hover:text-brand-400 p-2 text-sm tracking-widest font-bold transition-colors flex items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-arrow-left"></i> 上一步
+                </button>
+                <span id="cook-progress-text" class="text-xs text-gray-500 font-mono tracking-widest">1 / 5</span>
             </div>
-            <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                <div id="cook-progress-bar" class="h-full bg-brand-500 transition-all duration-300" style="width: 0%"></div>
+            <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                <div id="cook-progress-bar" class="h-full bg-brand-500 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(122,144,111,0.5)]" style="width: 0%"></div>
             </div>
         </div>
     </div>
@@ -690,22 +715,544 @@
             </div>
         </div>
     </div>
+    <div id="modal-staple-manager" class="fixed inset-0 z-[90] hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
+        <div class="bg-paper w-full h-[70vh] sm:h-[550px] sm:w-[400px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl animate-slide-up border border-gray-100">
+            
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white/50 backdrop-blur-md rounded-t-[30px]">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800 tracking-wide">專屬常備庫</h3>
+                    <p class="text-[10px] text-gray-400 mt-1 tracking-widest">家裡常備的食材，一鍵自動打勾</p>
+                </div>
+                <button onclick="app.closeModal('modal-staple-manager')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition border border-gray-100/50">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6 pb-2">
+                <div class="flex gap-2">
+                    <input type="text" id="input-new-staple" class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-400 outline-none transition shadow-sm" placeholder="例如：鹽巴、橄欖油...">
+                    <button onclick="app.addStaple()" class="bg-brand-500 text-white px-5 rounded-xl font-bold shadow-soft hover:bg-brand-600 active:scale-95 transition">
+                        新增
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 pt-2">
+                <div id="staple-list-container" class="space-y-2">
+                    </div>
+            </div>
+            
+            <div class="p-6 pt-4 border-t border-gray-50 bg-white/50 safe-pb">
+                <p class="text-[10px] text-gray-400 leading-relaxed tracking-wider text-center">
+                    <i class="fa-solid fa-circle-info text-brand-300"></i> 當 AI 生成的菜單中包含常備庫內的食材時，點擊採買頁面的「一鍵隱藏」即可自動標記為已購買。
+                </p>
+            </div>
+        </div>
+    </div>
     <script>
-        // MOCK DATA
-        let recipes = [
-            { id: 1, name: "日式鹽烤鯖魚", cal: 420, p: 25, c: 5, f: 30, tags: ["魚"], ingredients: ["鯖魚片", "白蘿蔔", "檸檬"], instructions: "1. 鯖魚抹鹽靜置。\n2. 乾煎至兩面金黃。\n3. 搭配蘿蔔泥食用。" },
-            { id: 2, name: "蔥爆牛肉便當", cal: 480, p: 30, c: 45, f: 20, tags: ["牛"], ingredients: ["牛肉片", "青蔥", "洋蔥", "醬油"], instructions: "1. 爆香蔥段。\n2. 下牛肉大火快炒。\n3. 加入調味快速起鍋。" },
-            { id: 3, name: "鮮蝦酪梨沙拉", cal: 350, p: 25, c: 15, f: 22, tags: ["海鮮","輕食"], ingredients: ["鮮蝦", "酪梨", "生菜", "番茄"], instructions: "1. 蝦仁燙熟冷卻。\n2. 酪梨切塊。\n3. 淋上油醋醬拌勻。" },
-            { id: 4, name: "照燒雞腿排", cal: 500, p: 35, c: 40, f: 25, tags: ["雞肉"], ingredients: ["去骨雞腿", "照燒醬", "花椰菜"], instructions: "1. 雞腿排皮朝下煎。\n2. 倒入醬汁收乾。\n3. 切塊擺盤。" },
-            { id: 5, name: "清炒時蔬豆腐", cal: 320, p: 18, c: 20, f: 15, tags: ["素"], ingredients: ["板豆腐", "香菇", "紅蘿蔔", "荷蘭豆"], instructions: "1. 豆腐切片煎黃。\n2. 加入蔬菜拌炒。\n3. 鹽巴調味即可。" }
-        ];
-
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-        const dayLabels = { 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五' };
-
         const app = {
-            state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
+// --- 1. 基礎設施層 (Infrastructure Layer) 擴充 ---
+    infrastructure: {
+        storage: {
+            get: (key, defaultVal) => {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : defaultVal;
+                } catch (e) {
+                    console.warn(`⚠️ 載入 ${key} 失敗，重置為預設值。`, e);
+                    return defaultVal;
+                }
+            },
+            set: (key, val) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(val));
+                } catch (e) {
+                    console.error(`❌ 儲存 ${key} 失敗。`, e);
+                }
+            }
+        },
+        
+        // 新增 AI 客戶端介面
+        ai: {
+            // 真實 API 呼叫 (嚴格限定 gemini-2.5-flash)
+            liveClient: async (promptText, apiKey) => {
+                const model = 'gemini-2.5-flash';
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                
+                console.log(`🚀 呼叫真實 API: ${model}...`);
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        contents: [{ parts: [{ text: promptText }] }],
+                        generationConfig: { response_mime_type: "application/json" },
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ]
+                    })
+                });
 
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(`API 錯誤 (${res.status}): ${errData.error?.message || '未知錯誤'}`);
+                }
+
+                const data = await res.json();
+                if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+                    throw new Error("API 回傳內容為空");
+                }
+
+                // JSON 清洗與解析邏輯
+                let jsonString = data.candidates[0].content.parts[0].text.trim();
+                jsonString = jsonString.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '');
+                const firstBracket = jsonString.indexOf('[');
+                const lastBracket = jsonString.lastIndexOf(']');
+                
+                if (firstBracket !== -1 && lastBracket !== -1) {
+                    jsonString = jsonString.substring(firstBracket, lastBracket + 1);
+                } else {
+                    const firstBrace = jsonString.indexOf('{');
+                    const lastBrace = jsonString.lastIndexOf('}');
+                    if (firstBrace !== -1 && lastBrace !== -1) {
+                        jsonString = `[${jsonString.substring(firstBrace, lastBrace + 1)}]`;
+                    }
+                }
+
+                return JSON.parse(jsonString);
+            },
+            
+            // 假資料客戶端 (Mock)
+            mockClient: async (isBatch) => {
+                console.log("🚧 開發模式：使用 MockClient");
+                await new Promise(r => setTimeout(r, 800)); // 模擬網路延遲
+                
+                const mockIngredients = [
+                    {name: "開發用雞胸肉", qty: "150g", type: "生鮮"},
+                    {name: "測試花椰菜", qty: "100g", type: "蔬果"},
+                    {name: "虛擬糙米飯", qty: "1碗", type: "澱粉"}
+                ];
+
+                if (!isBatch) {
+                    return [{
+                        name: "【測試】開發專用重骰菜色 #" + Math.floor(Math.random() * 999),
+                        main_tag: "牛肉", cal: 500, p: 40, c: 20, f: 30,
+                        ingredients: mockIngredients,
+                        instructions: "1. 這是單日重骰測試資料。\n2. 運作正常！"
+                    }];
+                }
+
+                const mockBatch = [];
+                const tags = ["雞肉", "牛肉", "海鮮", "素食"];
+                for(let i=1; i<=10; i++) {
+                    mockBatch.push({
+                        name: `【測試】營養餐盒 #${i}`, main_tag: tags[i % 4],
+                        cal: 400 + (i * 10), p: 20 + i, c: 50, f: 15,
+                        ingredients: mockIngredients,
+                        instructions: `1. 假菜色 ${i}。\n2. 測試排版用。`,
+                        prep_guide: "肉類：切塊備用 | 蔬菜：洗淨切好"
+                    });
+                }
+                return mockBatch;
+            },
+
+            // Facade：負責判斷路由
+            generate: async (promptText, isBatchMode) => {
+                const u = app.state.user;
+                if (!u) throw new Error("找不到使用者資料");
+                
+                if (u.isDev) {
+                    return await app.infrastructure.ai.mockClient(isBatchMode);
+                }
+                
+                if (!u.apiKey) throw new Error("未設定 API Key");
+                return await app.infrastructure.ai.liveClient(promptText, u.apiKey);
+            }
+        },
+        device: {
+            screenLocker: {
+                lock: async () => {
+                    try {
+                        if ('wakeLock' in navigator) {
+                            app.state.wakeLockObj = await navigator.wakeLock.request('screen');
+                            console.log('✅ 螢幕恆亮已開啟');
+                            return true;
+                        }
+                    } catch (err) {
+                        console.warn('⚠️ Wake Lock 失敗 (可能不支援或被拒絕):', err);
+                    }
+                    return false;
+                },
+                release: async () => {
+                    if (app.state.wakeLockObj) {
+                        await app.state.wakeLockObj.release().catch(console.error);
+                        app.state.wakeLockObj = null;
+                        console.log('✅ 螢幕恆亮已釋放');
+                    }
+                }
+            }
+        }
+
+    },
+
+    // --- 2. 領域層 (Domain Layer) 擴充 ---
+    domain: {
+        health: {
+            calculateBMI: (weight, heightCm) => {
+                if (!weight || !heightCm) return null;
+                const hM = heightCm / 100;
+                return parseFloat((weight / (hM * hM)).toFixed(1));
+            },
+            calculateBMR: (weight, heightCm, age, gender, bf, scaleBmr) => {
+                // 優先級 1: 體脂計數值
+                if (scaleBmr && scaleBmr > 0) return scaleBmr;
+                // 優先級 2: 包含體脂率的 Katch-McArdle 公式 (較精準)
+                if (bf && bf > 0) {
+                    const leanBodyMass = weight * (1 - (bf / 100));
+                    return Math.round(370 + (21.6 * leanBodyMass));
+                }
+                // 優先級 3: 傳統 Mifflin-St Jeor 公式
+                if (!weight || !heightCm || !age) return 0;
+                let bmr = (10 * weight) + (6.25 * heightCm) - (5 * age);
+                return Math.round(gender === 'male' ? bmr + 5 : bmr - 161);
+            },
+            calculateTDEE: (bmr, activityMultiplier) => {
+                if (!bmr || !activityMultiplier) return 0;
+                return Math.round(bmr * activityMultiplier);
+            }
+        }, 
+        
+        // 新增 AI 提示詞工廠 (純函式)
+        ai: {
+            promptFactory: {
+                createBatchPrompt: (user, cuisine, persona, isBatch, fridge, exclude) => {
+                    const targetCal = Math.round(user.tdee * 0.35);
+                    let bodyNote = "";
+                    if (user.bodyComp) {
+                        const { bf, muscle } = user.bodyComp;
+                        if (bf && bf > 28) bodyNote += "★ 使用者體脂率偏高，優先推薦低GI食材。\n";
+                        else if (bf && bf < 18) bodyNote += "★ 使用者體脂率較低，可適度增加優質澱粉與健康脂肪。\n";
+                        if (user.goal.includes('增肌') || (muscle && muscle > 30)) bodyNote += "★ 確保蛋白質來源多樣化且容易吸收。\n";
+                    }
+
+                    const personas = {
+                        pro: `你是一位資深臨床營養師。嚴格遵守三大營養素平衡，拒絕高油高糖。`,
+                        fitness: `你是一位嚴格的健身備餐教練。蛋白質優先，乾淨飲食，嚴格控制脂肪。`,
+                        lazy: `你是一位 IG 懶人帶便當達人。做法極度簡單，一鍋到底，高顏值配色。`
+                    };
+                    const personaPrompt = personas[persona] || personas.lazy;
+
+                    const batchNote = isBatch 
+                        ? "★「懶人備餐模式」：請確保這 10 道菜的食材重複性高、易於批量採買。" 
+                        : "請設計 10 道口味完全不同的菜色。";
+
+                    return `
+                        ${personaPrompt}
+                        請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 10 道午餐便當。
+                        目標：${user.goal}。料理風格：${cuisine}。
+                        
+                        【身體與需求指示】
+                        ${bodyNote || "無特殊身體狀況。"}
+                        ${batchNote}
+                        ${fridge ? `★ 優先使用冰箱食材：${fridge}` : ""}
+                        ${exclude ? `★ 絕對避開食材：${exclude}` : ""}
+                        
+                        【嚴格 JSON 格式要求】
+                        回傳 JSON Array (10個物件)，不含 Markdown。欄位：
+                        "name", "main_tag", "cal", "p", "c", "f", 
+                        "ingredients" (Array of {name, qty, type}), 
+                        "instructions" (字串, \\n 分隔), "prep_guide" ("肉類：... | 蔬菜：...")
+                    `;
+                },
+                createSinglePrompt: (user, exclude, currentNames) => {
+                    const targetCal = Math.round(user.tdee * 0.35);
+                    return `
+                        你是一位五星級健康餐盒設計師。設計 1 道詳細且美味的午餐便當。
+                        熱量約 ${targetCal} kcal，目標：${user.goal}。
+                        ${exclude ? `★ 絕對避開食材：${exclude}` : ""}
+                        【防重複機制】 避開以下菜色：${currentNames}。必須全新且不同。
+
+                        【嚴格 JSON 格式要求】
+                        回傳 JSON Array (1個物件)，不含 Markdown。欄位同上 (無 prep_guide)。
+                    `;
+                }
+            }
+        },
+        shopping: {
+            // 領域設定檔 (Config)：易於維護與擴充
+            config: {
+                categories: {
+                    fresh: "🥩 生鮮冷藏",
+                    veg: "🥦 蔬果區",
+                    carb: "🍚 穀物澱粉",
+                    pantry: "🧂 調味與雜貨"
+                },
+                typeMapping: {
+                    "生鮮": "🥩 生鮮冷藏", "肉類": "🥩 生鮮冷藏", "海鮮": "🥩 生鮮冷藏",
+                    "蔬果": "🥦 蔬果區", "蔬菜": "🥦 蔬果區",
+                    "澱粉": "🍚 穀物澱粉",
+                    "雜貨": "🧂 調味與雜貨", "乾料": "🧂 調味與雜貨"
+                },
+                regex: {
+                    fresh: /雞|牛|豬|魚|蝦|肉|排|羊|鴨|鵝|海鮮|蛋|培根|香腸|鮭|鮪|鯖|鯛|蛤|蚵|卷|板豆腐|嫩豆腐|豆干|豆腐|起司|乳酪|奶|優格|火腿|丸/,
+                    veg: /菜|菇|茄|椒|筍|瓜|葉|豆|蘿蔔|洋蔥|蔥|蒜|番茄|花椰|薑|檸檬|薯|芋|玉米|九層塔|香菜|沙拉|果|蘋|蕉|梨|桃|橙|橘|百合|山藥|秋葵|蓮藕|蘆筍|羅勒|迷迭香|百里香|酪梨/,
+                    carb: /米|麵|飯|冬粉|藜麥|燕麥|吐司|麵包|饅頭|餃|皮|餅|粉條|意麵|烏龍|寬粉/,
+                    pantry: /油|醬|鹽|糖|醋|酒|粉|胡椒|香料|味淋|味噌|高湯|罐頭|堅果|芝麻|蜜|茶|水|七味|辣椒|咖哩|湯塊|義大利香料/
+                },
+                staples: ['油', '鹽', '糖', '醬油', '醋', '胡椒', '米酒', '太白粉', '蒜', '薑', '蔥', '水', '香料', '芝麻', '日式醬油(低鈉)']
+            },
+            
+            // 領域服務 (Services)：純函式，負責資料聚合與分類
+            services: {
+                aggregateIngredients: (plan, recipes) => {
+                    const aggMap = {};
+                    Object.values(plan).forEach(rid => {
+                        const r = recipes.find(x => x.id === rid);
+                        if (r) {
+                            // 優先使用結構化資料，否則兼容舊資料格式
+                            const items = r.structured_ingredients || (r.ingredients ? r.ingredients.map(s => ({name: s, qty: '', type: '雜貨'})) : []);
+                            items.forEach(item => {
+                                const name = item.name.trim();
+                                if (!aggMap[name]) aggMap[name] = { type: item.type, qtys: [] };
+                                if (item.qty) aggMap[name].qtys.push(item.qty); // 收集份量
+                            });
+                        }
+                    });
+                    return aggMap;
+                },
+                
+                categorizeItem: (name, aiType, config) => {
+                    // 1. 優先信任 AI 給的 type mapping
+                    if (config.typeMapping[aiType]) return config.typeMapping[aiType];
+                    
+                    // 2. Fallback: 本地正則表達式推斷
+                    const n = name.toLowerCase();
+                    if (n.match(config.regex.fresh)) return config.categories.fresh;
+                    if (n.match(config.regex.veg)) return config.categories.veg;
+                    if (n.match(config.regex.carb)) return config.categories.carb;
+                    
+                    return config.categories.pantry; // 預設歸類為雜貨
+                },
+                
+                // --- 修改：支援自訂常備品陣列的判斷 ---
+                checkIsStaple: (name, config, customStaples = []) => {
+                    // 1. 檢查系統預設設定
+                    const isDefault = config.staples.some(s => name.includes(s));
+                    // 2. 檢查使用者自訂設定
+                    const isCustom = customStaples.some(s => name.includes(s));
+                    return isDefault || isCustom;
+                }
+            }
+        },
+        recipe: {
+            services: {
+                // 智慧步驟解析器：能處理各種 AI 生成的畸形字串
+                parseSteps: (rawInstructions) => {
+                    if (!rawInstructions || typeof rawInstructions !== 'string') return [];
+                    
+                    // 1. 將被 JSON 轉義的 \n 換回真正的換行符
+                    let raw = rawInstructions.replace(/\\n/g, '\n');
+                    
+                    // 2. 容錯：如果完全沒有換行，但有 "1.", "2." 這種結構，手動補換行
+                    if (!raw.includes('\n') && raw.match(/\d+\./)) {
+                        raw = raw.replace(/(\d+\.)/g, '\n$1');
+                    }
+                    
+                    // 3. 切割、去除前後空白、過濾空字串
+                    return raw.split('\n')
+                              .map(s => s.trim())
+                              .filter(s => s.length > 0);
+                }
+            }
+        }
+    },
+    state: { user: null, plan: { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null }, shopping: {}, history: [] },
+// --- 應用層 ---
+        
+// --- 替換：乾淨俐落的採買清單 ---
+        renderShopping: () => {
+            const container = document.getElementById('shopping-list-container');
+            const { config, services } = app.domain.shopping;
+            
+            const aggMap = services.aggregateIngredients(app.state.plan, recipes);
+
+            if(Object.keys(aggMap).length === 0) {
+                document.getElementById('shop-progress-bar').style.width = '0%';
+                return container.innerHTML = `<div class="text-center text-gray-300 py-12 text-sm tracking-widest">暫無清單</div>`;
+            }
+            
+            const cats = { [config.categories.veg]: [], [config.categories.fresh]: [], [config.categories.carb]: [], [config.categories.pantry]: [] };
+            let totalItems = 0; let checkedItems = 0;
+
+            Object.keys(aggMap).forEach(name => {
+                const itemData = aggMap[name];
+                const targetCat = services.categorizeItem(name, itemData.type, config);
+                const qtyStr = itemData.qtys.length > 0 ? ` <span class="text-xs text-brand-400 ml-2 font-mono">(${itemData.qtys.join(' + ')})</span>` : "";
+                const displayName = `${name}${qtyStr}`;
+
+                if(!cats[targetCat]) cats[targetCat] = [];
+                cats[targetCat].push({ displayName, key: name });
+                totalItems++;
+                if (app.state.shopping[name]) checkedItems++;
+            });
+
+            const percent = totalItems > 0 ? (checkedItems/totalItems)*100 : 0;
+            document.getElementById('shop-progress-bar').style.width = `${percent}%`;
+
+            container.innerHTML = '';
+            Object.keys(cats).forEach(catName => {
+                if(cats[catName].length > 0) {
+                    const items = cats[catName];
+                    items.sort((a,b) => (app.state.shopping[a.key] ? 1 : 0) - (app.state.shopping[b.key] ? 1 : 0) || a.key.localeCompare(b.key, 'zh-Hant'));
+
+                    const grp = document.createElement('div');
+                    grp.className = "mb-8";
+                    // 視覺升級：分類標題更細緻
+                    grp.innerHTML = `<h3 class="text-[11px] font-bold text-brand-500/70 mb-3 px-2 tracking-widest border-b border-brand-50/50 pb-2">${catName}</h3>`;
+                    
+                    const listDiv = document.createElement('div');
+                    listDiv.className = "flex flex-col gap-1"; 
+                    
+                    items.forEach(obj => {
+                        const checked = app.state.shopping[obj.key];
+                        const row = document.createElement('label');
+                        // 視覺升級：增加 py-3 觸控範圍，已打勾的透明度降至 25% (opacity-25)
+                        row.className = `flex items-center gap-4 py-3 px-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-brand-50/30 ${checked ? 'opacity-25 grayscale' : 'opacity-100'}`;
+                        row.innerHTML = `
+                            <input type="checkbox" class="hidden custom-checkbox" ${checked?'checked':''} onchange="app.toggleShop('${obj.key}')">
+                            <div class="w-5 h-5 rounded border border-gray-300 flex items-center justify-center transition-colors shrink-0 text-white text-[10px]">
+                                <i class="fa-solid fa-check ${checked?'':'hidden'}"></i>
+                            </div>
+                            <span class="text-sm font-medium ${checked?'line-through':''} text-gray-700 flex-1 tracking-wide">${obj.displayName}</span>
+                        `;
+                        listDiv.appendChild(row);
+                    });
+                    grp.appendChild(listDiv);
+                    container.appendChild(grp);
+                }
+            });
+        },
+
+        // --- 替換原有的 copyShoppingList ---
+        copyShoppingList: async () => {
+            const { config, services } = app.domain.shopping;
+            const aggMap = services.aggregateIngredients(app.state.plan, recipes);
+            const cats = {};
+            let hasItems = false;
+
+            Object.keys(aggMap).forEach(name => {
+                // 只處理「未打勾(未買)」的項目
+                if (!app.state.shopping[name]) {
+                    const itemData = aggMap[name];
+                    const targetCat = services.categorizeItem(name, itemData.type, config);
+                    const qtyStr = itemData.qtys.length > 0 ? `(${itemData.qtys.join(' + ')})` : "";
+                    const displayStr = qtyStr ? `${name} ${qtyStr}` : name;
+                    
+                    if (!cats[targetCat]) cats[targetCat] = [];
+                    cats[targetCat].push(displayStr);
+                    hasItems = true;
+                }
+            });
+
+            if (!hasItems) return app.showToast('🎉 所有食材都買齊囉！');
+
+            let text = "🛒 Bento Fit 採買清單\n──────────────────\n";
+            Object.keys(cats).forEach(catName => {
+                const uniqueItems = [...new Set(cats[catName])].sort();
+                if (uniqueItems.length > 0) {
+                    text += `\n${catName}\n`;
+                    uniqueItems.forEach(i => text += `⬜ ${i}\n`);
+                }
+            });
+            text += `\n📅 ${new Date().toLocaleDateString()} 生成`;
+
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Bento Fit 採買清單', text: text }); } catch (err) { console.log('取消分享'); }
+            } else {
+                navigator.clipboard.writeText(text);
+                app.showToast('✅ 已複製分區清單');
+            }
+        },
+
+// --- 替換原有的 filterStaples ---
+        filterStaples: () => {
+            const { config, services } = app.domain.shopping;
+            const aggMap = services.aggregateIngredients(app.state.plan, recipes);
+            let count = 0;
+            const customList = app.state.customStaples || [];
+            
+            Object.keys(aggMap).forEach(name => {
+                // 將 customList 傳入領域層判斷
+                if (services.checkIsStaple(name, config, customList)) {
+                    if (!app.state.shopping[name]) {
+                        app.state.shopping[name] = true;
+                        count++;
+                    }
+                }
+            });
+            
+            app.infrastructure.storage.set('bento_shopping', app.state.shopping);
+            app.renderShopping();
+            
+            if(count > 0) app.showToast(`✨ 已自動打勾 ${count} 項常備品`);
+            else app.showToast('沒有發現未勾選的常備品喔');
+        },
+
+        // --- 📦 新增：常備品庫管理邏輯 ---
+        openStapleManager: () => {
+            app.renderStapleManager();
+            document.getElementById('modal-staple-manager').classList.remove('hidden');
+        },
+
+        renderStapleManager: () => {
+            const listEl = document.getElementById('staple-list-container');
+            listEl.innerHTML = '';
+            
+            if (!app.state.customStaples || app.state.customStaples.length === 0) {
+                listEl.innerHTML = `<div class="text-center text-gray-300 py-6 text-xs tracking-widest">您的專屬常備庫目前是空的</div>`;
+                return;
+            }
+
+            app.state.customStaples.forEach((staple, idx) => {
+                const tag = document.createElement('div');
+                tag.className = "flex items-center justify-between bg-brand-50 border border-brand-100 px-4 py-3 rounded-xl transition-all hover:border-brand-200 group";
+                tag.innerHTML = `
+                    <span class="text-sm text-brand-900 font-medium tracking-wide">${staple}</span>
+                    <button onclick="app.removeStaple(${idx})" class="w-8 h-8 rounded-full flex items-center justify-center text-brand-300 hover:text-red-400 hover:bg-white transition-colors">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                `;
+                listEl.appendChild(tag);
+            });
+        },
+
+        addStaple: () => {
+            const input = document.getElementById('input-new-staple');
+            const val = input.value.trim();
+            if (!val) return;
+            
+            if (!app.state.customStaples) app.state.customStaples = [];
+            if (app.state.customStaples.includes(val)) {
+                return app.showToast('這個食材已經在常備庫裡囉！');
+            }
+            
+            app.state.customStaples.unshift(val); // 加在最前面
+            app.infrastructure.storage.set('bento_custom_staples', app.state.customStaples);
+            
+            input.value = '';
+            app.renderStapleManager();
+            app.cloudSync.upload();
+            app.showToast('✅ 已加入常備庫');
+        },
+
+        removeStaple: (idx) => {
+            app.state.customStaples.splice(idx, 1);
+            app.infrastructure.storage.set('bento_custom_staples', app.state.customStaples);
+            app.renderStapleManager();
+            app.cloudSync.upload();
+        },
 // --- ⚙️ 新增：開啟編輯個人資料彈窗 ---
         openEditProfile: () => {
             app.fillProfile(); // 先把現有資料填入 input
@@ -875,6 +1422,7 @@
             app.state.user = safeParse('bento_user', null);
             app.state.plan = safeParse('bento_plan', { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null });
             app.state.shopping = safeParse('bento_shopping', {});
+            app.state.customStaples = safeParse('bento_custom_staples', ['燕麥奶', '豌豆蛋白']);
             
             // 檢查食譜
             const savedRecipes = safeParse('bento_recipes', null);
@@ -1243,66 +1791,7 @@
                 }
             }
         },
-        // --- 請替換 app.startCooking 函式 ---
-        startCooking: async (id) => {
-            const r = recipes.find(x => x.id === id);
-            if(!r || !r.instructions) return app.showToast('此食譜沒有步驟');
 
-            // ✅ 修正：使用與 openDetail 相同的解析邏輯
-            let raw = r.instructions;
-            raw = raw.replace(/\\n/g, '\n');
-            if (!raw.includes('\n') && raw.match(/\d+\./)) {
-                raw = raw.replace(/(\d+\.)/g, '\n$1');
-            }
-            const steps = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-
-            // 1. 初始化數據
-            app.cookingState = {
-                steps: steps,
-                current: 0
-            };
-
-            // 2. 嘗試開啟螢幕恆亮 (Wake Lock)
-            try {
-                if ('wakeLock' in navigator) {
-                    app.wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('螢幕恆亮已開啟');
-                }
-            } catch (err) {
-                console.log('Wake Lock 失敗:', err);
-            }
-
-            // 3. 顯示 UI
-            document.getElementById('modal-cooking').classList.remove('hidden');
-            app.renderCookingStep();
-        },
-        renderCookingStep: () => {
-            const s = app.cookingState;
-            const total = s.steps.length;
-            
-            // 更新文字
-            document.getElementById('cook-step-num').innerText = (s.current + 1).toString().padStart(2, '0');
-            document.getElementById('cook-step-text').innerText = s.steps[s.current];
-            document.getElementById('cook-progress-text').innerText = `${s.current + 1} / ${total}`;
-            
-            // 更新進度條
-            const pct = ((s.current + 1) / total) * 100;
-            document.getElementById('cook-progress-bar').style.width = `${pct}%`;
-        },
-
-        nextCookingStep: async () => { // ⚠️ 記得加 async
-            const s = app.cookingState;
-            if (s.current < s.steps.length - 1) {
-                s.current++;
-                app.renderCookingStep();
-            } else {
-                // ✅ 修改處：最後一步的確認
-                if(await app.showModal('恭喜完成！要結束烹飪模式嗎？', "料理完成", "confirm")) {
-                    app.exitCooking();
-                    app.showToast('🎉 料理完成！記得拍照打卡喔');
-                }
-            }
-        },
 
         prevCookingStep: (e) => {
             if(e) e.stopPropagation(); // 避免觸發 nextCookingStep
@@ -1313,13 +1802,6 @@
             }
         },
 
-        exitCooking: () => {
-            // 釋放 Wake Lock
-            if (app.wakeLock) {
-                app.wakeLock.release().then(() => app.wakeLock = null);
-            }
-            document.getElementById('modal-cooking').classList.add('hidden');
-        },
             // 檢查連續登入
             checkStreak: (today) => {
                 const game = app.state.game;
@@ -1440,12 +1922,12 @@
 
         // --- 請替換 app 物件中的 saveProfile 函式 ---
 
-// --- [優化版] 儲存個人資料 (含智慧還原判斷) ---
+// --- 3. 應用層 (Application Layer) 協調者 ---
         saveProfile: () => {
-            // 0. 獲取舊網址 (用於比對)
             const oldUrl = app.state.user ? app.state.user.syncUrl : '';
+            const syncUrl = document.getElementById('input-sync-url').value.trim();
 
-            // 1. 獲取所有欄位值
+            // 1. 取得 DOM 輸入值
             const h = parseFloat(document.getElementById('input-height').value);
             const w = parseFloat(document.getElementById('input-weight').value);
             const age = parseInt(document.getElementById('input-age').value);
@@ -1453,88 +1935,64 @@
             const activity = parseFloat(document.getElementById('input-activity').value);
             const goal = document.getElementById('input-goal').value;
             
-            const key = document.getElementById('input-apikey').value.trim();
-            const exclude = document.getElementById('input-exclude').value.trim();
-            const isDev = document.getElementById('input-dev-mode').checked;
-            const syncUrl = document.getElementById('input-sync-url').value.trim();
-
-            // 🔥🔥🔥 優化重點：智慧判斷還原意圖 🔥🔥🔥
-            // 如果使用者填了網址，但身高/體重/年齡有缺漏 -> 判定為「想還原」
+            // 判斷還原意圖
             if (syncUrl && (!h || !w || !age)) {
                 if(confirm("偵測到您輸入了備份網址，且尚未填寫完整身體數值。\n\n系統判斷您可能想要「還原備份」。\n是否直接執行還原？")) {
                     app.cloudSync.loginAndRestore();
-                    return; // 中止後續的儲存動作
+                    return;
                 }
             }
 
-            // 2. 正常驗證 (如果沒觸發還原，才檢查必填)
             if (!h || !w || !age) return app.showToast('❌ 請填寫身高、體重與年齡');
 
-            // 3. 獲取身體組成 (防呆)
             const getVal = (id) => document.getElementById(id).value ? parseFloat(document.getElementById(id).value) : null;
             const bf = getVal('input-bf');
-            const muscle = getVal('input-muscle');
-            const vfat = getVal('input-vfat');
-            const water = getVal('input-water');
-            const protein = getVal('input-protein');
-            const bone = getVal('input-bone');
-            const scaleBmr = getVal('input-scale-bmr');
-            let bmi = getVal('input-bmi');
+            
+            // 2. 呼叫 Domain Layer 進行核心計算
+            let bmi = getVal('input-bmi') || app.domain.health.calculateBMI(w, h);
+            let bmr = app.domain.health.calculateBMR(w, h, age, gender, bf, getVal('input-scale-bmr'));
+            const tdee = app.domain.health.calculateTDEE(bmr, activity);
 
-            if (!bmi && h && w) bmi = parseFloat((w / ((h / 100) * (h / 100))).toFixed(1));
-
-            // 4. 計算 BMR/TDEE
-            let bmr = 0;
-            if (bf && bf > 0) {
-                const lbm = w * (1 - (bf / 100));
-                bmr = 370 + (21.6 * lbm);
-            } else if (scaleBmr && scaleBmr > 0) {
-                bmr = scaleBmr;
-            } else {
-                if (gender === 'male') bmr = (10 * w) + (6.25 * h) - (5 * age) + 5;
-                else bmr = (10 * w) + (6.25 * h) - (5 * age) - 161;
-            }
-            const tdee = Math.round(bmr * activity);
-
-            // 5. 建立新狀態物件
+            // 3. 組合 Entity
             app.state.user = {
                 height: h, weight: w, age: age, gender: gender, activity: activity,
-                goal: goal, tdee: tdee, apiKey: key, syncUrl: syncUrl,
-                exclude: exclude, isDev: isDev,
-                bodyComp: { bmi, bf, muscle, vfat, water, protein, bone, scaleBmr }
+                goal: goal, tdee: tdee, 
+                apiKey: document.getElementById('input-apikey').value.trim(), 
+                syncUrl: syncUrl,
+                exclude: document.getElementById('input-exclude').value.trim(), 
+                isDev: document.getElementById('input-dev-mode').checked,
+                bodyComp: { 
+                    bmi, bf, 
+                    muscle: getVal('input-muscle'), vfat: getVal('input-vfat'), 
+                    water: getVal('input-water'), protein: getVal('input-protein'), 
+                    bone: getVal('input-bone'), scaleBmr: getVal('input-scale-bmr') 
+                }
             };
             
-            localStorage.setItem('bento_user', JSON.stringify(app.state.user));
+            // 4. 呼叫 Infrastructure Layer 存檔
+            app.infrastructure.storage.set('bento_user', app.state.user);
 
-            // 6. 記錄體態 (BodyLog)
+            // 更新 BodyLog
             const todayDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
             if (!Array.isArray(app.state.bodyLog)) app.state.bodyLog = [];
-            
             const existingIndex = app.state.bodyLog.findIndex(log => log.date === todayDate);
             const logEntry = { date: todayDate, weight: w, bf: bf || 0 };
-
+            
             if (existingIndex >= 0) app.state.bodyLog[existingIndex] = logEntry;
             else { 
                 app.state.bodyLog.push(logEntry); 
                 if (app.state.bodyLog.length > 30) app.state.bodyLog.shift(); 
             }
-            localStorage.setItem('bento_body_log', JSON.stringify(app.state.bodyLog));
+            app.infrastructure.storage.set('bento_body_log', app.state.bodyLog);
 
-            // 7. 判斷與上傳邏輯
+            // 5. 處理同步與 UI 更新
             if (oldUrl && oldUrl === syncUrl) {
-                // ✅ 這是 A 電腦：網址沒變，單純改資料 -> 自動備份
-                localStorage.setItem('bento_timestamp', Date.now()); // 更新本地時間戳
-                app.cloudSync.upload(); // 🔥 觸發上傳
-                
-                if(isDev) app.showToast('✅ 設定已儲存 (已雲端備份)');
-                else app.showToast(`✅ 設定已更新！TDEE: ${tdee}`);
-
+                app.infrastructure.storage.set('bento_timestamp', Date.now());
+                app.cloudSync.upload();
+                app.showToast(app.state.user.isDev ? '✅ 設定已儲存 (已雲端備份)' : `✅ 設定已更新！TDEE: ${tdee}`);
             } else if (!oldUrl && syncUrl) {
-                // 這是 B 手機 (初次)：剛填入網址，只存網址，不自動上傳覆蓋
                 app.showToast('✅ 網址已儲存，請按上方按鈕進行還原');
-                // 這裡不用 call upload，避免把空資料傳上去
             } else {
-                // 純本地
                 app.showToast('✅ 設定已更新 (僅本地)');
             }
 
@@ -1792,446 +2250,118 @@
             document.getElementById('modal-ai-options').classList.remove('hidden');
         },
 
-        // --- 請替換 app.confirmAIPlan ---
+// --- 替換原有的 confirmAIPlan ---
         confirmAIPlan: async () => {
             app.closeModal('modal-ai-options');
             
-            // 歷史紀錄保存邏輯 (維持不變)
             if (Object.values(app.state.plan).some(id => id)) {
-                    if(await app.showModal("即將生成新菜單，是否將目前的菜單存入歷史紀錄？", "保存確認")) {
-                        if (!app.state.history) app.state.history = [];
-                        app.state.history.unshift({
-                            id: Date.now(),
-                            date: new Date().toLocaleDateString('zh-TW'),
-                            recipes: JSON.parse(JSON.stringify(recipes)),
-                            plan: {...app.state.plan}
-                        });
-                        localStorage.setItem('bento_history', JSON.stringify(app.state.history));
-                        app.showToast('✅ 已保存至歷史紀錄');
-                    }
+                if(await app.showModal("是否將目前的菜單存入歷史紀錄？", "保存確認")) {
+                    if (!app.state.history) app.state.history = [];
+                    app.state.history.unshift({
+                        id: Date.now(), date: new Date().toLocaleDateString('zh-TW'),
+                        recipes: JSON.parse(JSON.stringify(recipes)), plan: {...app.state.plan}
+                    });
+                    app.infrastructure.storage.set('bento_history', app.state.history);
+                    app.showToast('✅ 已保存至歷史紀錄');
                 }
-
-            // 1. 獲取新參數
-            const fridgeItems = document.getElementById('ai-opt-fridge').value.trim();
-            const tempExclude = document.getElementById('ai-opt-exclude').value.trim();
-            
-            // 獲取選中的風味
-            const cuisineEl = document.querySelector('input[name="ai-cuisine"]:checked');
-            const cuisine = cuisineEl ? cuisineEl.value : "均衡健康";
-            
-            // 獲取懶人模式
-            const isBatch = document.getElementById('ai-opt-batch').checked;
-
-            // ✅ 新增：獲取 AI 營養師風格
-            const personaEl = document.querySelector('input[name="ai-persona"]:checked');
-            const persona = personaEl ? personaEl.value : "lazy";
-
-            // 2. 組合 Prompt
-            const fridgeNote = fridgeItems ? `★ 優先使用冰箱食材：${fridgeItems}` : "";
-            const excludeNote = tempExclude ? `★ 絕對避開食材：${tempExclude}` : "";
-            
-            // 懶人模式指令
-            const batchNote = isBatch 
-                ? "★ 使用者選擇「懶人備餐模式」：請確保這 10 道菜的食材重複性高、易於批量採買與備料（例如多道菜共用雞胸肉或花椰菜）。" 
-                : "請設計 10 道「口味完全不同」的菜色，增加豐富度。";
-
-            // UI Loading
-            const btn = document.querySelector('button[onclick="app.generateAIPlan()"]');
-            const loading = document.getElementById('ai-loading');
-            const list = document.getElementById('planner-list');
-            
-            if(btn) btn.classList.add('hidden');
-            if(list) list.classList.add('hidden');
-            if(loading) loading.classList.remove('hidden');
-
-            try {
-                const user = app.state.user;
-                const targetCal = Math.round(user.tdee * 0.35);
-                
-                // 身體數據判讀邏輯 (讓數據說話)
-                let bodyNote = "";
-                if (user.bodyComp) {
-                    const { bf, muscle } = user.bodyComp;
-                    
-                    // 體脂率判斷 (簡單標準：男>25/女>32 為高，男<15/女<22 為低)
-                    // 這裡用一個通用的 25% 作為分界，或是您可以根據性別寫更細
-                    if (bf) {
-                        if (bf > 28) {
-                            bodyNote += "★ 使用者體脂率偏高，請嚴格控制「精緻澱粉」攝取，優先推薦低GI食材（如糙米、地瓜、南瓜），並增加膳食纖維。";
-                        } else if (bf < 18) {
-                            bodyNote += "★ 使用者體脂率較低，代謝可能較快，可適度增加優質澱粉與健康脂肪（如酪梨、堅果）以維持能量。";
-                        }
-                    }
-                    
-                    // 肌肉量/目標判斷
-                    if (user.goal.includes('增肌') || (muscle && muscle > 30)) {
-                        bodyNote += "★ 使用者目標為增肌或肌肉量較高，請確保蛋白質來源多樣化且容易吸收，並適當搭配碳水幫助合成。";
-                    }
-                }
-
-
-            // 🔥 核心：根據風格決定 AI 人設 🔥
-            let personaPrompt = "";
-            
-            if (persona === "pro") {
-                // --- 風格 A：專業營養師 ---
-                personaPrompt = `
-                    你是一位擁有 20 年經驗的**資深臨床營養師**。
-                    請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
-                    目標：${user.goal}。
-                    料理風格：${cuisine}。
-                    
-                    【設計風格要求 - 專業科學系】
-                    1. **營養黃金比例**：請嚴格遵守三大營養素平衡，並特別注重「膳食纖維」與「微量營養素 (維生素/礦物質)」的攝取。
-                    2. **健康烹調**：拒絕高油、高糖、油炸。優先使用蒸、煮、烤、涼拌等低負擔烹調法。
-                    3. **食材多樣性**：請選用「彩虹飲食法」原則，確保每餐有多種顏色的蔬菜搭配。
-                    4. **步驟描述**：請加入專業的小叮嚀 (例如：這個食材富含維他命C，建議不要煮太久)。
-                `;
-            } else if (persona === "fitness") {
-                // --- 風格 B：健身教練 ---
-                personaPrompt = `
-                    你是一位嚴格的**專業健身備餐教練**。
-                    請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
-                    目標：${user.goal}。
-                    料理風格：${cuisine}。
-                    
-                    【設計風格要求 - 增肌減脂系】
-                    1. **蛋白質優先**：確保每道菜都有充足的優質蛋白質 (雞胸、魚、瘦牛、蛋、豆製品)。
-                    2. **乾淨飲食 (Clean Eating)**：拒絕加工食品 (如香腸、丸子)，只使用原型食物。
-                    3. **優質碳水**：優先使用低 GI 澱粉 (地瓜、糙米、燕麥、南瓜)，避免精緻白米或麵食。
-                    4. **油脂控制**：嚴格控制脂肪量，僅使用健康油脂 (橄欖油、酪梨、堅果)。
-                `;
-            } else {
-                // --- 風格 C：懶人達人 (預設 IG 風) ---
-                personaPrompt = `
-                    你是一位在 Instagram 上擁有百萬追蹤的**「懶人帶便當達人」**。
-                    請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 5 天午餐便當。
-                    目標：${user.goal}。
-                    料理風格：${cuisine}。
-                    
-                    【設計風格要求 - IG 網紅懶人系】
-                    1. **做法極度簡單**：優先使用「一鍋到底」、「氣炸鍋」、「微波」或「免開火」料理。拒絕繁瑣工序。
-                    2. **高顏值配色**：便當配色要鮮豔豐富 (紅黃綠)，適合拍照打卡 (Instagrammable)。
-                    3. **美味至上**：使用網路上熱門的簡單調味 (如鹽蔥、蒜香、韓式)，在簡單中創造美味。
-                `;
             }
 
-            // 組合最終 Prompt
-            const aiPrompt = `
-                ${personaPrompt}
+            // 1. 蒐集 UI 參數
+            const fridge = document.getElementById('ai-opt-fridge').value.trim();
+            const exclude = document.getElementById('ai-opt-exclude').value.trim();
+            const cuisine = document.querySelector('input[name="ai-cuisine"]:checked')?.value || "均衡健康";
+            const persona = document.querySelector('input[name="ai-persona"]:checked')?.value || "lazy";
+            const isBatch = document.getElementById('ai-opt-batch').checked;
 
-                使用者身體狀況特別指示】
-                ${bodyNote || "無特殊身體狀況。"}
-                ${batchNote}
-                ${fridgeNote}
-                ${excludeNote}
-                
-                【嚴格 JSON 格式要求】
-                請回傳一個 JSON Array，包含 10 個物件。**不要包含 Markdown**。
-                每個物件必須包含以下欄位 (Key 名稱必須完全一致)：
-                - "name": (字串) 菜色名稱
-                - "main_tag": (字串) "雞肉", "牛肉", "海鮮", "素食"
-                - "cal": (數字)
-                - "p": (數字)
-                - "c": (數字)
-                - "f": (數字)
-                - "ingredients": [{"name":"食材","qty":"數量","type":"生鮮/蔬果/澱粉/雜貨"}]
-                - "instructions": (字串) 烹飪步驟 (用 \\n 分隔)。
-                - "prep_guide": (字串) **週末備料指南**。請以「肉類：... | 蔬菜：...」的格式撰寫。
-                   範例："肉類：雞腿切塊，用醬油膏、米酒抓醃20分鐘後分裝冷凍。 | 蔬菜：花椰菜洗淨切小朵，燙過瀝乾冷藏；紅蘿蔔切片。"            `;
+            // 2. 切換 UI Loading
+            document.querySelector('button[onclick="app.generateAIPlan()"]').classList.add('hidden');
+            document.getElementById('planner-list').classList.add('hidden');
+            document.getElementById('ai-loading').classList.remove('hidden');
 
-                const data = await app.callGeminiAPI(aiPrompt);
+            try {
+                // 3. 領域層：生成 Prompt
+                const prompt = app.domain.ai.promptFactory.createBatchPrompt(
+                    app.state.user, cuisine, persona, isBatch, fridge, exclude
+                );
+
+                // 4. 基礎設施層：獲取資料
+                const data = await app.infrastructure.ai.generate(prompt, true);
                 
-                // 資料處理 (防呆：確保欄位存在)
+                // 5. 更新狀態與存檔
                 recipes = data.map((r, i) => ({
-                    ...r, 
-                    id: Date.now() + i, 
-                    tags: [r.main_tag || '一般'], 
-                    favorite: false,
-                    
-                    // ✅ 加強防呆：確保 ingredients 是陣列，否則給空陣列，避免 map 報錯
-                    ingredients: Array.isArray(r.ingredients) 
-                        ? r.ingredients.map(ing => `${ing.name} ${ing.qty}`) 
-                        : [],
-                        
+                    ...r, id: Date.now() + i, tags: [r.main_tag || '一般'], favorite: false,
+                    ingredients: Array.isArray(r.ingredients) ? r.ingredients.map(ing => `${ing.name} ${ing.qty}`) : [],
                     structured_ingredients: Array.isArray(r.ingredients) ? r.ingredients : []
                 }));
+                app.infrastructure.storage.set('bento_recipes', recipes);
                 
-                localStorage.setItem('bento_recipes', JSON.stringify(recipes));
-                // 由程式邏輯來分配「懶人」或「豐富」
-                // AI 負責給 10 個選擇，我們負責決定怎麼吃  
-                if (isBatch) {
-                    // 懶人模式：只用前 3 道菜填滿 5 天 (A, A, B, B, C)
-                    // recipes[3] ~ recipes[9] 會自動變成替換選項
-                    app.state.plan = { 
-                        Mon: recipes[0].id, 
-                        Tue: recipes[0].id, 
-                        Wed: recipes[1].id, 
-                        Thu: recipes[1].id, 
-                        Fri: recipes[2].id 
-                    };
-                } else {
-                    // 一般模式：前 5 道菜填滿 5 天 (A, B, C, D, E)
-                    app.state.plan = { 
-                        Mon: recipes[0].id, 
-                        Tue: recipes[1].id, 
-                        Wed: recipes[2].id, 
-                        Thu: recipes[3].id, 
-                        Fri: recipes[4].id 
-                    };
-                }
-                    localStorage.setItem('bento_plan', JSON.stringify(app.state.plan));
-                    
-                    app.state.shopping = {};
-                    localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
+                app.state.plan = isBatch 
+                    ? { Mon: recipes[0].id, Tue: recipes[0].id, Wed: recipes[1].id, Thu: recipes[1].id, Fri: recipes[2].id }
+                    : { Mon: recipes[0].id, Tue: recipes[1].id, Wed: recipes[2].id, Thu: recipes[3].id, Fri: recipes[4].id };
+                app.infrastructure.storage.set('bento_plan', app.state.plan);
+                
+                app.state.shopping = {};
+                app.infrastructure.storage.set('bento_shopping', app.state.shopping);
 
-                    const msgType = isBatch ? "懶人 (已預留7道替換菜)" : "豐富 (已預留5道替換菜)";
-                    app.showToast(`🎉 已根據您的身體數據生成「${cuisine}」${msgType}清單！`);
-                    app.renderPlanner();
-
-                } catch (e) {
-                   await app.showModal(`生成失敗: ${e.message}`, "系統錯誤", "error");
-                } finally {
-                    if(loading) loading.classList.add('hidden');
-                    if(btn) btn.classList.remove('hidden');
-                    if(list) list.classList.remove('hidden');
-                }
+                app.showToast(`🎉 已生成「${cuisine}」清單！`);
+                app.renderPlanner();
+            } catch (e) {
+                await app.showModal(`生成失敗: ${e.message}`, "系統錯誤", "error");
+            } finally {
+                document.getElementById('ai-loading').classList.add('hidden');
+                document.querySelector('button[onclick="app.generateAIPlan()"]').classList.remove('hidden');
+                document.getElementById('planner-list').classList.remove('hidden');
                 app.cloudSync.upload();
-            },
-        // --- 3. 新增 rerollDay (單日重骰) ---
+            }
+        },
+
+        // --- 替換原有的 rerollDay ---
         rerollDay: async (dayKey) => {
             if(!(await app.showModal(`確定要重新生成「${dayLabels[dayKey]}」的便當嗎？`, "重骰確認"))) return;
-
-            const user = app.state.user;
-            const targetCal = Math.round(user.tdee * 0.35);
-            // 🔴 修正重點：收集目前所有已存在的菜名，防止 AI 生成重複的
-            const currentRecipeNames = recipes.filter(r => r.name).map(r => r.name).join('、');
-            const avoidNote = currentRecipeNames 
-                    ? `⚠️ 絕對避開以下菜色（請勿生成重複或極度相似的）：${currentRecipeNames}` 
-                    : "";
-            const excludeNote = user.exclude ? `★ 使用者忌口：${user.exclude}` : "";
 
             const card = document.getElementById(`plan-card-${dayKey}`);
             const originalContent = card.innerHTML;
             card.innerHTML = `<div class="flex justify-center items-center h-20 text-brand-500"><i class="fa-solid fa-circle-notch fa-spin text-xl"></i></div>`;
 
             try {
-                // 🔴 統一的高品質 Prompt (單日版)
-                const aiPrompt = `
-                    你是一位五星級健康餐盒設計師。請設計 1 道「詳細且美味」的午餐便當，取代原本的菜色。
-                    熱量約 ${targetCal} kcal，目標：${user.goal}。
-                    ${excludeNote}
-                    【防重複機制】 目前已有的菜色包括：${currentRecipeNames}。請設計一個「全新且不同」的菜色，絕對不可重複或極度相似。
-                    ${avoidNote}
+                // 1. 領域層：生成 Prompt
+                const currentNames = recipes.filter(r => r.name).map(r => r.name).join('、');
+                const prompt = app.domain.ai.promptFactory.createSinglePrompt(
+                    app.state.user, app.state.user.exclude, currentNames
+                );
 
-                    【嚴格 JSON 格式要求】
-                    請回傳包含 1 個物件的 JSON Array。**不要包含任何 Markdown 標記 (如 \`\`\`json) 或開頭結尾的解釋文字**。欄位必須完全一致：
-                    - "name": (字串) 菜色名稱
-                    - "main_tag": (字串) "雞肉", "牛肉", "海鮮", "素食"
-                    - "cal": (數字)
-                    - "p": (數字)
-                    - "c": (數字)
-                    - "f": (數字)
-                    - "ingredients": [{"name":"食材名", "qty":"數量", "type":"生鮮/蔬果/澱粉/雜貨"}]
-                    - "instructions": (字串) 步驟請用 \\n 分隔，描述需詳細。
-                `;
-
-                const data = await app.callGeminiAPI(aiPrompt);
-                
-                // 檢查數據是否完整 (解決 undefined 問題)
+                // 2. 基礎設施層：獲取單一資料
+                const data = await app.infrastructure.ai.generate(prompt, false);
                 const item = data[0];
-                if (!item.name || !item.ingredients) throw new Error("AI 回傳格式不完整，請重試");
-                // 二次檢查：如果 AI 還是給了重複的名字 (機率很低)，自動加個 (新)
+                if (!item.name || !item.ingredients) throw new Error("AI 回傳格式不完整");
+
                 let finalName = item.name;
-                if (recipes.some(r => r.name === finalName)) {
-                    finalName += " (特製)";
-                }
+                if (recipes.some(r => r.name === finalName)) finalName += " (特製)";
+
                 const newRecipe = {
-                    ...item, 
-                    id: Date.now(), 
-                    tags: [item.main_tag || '一般'], 
-                    favorite: false,
+                    ...item, name: finalName, id: Date.now(), tags: [item.main_tag || '一般'], favorite: false,
                     ingredients: item.ingredients.map(ing => `${ing.name} ${ing.qty}`),
                     structured_ingredients: item.ingredients
                 };
 
+                // 3. 更新狀態
                 recipes.push(newRecipe);
-                localStorage.setItem('bento_recipes', JSON.stringify(recipes));
-                
+                app.infrastructure.storage.set('bento_recipes', recipes);
                 app.state.plan[dayKey] = newRecipe.id;
-                localStorage.setItem('bento_plan', JSON.stringify(app.state.plan));
+                app.infrastructure.storage.set('bento_plan', app.state.plan);
 
                 app.showToast('✨ 新菜色已上桌！');
                 app.renderPlanner();
-                app.cloudSync.upload(); // ✅ 新增這行：改了菜單要馬上存
-
+                app.cloudSync.upload();
             } catch (e) {
                 console.error(e);
-               await app.showModal('重骰失敗: ' + e.message, "系統錯誤", "error");
+                await app.showModal('重骰失敗: ' + e.message, "系統錯誤", "error");
                 card.innerHTML = originalContent;
             }
         },
-// --- [修正版] 假資料產生器 (修復替換按鈕失效問題) ---
-        getMockData: (promptText) => {
-            console.log("🚧 開發模式啟動");
-            
-            // 判斷邏輯優化：
-            // 檢查是否包含 "10 個物件" (這是週計畫的特徵)
-            // 如果沒有，我們就預設它是 "單日重骰" (因為重骰只要求 1 個物件)
-            const isBatch = promptText.includes("10 個物件");
-            
-            // 共用的假食材
-            const mockIngredients = [
-                {name: "開發用雞胸肉", qty: "150g", type: "生鮮"},
-                {name: "測試花椰菜", qty: "100g", type: "蔬果"},
-                {name: "虛擬糙米飯", qty: "1碗", type: "澱粉"},
-                {name: "除錯荷包蛋", qty: "1顆", type: "生鮮"}
-            ];
 
-            if (!isBatch) {
-                // --- 情境 A：單日重骰 (替換按鈕) ---
-                console.log("📦 生成單日假資料");
-                return [{
-                    name: "【測試】開發專用牛排 #" + Math.floor(Math.random() * 999),
-                    main_tag: "牛肉",
-                    cal: 500 + Math.floor(Math.random() * 100), 
-                    p: 40, c: 20, f: 30,
-                    ingredients: mockIngredients,
-                    instructions: "1. 這是【替換按鈕】的測試資料。\n2. 如果您看到這道菜，代表開發模式運作正常！\n3. 數值是隨機生成的。"
-                }];
-            } else {
-                // --- 情境 B：週計畫生成 ---
-                console.log("📦 生成週計畫假資料");
-                const mockBatch = [];
-                const tags = ["雞肉", "牛肉", "海鮮", "素食"];
-                
-                for(let i=1; i<=10; i++) {
-                    mockBatch.push({
-                        name: `【測試】開發營養餐盒 #${i}`,
-                        main_tag: tags[i % 4],
-                        cal: 400 + (i * 10),
-                        p: 20 + i, c: 50, f: 15,
-                        ingredients: mockIngredients,
-                        instructions: `1. 這是第 ${i} 道假菜色。\n2. 用於測試懶人/豐富模式分配。\n3. 請檢查 UI 顯示是否正確。`
-                    });
-                }
-                return mockBatch;
-            }
-        },
-// --- [修復版] 2. 共用 API 呼叫邏輯 (移除無效模型) ---
-        callGeminiAPI: async (promptText) => {
-            // 1. 攔截：檢查開發模式
-            // 確保 app.state.user 存在，且 isDev 為 true
-            if (app.state.user && app.state.user.isDev) {
-                console.log("⚡ 攔截 API 請求，轉接至假資料產生器...");
-                
-                // 模擬網路延遲 (0.5秒)，讓 UI 轉圈圈一下，感覺比較真實
-                await new Promise(r => setTimeout(r, 500)); 
-                
-                // 呼叫假資料函式
-                if (typeof app.getMockData === 'function') {
-                    return app.getMockData(promptText);
-                } else {
-                    console.error("找不到 getMockData 函式！請確認程式碼是否正確貼上。");
-                    throw new Error("Dev Mode Error: getMockData missing");
-                }
-            }   
-            const key = app.state.user.apiKey;
-            
-            if (!key) {
-                alert("錯誤：未填寫 API Key");
-                throw new Error("No API Key");
-            }
 
-            // ✅ 修正：只使用您帳號支援的模型 (移除 gemini-pro 避免 404 錯誤)
-            const models = ['gemini-2.5-flash'];
-            
-            let lastErrorMsg = "";
-
-            for (const model of models) {
-                try {
-                    console.log(`🚀 正在嘗試模型: ${model}...`);
-                    
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-                    
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            contents: [{ parts: [{ text: promptText }] }],
-                            generationConfig: { 
-                                response_mime_type: "application/json" 
-                            },
-                            // 安全設定：防止食譜被誤判為暴力
-                            safetySettings: [
-                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                            ]
-                        })
-                    });
-
-                    if(!res.ok) {
-                        const errData = await res.json().catch(() => ({}));
-                        const errMsg = errData.error?.message || `Status ${res.status}`;
-                        console.warn(`❌ 模型 ${model} 失敗: ${errMsg}`);
-                        lastErrorMsg = `(${model}) ${errMsg}`;
-                        
-                        // 400 (Key 錯誤) 或 404 (模型找不到) 直接跳過或報錯
-                        if (res.status === 400) throw new Error("API Key 無效，請檢查 Key 是否正確。");
-                        
-                        continue; 
-                    }
-
-                    const data = await res.json();
-                    
-                    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-                        lastErrorMsg = "API 回傳內容為空 (可能被阻擋)";
-                        continue;
-                    }
-
-                    const rawText = data.candidates[0].content.parts[0].text;
-                    
-                    // JSON 清洗
-                    let jsonString = rawText.trim();
-                    jsonString = jsonString.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '');
-                    
-                    const firstBracket = jsonString.indexOf('[');
-                    const lastBracket = jsonString.lastIndexOf(']');
-                    
-                    if (firstBracket !== -1 && lastBracket !== -1) {
-                        jsonString = jsonString.substring(firstBracket, lastBracket + 1);
-                    } else {
-                         // 容錯：如果是單一物件 { ... } 則包成陣列
-                        const firstBrace = jsonString.indexOf('{');
-                        const lastBrace = jsonString.lastIndexOf('}');
-                        if (firstBrace !== -1 && lastBrace !== -1) {
-                            jsonString = `[${jsonString.substring(firstBrace, lastBrace + 1)}]`;
-                        }
-                    }
-
-                    try {
-                        const parsed = JSON.parse(jsonString);
-                        console.log(`✅ ${model} 生成成功！`);
-                        return Array.isArray(parsed) ? parsed : [parsed];
-                    } catch (e) {
-                        console.error("解析失敗:", rawText);
-                        lastErrorMsg = "JSON 解析失敗";
-                        continue;
-                    }
-
-                } catch(e) {
-                    console.error(e);
-                    lastErrorMsg = e.message;
-                    if (e.message.includes("API Key")) break;
-                }
-            }
-
-            alert(`生成失敗！\n\n原因：${lastErrorMsg}\n\n請確認網路連線或 API Key。`);
-            throw new Error(lastErrorMsg);
-        },
-        // --- 請替換 app 物件中的 renderPlanner ---
+// --- 替換：充滿呼吸感的 Planner 卡片 ---
         renderPlanner: () => {
             const list = document.getElementById('planner-list');
             list.innerHTML = '';
@@ -2241,182 +2371,46 @@
                 const rid = app.state.plan[d];
                 const r = recipes.find(x => x.id === rid);
                 const el = document.createElement('div');
-                // 加入 ID 方便重骰時定位
                 el.id = `plan-card-${d}`; 
-                el.className = "bg-white p-3 rounded-2xl border border-gray-100 flex items-center gap-3 transition active:scale-[0.98] group";
+                // 視覺升級：拔除陰影，加大 p-4，加入 hover:border-brand-200
+                el.className = "bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4 transition-all duration-300 hover:border-brand-200 active:scale-[0.99] group";
                 
                 const dayText = dayLabels[d]; 
 
                 if(r) {
                     el.innerHTML = `
                         <div class="w-10 font-bold text-gray-400 text-sm text-center tracking-widest shrink-0">${dayText}</div>
-                        <div class="w-14 h-14 rounded-xl bg-brand-50 flex items-center justify-center text-brand-500 text-2xl shrink-0">
+                        <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center text-brand-500 text-xl shrink-0 border border-brand-100/50">
                             <i class="fa-solid fa-bowl-rice"></i>
                         </div>
                         
-                        <div class="flex-1 min-w-0 cursor-pointer" onclick="app.openDetailById(${r.id})">
-                            <h4 class="font-bold text-gray-700 text-sm truncate">${r.name}</h4>
-                            <div class="text-[10px] text-gray-400 mt-0.5">${r.cal} Kcal · ${r.tags[0]}</div>
+                        <div class="flex-1 min-w-0 cursor-pointer pl-1" onclick="app.openDetailById(${r.id})">
+                            <h4 class="font-bold text-gray-800 text-sm truncate tracking-wide">${r.name}</h4>
+                            <div class="text-[11px] text-gray-400 mt-1 tracking-wider">${r.cal} Kcal · ${r.tags[0]}</div>
                         </div>
 
-                        <div class="flex gap-1">
-                            <button onclick="app.rerollDay('${d}')" class="w-8 h-8 rounded-full bg-purple-50 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition shadow-sm" title="AI 重骰這餐">
-                                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                        <div class="flex gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <button onclick="app.rerollDay('${d}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-transparent hover:border-brand-100" title="AI 重骰">
+                                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
                             </button>
-                            <button onclick="app.openSelector('${d}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-500 hover:text-white transition shadow-sm" title="手動選擇">
-                                <i class="fa-solid fa-rotate text-xs"></i>
+                            <button onclick="app.openSelector('${d}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-transparent hover:border-brand-100" title="手動選擇">
+                                <i class="fa-solid fa-rotate text-[10px]"></i>
                             </button>
                         </div>
                     `;
                 } else {
-                    // 空狀態保持不變...
                     el.innerHTML = `
-                        <div class="w-10 font-bold text-gray-400 text-sm text-center tracking-widest">${dayText}</div>
-                        <div class="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center text-gray-200"><i class="fa-solid fa-plus"></i></div>
-                        <div class="flex-1 text-sm text-gray-400">尚未安排</div>
-                        <button onclick="app.openSelector('${d}')" class="bg-brand-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-sm">選擇</button>
+                        <div class="w-10 font-bold text-gray-300 text-sm text-center tracking-widest">${dayText}</div>
+                        <div class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100/50"><i class="fa-solid fa-plus"></i></div>
+                        <div class="flex-1 text-sm text-gray-300 pl-1 tracking-wider">尚未安排</div>
+                        <button onclick="app.openSelector('${d}')" class="bg-brand-50 text-brand-500 text-xs px-4 py-1.5 rounded-full font-bold transition hover:bg-brand-100">選擇</button>
                     `;
                 }
                 list.appendChild(el);
             });
         },
-            // --- INGREDIENT SPLITTER & AGGREGATOR (NEW) ---
-            getAggregatedIngredients: () => {
-                const needed = new Set();
-                Object.values(app.state.plan).forEach(rid => {
-                    const r = recipes.find(x => x.id === rid);
-                    if (r && r.ingredients) {
-                        r.ingredients.forEach(str => {
-                            // Split by separators: 、 , ， / or space
-                            const items = str.split(/[、,，\/ ]+/); 
-                            items.forEach(item => {
-                                const cleanItem = item.trim();
-                                if(cleanItem && cleanItem.length > 0) needed.add(cleanItem);
-                            });
-                        });
-                    }
-                });
-                return needed;
-            },
 
-            // --- CATEGORY LOGIC (ENHANCED) ---
-            getCategory: (name) => {
-                const n = name.toLowerCase();
-                // 1. Meat/Fresh (Priority High: Tofu, Dairy, Meat)
-                if (n.match(/雞|牛|豬|魚|蝦|肉|排|羊|鴨|鵝|海鮮|蛋|培根|香腸|鮭|鮪|鯖|鯛|蛤|蚵|卷|板豆腐|嫩豆腐|豆干|豆腐|起司|乳酪|奶|優格|火腿|丸/)) return "🥩 生鮮冷藏";
-                
-                // 2. Veg (Medium)
-                if (n.match(/菜|菇|茄|椒|筍|瓜|葉|豆|蘿蔔|洋蔥|蔥|蒜|番茄|花椰|薑|檸檬|薯|芋|玉米|九層塔|香菜|沙拉|果|蘋|蕉|梨|桃|橙|橘|百合|山藥|秋葵|蓮藕|蘆筍|羅勒|迷迭香|百里香|酪梨/)) return "🥦 蔬果區";
-                
-                // 3. Grains
-                if (n.match(/米|麵|飯|冬粉|藜麥|燕麥|吐司|麵包|饅頭|餃|皮|餅|粉條|意麵|烏龍|寬粉/)) return "🍚 穀物澱粉";
-                
-                // 4. Seasoning & Others (Catch-all)
-                if (n.match(/油|醬|鹽|糖|醋|酒|粉|胡椒|香料|味淋|味噌|高湯|罐頭|堅果|芝麻|蜜|茶|水|七味|辣椒|咖哩|湯塊|義大利香料/)) return "🧂 調味與雜貨";
-                
-                return "🧂 調味與雜貨"; // Default
-            },
 
-            // --- 請更新 renderShopping 函式 ---
-
-            renderShopping: () => {
-                const container = document.getElementById('shopping-list-container');
-                
-                // 1. 收集所有食材 (Aggregation)
-                const aggMap = {};
-                Object.values(app.state.plan).forEach(rid => {
-                    const r = recipes.find(x => x.id === rid);
-                    if (r) {
-                        if (r.structured_ingredients) {
-                            r.structured_ingredients.forEach(item => {
-                                const name = item.name.trim();
-                                if (!aggMap[name]) aggMap[name] = { type: item.type, qtys: [] };
-                                aggMap[name].qtys.push(item.qty);
-                            });
-                        } else if (r.ingredients) {
-                            r.ingredients.forEach(str => {
-                                aggMap[str] = { type: "雜貨", qtys: ["1份"] }; 
-                            });
-                        }
-                    }
-                });
-
-                if(Object.keys(aggMap).length === 0) {
-                    // 進度條歸零
-                    document.getElementById('shop-progress-bar').style.width = '0%';
-                    return container.innerHTML = `<div class="text-center text-gray-300 py-10 text-xs">暫無清單</div>`;
-                }
-                
-                // 2. 建立分類對應
-                const typeMapping = {
-                    "生鮮": "🥩 生鮮冷藏", "肉類": "🥩 生鮮冷藏", "海鮮": "🥩 生鮮冷藏",
-                    "蔬果": "🥦 蔬果區", "蔬菜": "🥦 蔬果區",
-                    "澱粉": "🍚 穀物澱粉",
-                    "雜貨": "🧂 調味與雜貨", "乾料": "🧂 調味與雜貨"
-                };
-
-                const cats = { "🥦 蔬果區": [], "🥩 生鮮冷藏": [], "🍚 穀物澱粉": [], "🧂 調味與雜貨": [] };
-                
-                let totalItems = 0;
-                let checkedItems = 0;
-
-                // 3. 分配與統計
-                Object.keys(aggMap).forEach(name => {
-                    const itemData = aggMap[name];
-                    let targetCat = typeMapping[itemData.type] || "🧂 調味與雜貨";
-                    
-                    const qtyStr = itemData.qtys.join(' + ');
-                    const displayName = `${name} <span class="text-xs text-brand-500 ml-1">(${qtyStr})</span>`;
-                    const key = name;
-
-                    cats[targetCat].push({ displayName, key });
-                    
-                    totalItems++;
-                    if (app.state.shopping[key]) checkedItems++;
-                });
-
-                // 4. 更新進度條 (移除文字更新邏輯)
-                // document.getElementById('shop-progress-text').innerText = ... (這行已移除)
-                const percent = totalItems > 0 ? (checkedItems/totalItems)*100 : 0;
-                document.getElementById('shop-progress-bar').style.width = `${percent}%`;
-
-                // 5. 渲染畫面 (與之前相同)
-                container.innerHTML = '';
-                Object.keys(cats).forEach(catName => {
-                    if(cats[catName].length > 0) {
-                        const items = cats[catName];
-                        // 排序：未買的在前
-                        items.sort((a,b) => {
-                            const cA = app.state.shopping[a.key] ? 1 : 0;
-                            const cB = app.state.shopping[b.key] ? 1 : 0;
-                            return cA - cB || a.key.localeCompare(b.key, 'zh-Hant');
-                        });
-
-                        const grp = document.createElement('div');
-                        grp.className = "mb-6";
-                        grp.innerHTML = `<h3 class="text-xs font-bold text-gray-400 mb-3 px-1 tracking-wider border-b border-gray-100 pb-1">${catName}</h3>`;
-                        
-                        const listDiv = document.createElement('div');
-                        listDiv.className = "flex flex-col gap-2"; 
-                        
-                        items.forEach(obj => {
-                            const checked = app.state.shopping[obj.key];
-                            const row = document.createElement('label');
-                            row.className = `flex items-center gap-4 py-2 px-2 cursor-pointer group transition-all duration-300 ${checked ? 'opacity-30' : 'opacity-100'}`;
-                            row.innerHTML = `
-                                <input type="checkbox" class="hidden custom-checkbox" ${checked?'checked':''} onchange="app.toggleShop('${obj.key}')">
-                                <div class="w-6 h-6 rounded border-2 border-gray-300 flex items-center justify-center transition-colors shrink-0 text-white text-xs">
-                                    <i class="fa-solid fa-check ${checked?'':'hidden'}"></i>
-                                </div>
-                                <span class="text-base font-medium ${checked?'line-through':''} text-gray-700 flex-1">${obj.displayName}</span>
-                            `;
-                            listDiv.appendChild(row);
-                        });
-                        grp.appendChild(listDiv);
-                        container.appendChild(grp);
-                    }
-                });
-            },
             toggleShop: (item) => {
                 app.state.shopping[item] = !app.state.shopping[item];
                 localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
@@ -2673,80 +2667,7 @@
             app.showToast("✅ 已標記本週備料完成！");
             app.cloudSync.upload();
         },
-            // --- 請替換 app.copyShoppingList ---
-            copyShoppingList: async () => {
-                // 1. 建立分類對應表 (與 renderShopping 保持一致)
-                const typeMapping = {
-                    "生鮮": "🥩 生鮮冷藏", "肉類": "🥩 生鮮冷藏", "海鮮": "🥩 生鮮冷藏",
-                    "蔬果": "🥦 蔬果區", "蔬菜": "🥦 蔬果區",
-                    "澱粉": "🍚 穀物澱粉",
-                    "雜貨": "🧂 調味與雜貨", "乾料": "🧂 調味與雜貨"
-                };
 
-                const cats = { 
-                    "🥩 生鮮冷藏": [], 
-                    "🥦 蔬果區": [], 
-                    "🍚 穀物澱粉": [], 
-                    "🧂 調味與雜貨": [] 
-                };
-
-                let hasItems = false;
-
-                // 2. 遍歷本週計畫，收集未買清單
-                Object.values(app.state.plan).forEach(rid => {
-                    const r = recipes.find(x => x.id === rid);
-                    if (r) {
-                        // 優先使用結構化資料 (AI 生成的都有這個)
-                        const ingredients = r.structured_ingredients || 
-                            (r.ingredients ? r.ingredients.map(s => ({name: s, qty: '', type: '雜貨'})) : []);
-
-                        ingredients.forEach(item => {
-                            const name = item.name.trim();
-                            
-                            // 只處理未打勾(未買)的項目
-                            // 注意：這裡使用 name 作為 key，需與 toggleShop 的 key 邏輯一致
-                            if (!app.state.shopping[name]) {
-                                // 判斷分類
-                                let targetCat = typeMapping[item.type] || "🧂 調味與雜貨";
-                                
-                                // 為了避免重複列出 (例如: 雞胸肉 100g, 雞胸肉 50g)，我們先存字串
-                                // 這裡做個簡單處理：直接列出 "品名 (數量)"
-                                const displayStr = item.qty ? `${name} (${item.qty})` : name;
-                                
-                                cats[targetCat].push(displayStr);
-                                hasItems = true;
-                            }
-                        });
-                    }
-                });
-
-                if (!hasItems) return app.showToast('🎉 所有食材都買齊囉！');
-
-                // 3. 組合文字
-                let text = "🛒 Bento Fit 採買清單\n──────────────────\n";
-                
-                Object.keys(cats).forEach(catName => {
-                    // 去除重複並排序
-                    const uniqueItems = [...new Set(cats[catName])].sort();
-                    
-                    if (uniqueItems.length > 0) {
-                        text += `\n${catName}\n`;
-                        uniqueItems.forEach(i => text += `⬜ ${i}\n`);
-                    }
-                });
-                
-                text += `\n📅 ${new Date().toLocaleDateString()} 生成`;
-
-                // 4. 分享或複製
-                if (navigator.share) {
-                    try {
-                        await navigator.share({ title: 'Bento Fit 採買清單', text: text });
-                    } catch (err) { console.log('取消分享'); }
-                } else {
-                    navigator.clipboard.writeText(text);
-                    app.showToast('✅ 已複製分區清單');
-                }
-            },
             // --- History ---
             renderHistory: () => {
                 const list = document.getElementById('history-list');
@@ -2846,7 +2767,69 @@
                     app.cloudSync.upload();
                 }
             },
+// --- 替換原有的 Cooking 相關函式 ---
+        
+        startCooking: async (id) => {
+            const r = recipes.find(x => x.id === id);
+            if(!r || !r.instructions) return app.showToast('此食譜沒有步驟');
 
+            // 1. 領域層：解析步驟
+            const steps = app.domain.recipe.services.parseSteps(r.instructions);
+            if (steps.length === 0) return app.showToast('無法解析步驟內容');
+
+            // 2. 初始化會話狀態 (Session State)
+            app.state.cookingSession = { steps: steps, current: 0 };
+
+            // 3. 基礎設施層：鎖定螢幕
+            await app.infrastructure.device.screenLocker.lock();
+
+            // 4. UI 渲染
+            document.getElementById('modal-cooking').classList.remove('hidden');
+            app.renderCookingStep();
+        },
+
+        renderCookingStep: () => {
+            const s = app.state.cookingSession;
+            if (!s) return;
+            const total = s.steps.length;
+            
+            // 更新文字與進度條
+            document.getElementById('cook-step-num').innerText = (s.current + 1).toString().padStart(2, '0');
+            document.getElementById('cook-step-text').innerText = s.steps[s.current];
+            document.getElementById('cook-progress-text').innerText = `${s.current + 1} / ${total}`;
+            document.getElementById('cook-progress-bar').style.width = `${((s.current + 1) / total) * 100}%`;
+        },
+
+        nextCookingStep: async () => {
+            const s = app.state.cookingSession;
+            if (!s) return;
+
+            if (s.current < s.steps.length - 1) {
+                s.current++;
+                app.renderCookingStep();
+            } else {
+                if(await app.showModal('恭喜完成！要結束烹飪模式嗎？', "料理完成", "confirm")) {
+                    app.exitCooking();
+                    app.showToast('🎉 料理完成！記得拍照打卡喔');
+                }
+            }
+        },
+
+        prevCookingStep: (e) => {
+            if(e) e.stopPropagation(); // 避免點擊按鈕時觸發外層的 nextCookingStep
+            const s = app.state.cookingSession;
+            if (s && s.current > 0) {
+                s.current--;
+                app.renderCookingStep();
+            }
+        },
+
+        exitCooking: () => {
+            // 釋放鎖定與清理狀態
+            app.infrastructure.device.screenLocker.release();
+            app.state.cookingSession = null;
+            document.getElementById('modal-cooking').classList.add('hidden');
+        },
             // --- 請替換 app.openDetail 函式 ---
             openDetail: (r) => {
                 if(!r) return;
@@ -2888,21 +2871,12 @@
                 startCookBtn.onclick = () => app.startCooking(r.id);
                 stepContainer.appendChild(startCookBtn);
 
+// 在 openDetail 內部替換以下片段：
                 if (r.instructions) {
-                    // ✅ 修正：更強大的步驟解析邏輯
-                    let raw = r.instructions;
-                    // 1. 先將 \\n (字串的換行) 轉為真正的 \n
-                    raw = raw.replace(/\\n/g, '\n');
-                    
-                    // 2. 如果內容完全沒有換行，但有 "1. ", "2. " 這種結構，手動補換行
-                    if (!raw.includes('\n') && raw.match(/\d+\./)) {
-                        raw = raw.replace(/(\d+\.)/g, '\n$1');
-                    }
-                    
-                    // 3. 切割並過濾空行
-                    let steps = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+                    // 呼叫我們乾淨的領域層解析器
+                    const steps = app.domain.recipe.services.parseSteps(r.instructions);
 
-                    steps.forEach((step, idx) => {
+                    steps.forEach((step) => {
                         const stepDiv = document.createElement('div');
                         stepDiv.className = "flex gap-3 items-start p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors group";
                         stepDiv.onclick = function() {
@@ -2926,7 +2900,6 @@
                 } else {
                     stepContainer.innerHTML += '<div class="text-gray-400 text-center py-4">暫無步驟資料</div>';
                 }
-
                 document.getElementById('modal-detail').classList.remove('hidden');
             },
             // 3. 替換：filterRecipes (支援 'fav' 篩選)
@@ -2968,34 +2941,6 @@
                 });
             },
             openDetailById: (id) => app.openDetail(recipes.find(r => r.id === id)),
-            // --- 新增：一鍵過濾常備品 ---
-            filterStaples: () => {
-                // 定義常備品關鍵字
-                const staples = ['油', '鹽', '糖', '醬油', '醋', '胡椒', '米酒', '太白粉', '蒜', '薑', '蔥', '水', '香料', '芝麻', '日式醬油(低鈉)'];
-                let count = 0;
-                
-                // 取得所有需要的食材名稱
-                const needed = app.getAggregatedIngredients(); // 呼叫既有的 helper
-                
-                needed.forEach(name => {
-                    // 如果食材名稱包含常備品關鍵字 (例如 "橄欖油" 包含 "油")
-                    if (staples.some(s => name.includes(s))) {
-                        // 將其設為已購買 (true)
-                        if (!app.state.shopping[name]) {
-                            app.state.shopping[name] = true;
-                            count++;
-                        }
-                    }
-                });
-                
-                // 存檔並重繪
-                localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
-                app.renderShopping();
-                
-                if(count > 0) app.showToast(`已自動隱藏 ${count} 項常備調味品`);
-                else app.showToast('沒有發現未勾選的常備品');
-            },
-
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
             showToast: (msg) => {
                 const t = document.getElementById('toast');
@@ -3129,8 +3074,51 @@
                     location.reload();
                 }
             },
+// --- 測試層 (Testing) ---
+        tests: {
+            runHealthDomainTests: () => {
+                console.log("🏃‍♂️ 開始執行健康領域單元測試...");
+                const { calculateBMI, calculateBMR, calculateTDEE } = app.domain.health;
+                console.assert(calculateBMI(55, 160) === 21.5, "BMI 計算錯誤");
+                console.assert(calculateBMR(55, 160, 30, 'female', null, null) === 1239, "BMR 計算錯誤");
+                console.assert(calculateBMR(55, 160, 30, 'female', 20, null) === 1320, "BMR (包含體脂) 計算錯誤");
+                console.assert(calculateTDEE(1239, 1.2) === 1487, "TDEE 計算錯誤");
+                console.log("✅ 健康領域單元測試通過！");
+            },
+            runAiDomainTests: () => {
+                console.log("🏃‍♂️ 開始執行 AI 領域單元測試...");
+                const mockUser = { tdee: 2000, goal: "減脂", bodyComp: { bf: 30 } };
+                const prompt = app.domain.ai.promptFactory.createBatchPrompt(mockUser, "日式", "pro", true, "番茄", "香菜");
+                console.assert(prompt.includes("700"), "Prompt 應正確計算出午餐熱量");
+                console.assert(prompt.includes("日式"), "Prompt 應包含風格");
+                console.log("✅ AI 領域單元測試通過！");
+            },
+            runShoppingDomainTests: () => {
+                console.log("🏃‍♂️ 開始執行 Shopping 領域單元測試...");
+                const { config, services } = app.domain.shopping;
+                console.assert(services.categorizeItem("高麗菜", "未知", config) === "🥦 蔬果區", "高麗菜應為蔬果");
+                console.assert(services.checkIsStaple("橄欖油", config) === true, "橄欖油應為常備品");
+                console.log("✅ Shopping 領域單元測試通過！");
+                console.assert(services.checkIsStaple("燕麥奶", config, ["燕麥奶", "黑豆"]) === true, "自訂常備品應被正確識別");
+                console.assert(services.checkIsStaple("雞胸肉", config, ["燕麥奶"]) === false, "非預設且非自訂的食材不應為常備品");
+            },
+            runRecipeDomainTests: () => {
+                console.log("🏃‍♂️ 開始執行 Recipe 領域單元測試...");
+                const { parseSteps } = app.domain.recipe.services;
+                const t1 = parseSteps("1. 切菜\n2. 炒菜");
+                console.assert(t1.length === 2 && t1[1] === "2. 炒菜", "應正確處理一般換行");
+                console.log("✅ Recipe 領域單元測試通過！");
+            },
+            runAllTests: () => {
+                console.log("🚀 啟動 Bento Fit 領域層測試套件...");
+                app.tests.runHealthDomainTests();
+                app.tests.runAiDomainTests();
+                app.tests.runShoppingDomainTests();
+                app.tests.runRecipeDomainTests();
+                console.log("🏆 所有測試通過！系統架構非常健康！");
+            }
+        }
         };
-
         window.addEventListener('DOMContentLoaded', app.init);
         // ✅ 優化後的 Service Worker 註冊
         if ('serviceWorker' in navigator) {
@@ -3158,6 +3146,7 @@
                 }
             }
         });
+
     </script>
 </body>
 </html>
