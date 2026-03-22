@@ -1,5 +1,5 @@
 // Bento Fit Service Worker v1.0
-const CACHE_NAME = 'bento-fit-v2.3';
+const CACHE_NAME = 'bento-fit-v2.4';
 const urlsToCache = [
   './',
   './index.html',
@@ -73,4 +73,4 @@ self.addEventListener('fetch', event => {
             });
         })
     );
-});
+});// hook test
