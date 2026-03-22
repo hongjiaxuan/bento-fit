@@ -262,10 +262,10 @@
                         <i class="fa-solid fa-gear text-xs"></i>
                     </button>
                 </div>
-                <div class="flex gap-1.5">
-                    <button id="btn-hide-checked" onclick="app.toggleHideChecked()" title="隱藏已購"
-                        class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
-                        <i class="fa-regular fa-eye-slash text-xs"></i>
+                <div class="flex gap-1.5 items-center">
+                    <button id="btn-hide-checked" onclick="app.toggleHideChecked()"
+                        class="h-9 px-3 rounded-full bg-gray-50 text-gray-400 flex items-center gap-1.5 border border-gray-100 active:scale-90 transition text-xs font-bold">
+                        <i class="fa-regular fa-eye-slash"></i> 隱藏已購
                     </button>
                     <button onclick="app.copyShoppingList()" title="分享清單"
                         class="w-9 h-9 rounded-full bg-gray-50 text-brand-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
@@ -3277,10 +3277,12 @@
                 if (btn) {
                     if (app.state.hideChecked) {
                         btn.innerHTML = '<i class="fa-regular fa-eye"></i> 顯示已購';
-                        btn.classList.replace('text-gray-400', 'text-brand-500');
+                        btn.classList.remove('text-gray-400', 'bg-gray-50', 'border-gray-100');
+                        btn.classList.add('text-brand-500', 'bg-brand-50', 'border-brand-100');
                     } else {
                         btn.innerHTML = '<i class="fa-regular fa-eye-slash"></i> 隱藏已購';
-                        btn.classList.replace('text-brand-500', 'text-gray-400');
+                        btn.classList.remove('text-brand-500', 'bg-brand-50', 'border-brand-100');
+                        btn.classList.add('text-gray-400', 'bg-gray-50', 'border-gray-100');
                     }
                 }
                 app.renderShopping();
