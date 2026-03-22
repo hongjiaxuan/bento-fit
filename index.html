@@ -243,9 +243,10 @@
 
         <section id="view-shopping" class="view-section fade-in hidden h-full flex flex-col">
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4 sticky top-0 z-10">
-                <div class="flex justify-between items-end mb-2">
+                <div class="flex justify-between items-center mb-2">
                     <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">採買完成度</div>
-                    </div>
+                    <div id="shop-count-label" class="text-[11px] font-bold text-brand-500"></div>
+                </div>
                 <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
                     <div id="shop-progress-bar" class="h-full bg-brand-500 transition-all duration-500" style="width: 0%"></div>
                 </div>
@@ -253,7 +254,7 @@
 
             <div class="flex items-center justify-between mb-4 px-1">
                 <div class="flex gap-1.5">
-                    <button onclick="app.filterStaples()" title="一鍵隱藏常備庫"
+                    <button onclick="app.filterStaples()" title="一鍵勾選常備品（家中已有的食材）"
                         class="w-9 h-9 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center border border-brand-100 active:scale-90 transition">
                         <i class="fa-solid fa-box-open text-xs"></i>
                     </button>
@@ -380,7 +381,8 @@
                 <!-- 第三行：AI 短評（緊湊條） -->
                 <div class="bg-brand-50 rounded-xl px-3 py-2.5 border border-brand-100 flex items-start gap-2">
                     <i class="fa-solid fa-robot text-brand-400 text-xs mt-0.5 shrink-0"></i>
-                    <p id="report-comment" class="text-[11px] text-brand-800 leading-snug">分析中...</p>
+                    <p id="report-comment" class="text-[11px] text-brand-800 leading-snug line-clamp-2 cursor-pointer" onclick="app.toggleReportComment()">分析中...</p>
+                    <button id="report-expand-btn" onclick="app.toggleReportComment()" class="text-[10px] text-brand-400 hover:text-brand-600 mt-0.5 hidden">▼ 展開全文</button>
                 </div>
 
                 <!-- 第四行：評分 Top 3（左）+ 常用 Top 5（右）並排 -->
@@ -489,7 +491,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1">年齡</label>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">年齡 (歲)</label>
                                 <input type="number" id="input-age" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none" placeholder="25">
                             </div>
                             <div>
@@ -536,7 +538,7 @@
                                 <input type="number" step="0.1" id="input-muscle" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1">內臟脂肪</label>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1">內臟脂肪 (1–30)</label>
                                 <input type="number" step="0.5" id="input-vfat" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-400 outline-none" placeholder="選填">
                             </div>
                             <div>
@@ -763,6 +765,10 @@
                         <div class="w-px bg-gray-200"></div>
                         <div><div class="text-[10px] text-gray-400 mb-1">脂肪</div><div id="detail-f" class="font-bold text-gray-800 text-sm"></div></div>
                     </div>
+                    <div id="detail-sides-section" class="hidden mb-5">
+                        <h3 class="font-bold text-gray-800 mb-2 text-sm flex items-center gap-2"><i class="fa-solid fa-leaf text-green-400"></i> 配菜</h3>
+                        <div id="detail-sides" class="flex flex-wrap gap-2"></div>
+                    </div>
                     <h3 class="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-basket-shopping text-brand-400"></i> 食材</h3>
                     <ul id="detail-ingredients" class="list-disc list-inside text-gray-600 space-y-1 mb-6 text-sm pl-2 marker:text-gray-300"></ul>
                     <h3 class="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-list-ol text-brand-400"></i> 步驟</h3>
@@ -800,7 +806,7 @@
         </div>
     </div>
 
-    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-800/90 backdrop-blur text-white px-5 py-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-[70] text-xs font-bold flex items-center gap-2">
+    <div id="toast" class="fixed top-16 left-1/2 transform -translate-x-1/2 bg-gray-800/90 backdrop-blur text-white px-5 py-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-[70] text-xs font-bold flex items-center gap-2">
         <i class="fa-solid fa-check text-brand-400"></i> <span id="toast-msg"></span>
     </div>
     <div id="modal-cooking" class="fixed inset-0 z-[100] hidden bg-[#0a0b0a] text-gray-100 flex flex-col transition-opacity duration-500">
@@ -1351,7 +1357,7 @@
         // 新增 AI 提示詞工廠 (純函式)
         ai: {
             promptFactory: {
-                createBatchPrompt: (user, cuisine, persona, isBatch, fridge, exclude) => {
+                createBatchPrompt: (user, cuisine, persona, isBatch, fridge, exclude, recentNames) => {
                     const targetCal = Math.round(user.tdee * 0.35);
                     let bodyNote = "";
                     if (user.bodyComp) {
@@ -1369,39 +1375,57 @@
                     };
                     const personaPrompt = personas[persona] || personas.lazy;
 
-                    const batchNote = isBatch 
-                        ? "★「懶人備餐模式」：請確保這 10 道菜的食材重複性高、易於批量採買。" 
+                    const batchNote = isBatch
+                        ? "★「懶人備餐模式」：請確保這 10 道菜的食材重複性高、易於批量採買。"
                         : "請設計 10 道口味完全不同的菜色。";
+
+                    const seed = Date.now();
 
                     return `
                         ${personaPrompt}
                         請為 TDEE ${user.tdee} (午餐目標 ${targetCal} kcal) 的使用者，設計 10 道午餐便當。
                         目標：${user.goal}。料理風格：${cuisine}。
-                        
+
                         【身體與需求指示】
                         ${bodyNote || "無特殊身體狀況。"}
                         ${batchNote}
                         ${fridge ? `★ 優先使用冰箱食材：${fridge}` : ""}
                         ${exclude ? `★ 絕對避開食材：${exclude}` : ""}
-                        
+
+                        【多樣性要求 — 嚴格遵守，違反即重來】
+                        ★ 10 道菜的主要蛋白質來源必須各不相同（例如：雞胸、豬里肌、牛肉、鮭魚、蝦仁、豆腐、鯖魚、雞腿、豬排、花枝，每種只能出現一次）。
+                        ★ 烹調方式需多樣化，同一烹調法不得超過 2 次（煎/炒/烤/蒸/滷/炸/煮 各自計算）。
+                        ★ 每道便當必須包含：1 道主菜 + 2~3 道配菜（以蔬菜為主）。
+                        ${recentNames ? `★ 以下為近期已使用菜色，本次絕對禁止出現：${recentNames}` : ""}
+                        ★ 隨機種子 ${seed}：依此確保本次與上次生成結果完全不同，禁止照搬舊菜單。
+
                         【嚴格 JSON 格式要求】
                         回傳 JSON Array (10個物件)，不含 Markdown。欄位：
-                        "name", "main_tag", "cal", "p", "c", "f", 
-                        "ingredients" (Array of {name, qty, type}), 
-                        "instructions" (字串, \\n 分隔),
+                        "name"（便當完整名稱，例如「照燒雞腿便當」）,
+                        "main_tag", "cal", "p", "c", "f",
+                        "sides" (Array of string, 配菜名稱列表 2~3 項, 例如: ["清炒花椰菜", "滷蛋", "玉米"]),
+                        "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
+                        "instructions" (字串, \\n 分隔，包含主菜與配菜做法),
                         "prep_guide" (字串，用 " | " 分隔各類別，例如："肉類：雞胸肉切片醃漬10分鐘 | 蔬菜：花椰菜洗淨切小朵冷藏備用 | 澱粉：免預處理"。若無該類食材則省略該段)
                     `;
                 },
                 createSinglePrompt: (user, exclude, currentNames) => {
                     const targetCal = Math.round(user.tdee * 0.35);
+                    const seed = Date.now();
                     return `
                         你是一位五星級健康餐盒設計師。設計 1 道詳細且美味的午餐便當。
                         熱量約 ${targetCal} kcal，目標：${user.goal}。
                         ${exclude ? `★ 絕對避開食材：${exclude}` : ""}
                         【防重複機制】 避開以下菜色：${currentNames}。必須全新且不同。
+                        【配菜要求】 每道便當須包含 1 道主菜 + 2~3 道配菜（蔬菜為主）。
+                        【隨機種子 ${seed}】請依此確保每次生成結果不同。
 
                         【嚴格 JSON 格式要求】
-                        回傳 JSON Array (1個物件)，不含 Markdown。欄位同上 (無 prep_guide)。
+                        回傳 JSON Array (1個物件)，不含 Markdown。欄位：
+                        "name", "main_tag", "cal", "p", "c", "f",
+                        "sides" (Array of string, 配菜名稱列表 2~3 項),
+                        "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
+                        "instructions" (字串, \\n 分隔，包含主菜與配菜做法)。
                     `;
                 }
             }
@@ -1500,6 +1524,19 @@
 // --- 替換：乾淨俐落的採買清單 ---
         renderShopping: () => {
             const container = document.getElementById('shopping-list-container');
+            // 同步「隱藏已購」按鈕視覺狀態
+            const hideBtn = document.getElementById('btn-hide-checked');
+            if (hideBtn) {
+                if (app.state.hideChecked) {
+                    hideBtn.innerHTML = '<i class="fa-regular fa-eye"></i> 顯示已購';
+                    hideBtn.classList.remove('text-gray-400', 'bg-gray-50', 'border-gray-100');
+                    hideBtn.classList.add('text-brand-500', 'bg-brand-50', 'border-brand-100');
+                } else {
+                    hideBtn.innerHTML = '<i class="fa-regular fa-eye-slash"></i> 隱藏已購';
+                    hideBtn.classList.remove('text-brand-500', 'bg-brand-50', 'border-brand-100');
+                    hideBtn.classList.add('text-gray-400', 'bg-gray-50', 'border-gray-100');
+                }
+            }
             const { config, services } = app.domain.shopping;
 
             const aggMap = services.aggregateIngredients(app.state.plan, app.state.recipes);
@@ -1527,6 +1564,8 @@
 
             const percent = totalItems > 0 ? (checkedItems/totalItems)*100 : 0;
             document.getElementById('shop-progress-bar').style.width = `${percent}%`;
+            const countLabel = document.getElementById('shop-count-label');
+            if (countLabel) countLabel.innerText = totalItems > 0 ? `${checkedItems} / ${totalItems} 項` : '';
 
             container.innerHTML = '';
             Object.keys(cats).forEach(catName => {
@@ -1544,19 +1583,18 @@
                     grp.innerHTML = `<h3 class="text-[11px] font-bold text-brand-500/70 mb-3 px-2 tracking-widest border-b border-brand-50/50 pb-2">${catName}</h3>`;
                     
                     const listDiv = document.createElement('div');
-                    listDiv.className = "flex flex-col gap-1"; 
-                    
+                    listDiv.className = "grid grid-cols-2 gap-x-1 gap-y-0.5";
+
                     items.forEach(obj => {
                         const checked = app.state.shopping[obj.key];
                         const row = document.createElement('label');
-                        // 視覺升級：增加 py-3 觸控範圍，已打勾的透明度降至 25% (opacity-25)
-                        row.className = `flex items-center gap-4 py-3 px-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-brand-50/30 ${checked ? 'opacity-25 grayscale' : 'opacity-100'}`;
+                        row.className = `flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-brand-50/30 min-w-0 ${checked ? 'opacity-25 grayscale' : 'opacity-100'}`;
                         row.innerHTML = `
                             <input type="checkbox" class="hidden custom-checkbox" ${checked?'checked':''} onchange="app.toggleShop('${obj.key}')">
                             <div class="w-5 h-5 rounded border border-gray-300 flex items-center justify-center transition-colors shrink-0 text-white text-[10px]">
                                 <i class="fa-solid fa-check ${checked?'':'hidden'}"></i>
                             </div>
-                            <span class="text-sm font-medium ${checked?'line-through':''} text-gray-700 flex-1 tracking-wide">${obj.displayName}</span>
+                            <span class="text-xs font-medium ${checked?'line-through':''} text-gray-700 truncate tracking-wide">${obj.displayName}</span>
                         `;
                         listDiv.appendChild(row);
                     });
@@ -1571,20 +1609,20 @@
                 grp.className = "mb-8";
                 grp.innerHTML = `<h3 class="text-[11px] font-bold text-purple-400/80 mb-3 px-2 tracking-widest border-b border-purple-50 pb-2">🛍️ 手動新增</h3>`;
                 const listDiv = document.createElement('div');
-                listDiv.className = "flex flex-col gap-1";
+                listDiv.className = "grid grid-cols-2 gap-x-1 gap-y-0.5";
                 customItems.forEach((name, idx) => {
                     const key = `__custom_${idx}`;
                     const checked = !!app.state.shopping[key];
                     if (app.state.hideChecked && checked) return;
                     const row = document.createElement('label');
-                    row.className = `flex items-center gap-4 py-3 px-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-purple-50/30 ${checked ? 'opacity-25 grayscale' : ''}`;
+                    row.className = `flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-purple-50/30 min-w-0 ${checked ? 'opacity-25 grayscale' : ''}`;
                     row.innerHTML = `
                         <input type="checkbox" class="hidden custom-checkbox" ${checked?'checked':''} onchange="app.toggleShop('${key}')">
                         <div class="w-5 h-5 rounded border border-gray-300 flex items-center justify-center transition-colors shrink-0 text-white text-[10px]">
                             <i class="fa-solid fa-check ${checked?'':'hidden'}"></i>
                         </div>
-                        <span class="text-sm font-medium ${checked?'line-through':''} text-gray-700 flex-1 tracking-wide">${name}</span>
-                        <button onclick="event.stopPropagation(); app.removeCustomShoppingItem(${idx})" class="text-gray-200 hover:text-red-400 transition text-xs ml-2"><i class="fa-solid fa-xmark"></i></button>
+                        <span class="text-xs font-medium ${checked?'line-through':''} text-gray-700 truncate flex-1 tracking-wide">${name}</span>
+                        <button onclick="event.stopPropagation(); app.removeCustomShoppingItem(${idx})" class="text-gray-200 hover:text-red-400 transition text-xs shrink-0"><i class="fa-solid fa-xmark"></i></button>
                     `;
                     listDiv.appendChild(row);
                 });
@@ -1827,9 +1865,31 @@
 
 // --- ⚙️ 新增：開啟編輯個人資料彈窗 ---
         openEditProfile: () => {
-            app.fillProfile(); // 先把現有資料填入 input
+            app.fillProfile();
             document.getElementById('modal-profile-edit').classList.remove('hidden');
-            app.switchProfileTab('basic'); // 預設打開第一頁
+            app.switchProfileTab('basic');
+            // API Key 格式即時驗證
+            const apiInput = document.getElementById('input-apikey');
+            if (apiInput && !apiInput._hintBound) {
+                apiInput._hintBound = true;
+                apiInput.addEventListener('blur', () => {
+                    const val = apiInput.value.trim();
+                    let hint = document.getElementById('apikey-hint');
+                    if (!hint) {
+                        hint = document.createElement('p');
+                        hint.id = 'apikey-hint';
+                        apiInput.parentElement.appendChild(hint);
+                    }
+                    if (!val) { hint.textContent = ''; }
+                    else if (val.startsWith('AIza') && val.length >= 35) {
+                        hint.textContent = '✅ 格式正確';
+                        hint.className = 'text-[10px] mt-1 text-green-500';
+                    } else {
+                        hint.textContent = '⚠️ 格式可能有誤（應以 AIza 開頭，約 39 字元）';
+                        hint.className = 'text-[10px] mt-1 text-orange-400';
+                    }
+                });
+            }
         },
 
         // --- ⚙️ 新增：切換彈窗分頁 (Tab) ---
@@ -2066,6 +2126,15 @@
 
             // 午餐提醒通知 (11:00–13:00 且今天尚未提醒過)
             app.scheduleLunchNotification();
+
+            // 所有 Modal 背景點擊關閉（排除 modal-general 由 showModal 自行處理，以及 modal-onboarding）
+            const skipBackdropClose = new Set(['modal-general', 'modal-onboarding']);
+            document.querySelectorAll('.modal-backdrop').forEach(modal => {
+                if (skipBackdropClose.has(modal.id)) return;
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.classList.add('hidden');
+                });
+            });
         },
 
         scheduleLunchNotification: () => {
@@ -2190,7 +2259,15 @@
 
             if(r) {
                 document.getElementById('dash-cal-curr').innerText = r.cal;
-                document.getElementById('bar-cal').style.width = Math.min((r.cal/lunchTarget)*100, 100) + '%';
+                const calPct = (r.cal / lunchTarget) * 100;
+                const barCal = document.getElementById('bar-cal');
+                barCal.style.width = Math.min(calPct, 100) + '%';
+                if (calPct > 110) {
+                    barCal.className = "bg-red-400 h-2 rounded-full transition-all duration-1000";
+                    document.getElementById('tdee-display').innerHTML = `TDEE: ${tdee} <span class="text-red-400 font-bold ml-1">⚠️ 超標</span>`;
+                } else {
+                    barCal.className = "bg-brand-400 h-2 rounded-full transition-all duration-1000";
+                }
                 document.getElementById('bar-prot').style.width = Math.min((r.p/40)*100, 100) + '%';
                 document.getElementById('bar-carb').style.width = Math.min((r.c/60)*100, 100) + '%';
                 document.getElementById('bar-fat').style.width = Math.min((r.f/25)*100, 100) + '%';
@@ -2249,6 +2326,7 @@
             } else {
                 document.getElementById('dash-cal-curr').innerText = "0";
                 document.getElementById('bar-cal').style.width = '0%';
+                document.getElementById('bar-cal').className = "bg-brand-400 h-2 rounded-full transition-all duration-1000";
                 document.getElementById('bar-prot').style.width = '0%';
                 document.getElementById('bar-carb').style.width = '0%';
                 document.getElementById('bar-fat').style.width = '0%';
@@ -2498,13 +2576,13 @@
 
                 // 定義所有徽章 (已更新難度條件)
                 const allBadges = [
-                    { id: 'newbie',   icon: 'fa-seedling',       name: '新手上路', color: 'text-green-500',  bg: 'bg-green-100',  cond: () => true },
-                    { id: 'streak3',  icon: 'fa-fire-flame-simple', name: '連續 3 天', color: 'text-yellow-500', bg: 'bg-yellow-100', cond: () => game.streak >= 3 },
-                    { id: 'streak7',  icon: 'fa-fire',            name: '連續 7 天', color: 'text-orange-500', bg: 'bg-orange-100', cond: () => game.streak >= 7 },
-                    { id: 'streak30', icon: 'fa-trophy',          name: '連續月燃', color: 'text-red-500',    bg: 'bg-red-100',    cond: () => game.streak >= 30 },
-                    { id: 'planner',  icon: 'fa-calendar-check',  name: '規劃達人', color: 'text-blue-500',   bg: 'bg-blue-100',   cond: () => history.length >= 10 },
-                    { id: 'tracker',  icon: 'fa-weight-scale',    name: '數據控',   color: 'text-purple-500', bg: 'bg-purple-100', cond: () => bodyLog.length >= 10 },
-                    { id: 'gourmet',  icon: 'fa-star',            name: '美食家',   color: 'text-pink-500',   bg: 'bg-pink-100',
+                    { id: 'newbie',   icon: 'fa-seedling',       name: '新手上路', color: 'text-green-500',  bg: 'bg-green-100',  hint: '完成個人設定即可解鎖',          cond: () => true },
+                    { id: 'streak3',  icon: 'fa-fire-flame-simple', name: '連續 3 天', color: 'text-yellow-500', bg: 'bg-yellow-100', hint: '連續使用 App 3 天',             cond: () => game.streak >= 3 },
+                    { id: 'streak7',  icon: 'fa-fire',            name: '連續 7 天', color: 'text-orange-500', bg: 'bg-orange-100', hint: '連續使用 App 7 天',             cond: () => game.streak >= 7 },
+                    { id: 'streak30', icon: 'fa-trophy',          name: '連續月燃', color: 'text-red-500',    bg: 'bg-red-100',    hint: '連續使用 App 30 天',            cond: () => game.streak >= 30 },
+                    { id: 'planner',  icon: 'fa-calendar-check',  name: '規劃達人', color: 'text-blue-500',   bg: 'bg-blue-100',   hint: '累積規劃並儲存 10 週菜單',      cond: () => history.length >= 10 },
+                    { id: 'tracker',  icon: 'fa-weight-scale',    name: '數據控',   color: 'text-purple-500', bg: 'bg-purple-100', hint: '記錄 10 次以上體重或體態數據', cond: () => bodyLog.length >= 10 },
+                    { id: 'gourmet',  icon: 'fa-star',            name: '美食家',   color: 'text-pink-500',   bg: 'bg-pink-100',   hint: '對 5 道以上菜色評 4 星以上',
                       cond: () => {
                           const ratings = app.state.ratings || {};
                           return Object.values(ratings).filter(v => v >= 4).length >= 5;
@@ -2530,7 +2608,7 @@
                         const unlocked = game.badges.includes(b.id);
                         // 這裡可以稍微優化 UI，未解鎖時顯示灰色
                         return `
-                            <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${unlocked ? b.bg : 'bg-gray-50 opacity-40 grayscale'} transition-all relative group" title="${unlocked ? '已解鎖' : '尚未達成'}">
+                            <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${unlocked ? b.bg : 'bg-gray-50 opacity-40 grayscale'} transition-all relative group" title="${unlocked ? `✅ 已解鎖：${b.name}` : `🔒 解鎖條件：${b.hint}`}">
                                 <i class="fa-solid ${b.icon} text-xl ${unlocked ? b.color : 'text-gray-400'}"></i>
                                 <span class="text-[9px] font-bold text-gray-600">${b.name}</span>
                             </div>
@@ -2936,7 +3014,12 @@
             else if (pctC > 60) comment += " 🍚 碳水比例較高，若是運動日則非常合適。";
             else comment += " 🥗 三大營養素分佈均衡，請繼續保持！";
 
-            document.getElementById('report-comment').innerText = comment;
+            const commentEl = document.getElementById('report-comment');
+            commentEl.innerText = comment;
+            commentEl.classList.add('line-clamp-2');
+            commentEl.dataset.expanded = '0';
+            const expandBtn = document.getElementById('report-expand-btn');
+            if (expandBtn) { expandBtn.innerHTML = '▼ 展開全文'; expandBtn.classList.remove('hidden'); }
 
             // 6. 評分統計 Top 3
             const ratings = app.state.ratings || {};
@@ -3045,16 +3128,21 @@
 
             try {
                 // 3. 領域層：生成 Prompt
+                const recentNames = (app.state.history || [])
+                    .slice(0, 3)
+                    .flatMap(h => (h.recipes || []).map(r => r.name))
+                    .filter(Boolean).slice(0, 20).join('、');
                 const prompt = app.domain.ai.promptFactory.createBatchPrompt(
-                    app.state.user, cuisine, persona, isBatch, fridge, exclude
+                    app.state.user, cuisine, persona, isBatch, fridge, exclude, recentNames
                 );
 
                 // 4. 基礎設施層：獲取資料
                 const data = await app.infrastructure.ai.generate(prompt, true);
-                
+
                 // 5. 更新狀態與存檔
                 app.state.recipes = data.map((r, i) => ({
                     ...r, id: Date.now() + i, tags: [r.main_tag || '一般'], favorite: false,
+                    sides: Array.isArray(r.sides) ? r.sides : [],
                     ingredients: Array.isArray(r.ingredients) ? r.ingredients.map(ing => `${ing.name} ${ing.qty}`) : [],
                     structured_ingredients: Array.isArray(r.ingredients) ? r.ingredients : []
                 }));
@@ -3071,7 +3159,10 @@
                 app.showToast(`🎉 已生成「${cuisine}」清單！`);
                 app.renderPlanner();
             } catch (e) {
-                await app.showModal(`生成失敗: ${e.message}`, "系統錯誤", "error");
+                const errMsg = (e.message === 'Failed to fetch' || e.message.includes('NetworkError'))
+                    ? '網路連線失敗，請確認網路後重試。'
+                    : `生成失敗：${e.message}`;
+                await app.showModal(errMsg, "生成失敗", "error");
             } finally {
                 document.getElementById('ai-loading').classList.add('hidden');
                 document.querySelector('button[onclick="app.generateAIPlan()"]').classList.remove('hidden');
@@ -3098,7 +3189,16 @@
 
             const card = document.getElementById(`plan-card-${dayKey}`);
             const originalContent = card.innerHTML;
-            card.innerHTML = `<div class="flex justify-center items-center h-20 text-brand-500"><i class="fa-solid fa-circle-notch fa-spin text-xl"></i></div>`;
+            let cancelled = false;
+            card.innerHTML = `
+                <div class="flex flex-col justify-center items-center h-20 gap-2">
+                    <i class="fa-solid fa-circle-notch fa-spin text-xl text-brand-500"></i>
+                    <button id="reroll-cancel-${dayKey}" class="text-[10px] text-gray-400 hover:text-red-400 transition underline">取消</button>
+                </div>`;
+            document.getElementById(`reroll-cancel-${dayKey}`).onclick = () => {
+                cancelled = true;
+                card.innerHTML = originalContent;
+            };
 
             try {
                 // 1. 領域層：生成 Prompt
@@ -3109,6 +3209,7 @@
 
                 // 2. 基礎設施層：獲取單一資料
                 const data = await app.infrastructure.ai.generate(prompt, false);
+                if (cancelled) return;
                 const item = data[0];
                 if (!item.name || !item.ingredients) throw new Error("AI 回傳格式不完整");
 
@@ -3117,6 +3218,7 @@
 
                 const newRecipe = {
                     ...item, name: finalName, id: Date.now(), tags: [item.main_tag || '一般'], favorite: false,
+                    sides: Array.isArray(item.sides) ? item.sides : [],
                     ingredients: item.ingredients.map(ing => `${ing.name} ${ing.qty}`),
                     structured_ingredients: item.ingredients
                 };
@@ -3131,8 +3233,12 @@
                 app.renderPlanner();
                 app.cloudSync.upload();
             } catch (e) {
+                if (cancelled) return;
                 console.error(e);
-                await app.showModal('重骰失敗: ' + e.message, "系統錯誤", "error");
+                const errMsg = (e.message === 'Failed to fetch' || e.message.includes('NetworkError'))
+                    ? '網路連線失敗，請確認網路後重試。'
+                    : `重骰失敗：${e.message}`;
+                await app.showModal(errMsg, "重骰失敗", "error");
                 card.innerHTML = originalContent;
             }
         },
@@ -3162,7 +3268,8 @@
                         
                         <div class="flex-1 min-w-0 cursor-pointer pl-1" onclick="app.openDetailById(${r.id})">
                             <h4 class="font-bold text-gray-800 text-sm truncate tracking-wide">${r.name}</h4>
-                            <div class="text-[11px] text-gray-400 mt-1 tracking-wider">${r.cal} Kcal · ${r.tags[0]}</div>
+                            <div class="text-[11px] text-gray-400 mt-0.5 tracking-wider">${r.cal} Kcal · ${r.tags[0]}</div>
+                            ${r.sides && r.sides.length ? `<div class="text-[10px] text-green-600 mt-0.5 truncate">${r.sides.join(' · ')}</div>` : ''}
                         </div>
 
                         <div class="flex gap-1 shrink-0">
@@ -3238,7 +3345,8 @@
                 app.cloudSync.upload();
             },
 
-            clearShoppingList: () => {
+            clearShoppingList: async () => {
+                if (!(await app.showModal('確定要清除所有「已買」項目嗎？此操作無法復原。', '清除已買', 'danger', '確認清除'))) return;
                 for(let k in app.state.shopping) { if(app.state.shopping[k]) delete app.state.shopping[k]; }
                 localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
                 app.renderShopping();
@@ -3697,7 +3805,7 @@
 
             restoreHistory: async (idx) => { // ⚠️ 記得加 async
                 // ✅ 修改處
-                if(!(await app.showModal('確定要帶回此週紀錄嗎？\n\n⚠️ 注意：目前的本週菜單與所有自訂食譜資料都將被此紀錄覆蓋，且無法復原。', "帶回本週確認", "error"))) return;
+                if(!(await app.showModal('⚠️ 帶回後，目前本週的菜單與自訂食譜將全部被覆蓋，且無法復原。\n\n確定要繼續嗎？', "覆蓋確認", "danger", "確認覆蓋"))) return;
                 
                 const h = app.state.history[idx];
                 app.state.recipes = h.recipes;
@@ -3823,6 +3931,15 @@
                 } else {
                     favBtn.innerHTML = '<i class="fa-regular fa-heart text-white"></i>';
                     favBtn.className = "absolute top-4 right-16 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition active:scale-90";
+                }
+
+                const sidesSection = document.getElementById('detail-sides-section');
+                const sidesEl = document.getElementById('detail-sides');
+                if (r.sides && r.sides.length > 0) {
+                    sidesEl.innerHTML = r.sides.map(s => `<span class="bg-green-50 text-green-700 border border-green-100 text-xs px-2.5 py-1 rounded-full">${s}</span>`).join('');
+                    sidesSection.classList.remove('hidden');
+                } else {
+                    sidesSection.classList.add('hidden');
                 }
 
                 const ingEl = document.getElementById('detail-ingredients');
@@ -4049,6 +4166,23 @@
                 }
             },
 
+            // 統計 AI 評語展開/收合
+            toggleReportComment: () => {
+                const el = document.getElementById('report-comment');
+                const btn = document.getElementById('report-expand-btn');
+                if (!el) return;
+                const expanded = el.dataset.expanded === '1';
+                if (expanded) {
+                    el.classList.add('line-clamp-2');
+                    if (btn) btn.innerHTML = '▼ 展開全文';
+                    el.dataset.expanded = '0';
+                } else {
+                    el.classList.remove('line-clamp-2');
+                    if (btn) btn.innerHTML = '▲ 收合';
+                    el.dataset.expanded = '1';
+                }
+            },
+
             showToast: (msg) => {
                 const t = document.getElementById('toast');
                 document.getElementById('toast-msg').innerText = msg;
@@ -4056,7 +4190,7 @@
                 setTimeout(() => t.classList.add('opacity-0', 'translate-y-4'), 2000);
             },
             // --- 請新增此函式到 app 物件中 ---
-            showModal: (msg, title = "提示", type = "confirm") => {
+            showModal: (msg, title = "提示", type = "confirm", confirmText = null) => {
                 return new Promise((resolve) => {
                     const modal = document.getElementById('modal-general');
                     const titleEl = document.getElementById('modal-title');
@@ -4066,46 +4200,47 @@
                     const iconEl = document.getElementById('modal-icon');
                     const iconBg = document.getElementById('modal-icon-bg');
 
-                    // 設定文字
                     titleEl.innerText = title;
                     msgEl.innerText = msg;
                     modal.classList.remove('hidden');
 
-                    // 根據類型設定樣式 (confirm: 雙按鈕, alert: 單按鈕, error: 紅色單按鈕)
-                    if (type === 'alert' || type === 'error') {
-                        btnCancel.classList.add('hidden');
-                        btnConfirm.innerText = "知道了";
-                        // 單按鈕時寬度全滿
-                        btnConfirm.className = "w-full bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95";
-                    } else {
-                        btnCancel.classList.remove('hidden');
-                        btnConfirm.innerText = "確定";
-                        // 雙按鈕時各佔一半
-                        btnConfirm.className = "flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95";
-                    }
-                    
-                    // 設定圖示與顏色
-                    if (type === 'error') {
-                        iconEl.className = "fa-solid fa-circle-exclamation";
-                        iconBg.className = "w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
-                        if(type === 'error') btnConfirm.classList.replace('bg-brand-500', 'bg-red-500'); // 按鈕變紅
-                    } else if (type === 'confirm') {
-                        iconEl.className = "fa-solid fa-circle-question";
-                        iconBg.className = "w-16 h-16 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
-                    } else {
-                        iconEl.className = "fa-solid fa-circle-info";
-                        iconBg.className = "w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
-                    }
-
-                    // 事件處理 (使用 Promise resolve 回傳 true/false)
                     const close = (val) => {
                         modal.classList.add('hidden');
-                        // 還原按鈕樣式 (避免下次開啟殘留紅色)
-                        btnConfirm.classList.replace('bg-red-500', 'bg-brand-500'); 
+                        modal.removeEventListener('click', backdropClick);
                         resolve(val);
                     };
+                    const backdropClick = (e) => { if (e.target === modal) close(false); };
+                    modal.addEventListener('click', backdropClick);
 
-                    // 覆蓋舊的 onclick，避免重複綁定
+                    // 根據型別設定樣式
+                    if (type === 'error') {
+                        btnCancel.classList.add('hidden');
+                        btnConfirm.innerText = confirmText || "知道了";
+                        btnConfirm.className = "w-full bg-red-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-red-600 transition active:scale-95";
+                        iconEl.className = "fa-solid fa-circle-exclamation";
+                        iconBg.className = "w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
+                    } else if (type === 'alert') {
+                        btnCancel.classList.add('hidden');
+                        btnConfirm.innerText = confirmText || "知道了";
+                        btnConfirm.className = "w-full bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95";
+                        iconEl.className = "fa-solid fa-circle-info";
+                        iconBg.className = "w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
+                    } else if (type === 'danger') {
+                        // 破壞性操作：雙按鈕，確認鍵為紅色
+                        btnCancel.classList.remove('hidden');
+                        btnConfirm.innerText = confirmText || "確認刪除";
+                        btnConfirm.className = "flex-1 bg-red-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-red-600 transition active:scale-95";
+                        iconEl.className = "fa-solid fa-triangle-exclamation";
+                        iconBg.className = "w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
+                    } else {
+                        // confirm（預設）：雙按鈕，確認鍵為 brand 色
+                        btnCancel.classList.remove('hidden');
+                        btnConfirm.innerText = confirmText || "確定";
+                        btnConfirm.className = "flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95";
+                        iconEl.className = "fa-solid fa-circle-question";
+                        iconBg.className = "w-16 h-16 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center mb-4 text-2xl shadow-sm";
+                    }
+
                     btnConfirm.onclick = () => close(true);
                     btnCancel.onclick = () => close(false);
                 });
