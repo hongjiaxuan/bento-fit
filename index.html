@@ -251,18 +251,31 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mb-2 px-1">
-                <button id="btn-hide-checked" onclick="app.toggleHideChecked()" class="text-xs text-gray-400 font-bold hover:text-gray-600 flex items-center gap-1"><i class="fa-regular fa-eye-slash"></i> 隱藏已購</button>
-                <button onclick="app.copyShoppingList()" class="text-xs text-brand-500 font-bold hover:text-brand-600 flex items-center gap-1"><i class="fa-solid fa-share-nodes"></i> 分享清單</button>
-                <button onclick="app.clearShoppingList()" class="text-xs text-red-400 font-bold hover:text-red-500 flex items-center gap-1"><i class="fa-regular fa-trash-can"></i> 清除已買</button>
-            </div>
-            <div class="flex justify-between items-center mb-6 mt-2 px-1">
-                <button onclick="app.filterStaples()" class="text-xs text-brand-600 font-bold hover:text-brand-700 flex items-center gap-1.5 bg-brand-50/80 px-4 py-2 rounded-full border border-brand-100 transition active:scale-95">
-                    <i class="fa-solid fa-eye-slash"></i> 一鍵隱藏常備庫
-                </button>
-                <button onclick="app.openStapleManager()" class="text-xs text-gray-400 font-bold hover:text-gray-600 flex items-center gap-1 px-2 py-1 transition active:scale-95">
-                    <i class="fa-solid fa-box-open"></i> 管理常備庫
-                </button>
+            <div class="flex items-center justify-between mb-4 px-1">
+                <div class="flex gap-1.5">
+                    <button onclick="app.filterStaples()" title="一鍵隱藏常備庫"
+                        class="w-9 h-9 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center border border-brand-100 active:scale-90 transition">
+                        <i class="fa-solid fa-box-open text-xs"></i>
+                    </button>
+                    <button onclick="app.openStapleManager()" title="管理常備庫"
+                        class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
+                        <i class="fa-solid fa-gear text-xs"></i>
+                    </button>
+                </div>
+                <div class="flex gap-1.5">
+                    <button id="btn-hide-checked" onclick="app.toggleHideChecked()" title="隱藏已購"
+                        class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
+                        <i class="fa-regular fa-eye-slash text-xs"></i>
+                    </button>
+                    <button onclick="app.copyShoppingList()" title="分享清單"
+                        class="w-9 h-9 rounded-full bg-gray-50 text-brand-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
+                        <i class="fa-solid fa-share-nodes text-xs"></i>
+                    </button>
+                    <button onclick="app.clearShoppingList()" title="清除已買"
+                        class="w-9 h-9 rounded-full bg-gray-50 text-red-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                </div>
             </div>
             
             <div id="shopping-list-container" class="space-y-8 pb-36"></div>
@@ -656,6 +669,7 @@
 
                 <div class="px-5 py-2 flex gap-2 overflow-x-auto hide-scrollbar">
                     <button onclick="app.applyRecipeFilter('all')" class="filter-chip px-4 py-1.5 bg-brand-500 text-white rounded-full text-xs font-bold whitespace-nowrap shadow-sm" data-filter="all">全部</button>
+                    <button onclick="app.applyRecipeFilter('custom')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="custom">✏️ 我的自訂</button>
                     <button onclick="app.applyRecipeFilter('fav')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="fav"><i class="fa-solid fa-heart mr-1 text-pink-400"></i>收藏</button>
                     <button onclick="app.applyRecipeFilter('low')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="low">低卡 &lt;400</button>
                     <button onclick="app.applyRecipeFilter('high-p')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="high-p">高蛋白 &gt;30g</button>
@@ -1983,6 +1997,7 @@
             app.state.plan = safeParse('bento_plan', { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null, Sat: null, Sun: null });
             app.state.shopping = safeParse('bento_shopping', {});
             app.state.customStaples = safeParse('bento_custom_staples', ['燕麥奶', '豌豆蛋白']);
+            app.state.customLibrary = safeParse('bento_custom_library', []);
             
             // 檢查食譜
             const savedRecipes = safeParse('bento_recipes', null);
@@ -3150,21 +3165,15 @@
                             <div class="text-[11px] text-gray-400 mt-1 tracking-wider">${r.cal} Kcal · ${r.tags[0]}</div>
                         </div>
 
-                        <div class="flex gap-1.5">
-                            <button onclick="app.toggleFavorite(${r.id}); app.renderPlanner();" class="w-7 h-7 rounded-full ${r.favorite ? 'bg-red-50 text-red-400 border-red-100' : 'bg-gray-50 text-gray-300 border-transparent'} flex items-center justify-center hover:bg-red-50 hover:text-red-400 transition border" title="${r.favorite ? '取消收藏' : '加入收藏'}">
-                                <i class="${r.favorite ? 'fa-solid' : 'fa-regular'} fa-heart text-[9px]"></i>
+                        <div class="flex gap-1 shrink-0">
+                            <button onclick="app.toggleFavorite(${r.id}); app.renderPlanner();" class="w-6 h-6 rounded-full ${r.favorite ? 'bg-red-50 text-red-400 border-red-100' : 'bg-gray-50 text-gray-300 border-gray-100'} flex items-center justify-center transition border active:scale-90" title="${r.favorite ? '取消收藏' : '加入收藏'}">
+                                <i class="${r.favorite ? 'fa-solid' : 'fa-regular'} fa-heart text-[8px]"></i>
                             </button>
-                            <button onclick="app.swapPlanDay('${d}','up')" class="w-7 h-7 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-blue-50 hover:text-blue-400 transition border border-transparent hover:border-blue-100" title="上移">
-                                <i class="fa-solid fa-arrow-up text-[9px]"></i>
+                            <button onclick="app.rerollDay('${d}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="AI 重骰">
+                                <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i>
                             </button>
-                            <button onclick="app.swapPlanDay('${d}','down')" class="w-7 h-7 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-blue-50 hover:text-blue-400 transition border border-transparent hover:border-blue-100" title="下移">
-                                <i class="fa-solid fa-arrow-down text-[9px]"></i>
-                            </button>
-                            <button onclick="app.rerollDay('${d}')" class="w-7 h-7 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-transparent hover:border-brand-100" title="AI 重骰">
-                                <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i>
-                            </button>
-                            <button onclick="app.openSelector('${d}')" class="w-7 h-7 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-transparent hover:border-brand-100" title="換菜">
-                                <i class="fa-solid fa-rotate text-[9px]"></i>
+                            <button onclick="app.openSelector('${d}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="換菜">
+                                <i class="fa-solid fa-rotate text-[8px]"></i>
                             </button>
                         </div>
                     `;
@@ -3920,10 +3929,15 @@
                     prep_guide: ''
                 };
 
+                // 加入當週食譜列表
                 app.state.recipes.push(newRecipe);
                 app.infrastructure.storage.set('bento_recipes', app.state.recipes);
+                // 同時存入永久自訂庫
+                if (!app.state.customLibrary) app.state.customLibrary = [];
+                app.state.customLibrary.push(newRecipe);
+                app.infrastructure.storage.set('bento_custom_library', app.state.customLibrary);
                 app.closeModal('modal-custom-recipe');
-                app.showToast(`✅ 已新增食譜「${name}」`);
+                app.showToast(`✅ 已新增食譜「${name}」，已永久保存至自訂庫`);
                 // 若 selector 仍開著，刷新列表
                 if (!document.getElementById('modal-selector').classList.contains('hidden')) {
                     app.applyRecipeFilter();
@@ -3948,7 +3962,15 @@
 
                 // 套用 tag 篩選
                 let list;
-                if (activeTag === 'fav')    list = app.state.recipes.filter(r => r.favorite);
+                if (activeTag === 'custom') {
+                    // 永久自訂庫：合併 customLibrary 與當週 isCustom 食譜，依 id 去重
+                    const lib = app.state.customLibrary || [];
+                    const weekCustom = app.state.recipes.filter(r => r.isCustom);
+                    const merged = [...lib];
+                    weekCustom.forEach(r => { if (!merged.find(x => x.id === r.id)) merged.push(r); });
+                    list = merged;
+                }
+                else if (activeTag === 'fav')    list = app.state.recipes.filter(r => r.favorite);
                 else if (activeTag === 'low')    list = app.state.recipes.filter(r => r.cal < 400);
                 else if (activeTag === 'high-p') list = app.state.recipes.filter(r => r.p > 30);
                 else list = [...app.state.recipes];
@@ -3965,6 +3987,12 @@
                 app.state.selectorFilter = 'all';
                 const searchEl = document.getElementById('selector-search');
                 if (searchEl) searchEl.value = '';
+                // 將永久自訂庫的食譜合併進當週（避免重複）
+                (app.state.customLibrary || []).forEach(cr => {
+                    if (!app.state.recipes.find(r => r.id === cr.id)) {
+                        app.state.recipes.push(cr);
+                    }
+                });
                 app.applyRecipeFilter('all');
                 document.getElementById('modal-selector').classList.remove('hidden');
             },
