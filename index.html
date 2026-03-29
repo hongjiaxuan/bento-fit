@@ -745,15 +745,16 @@
         <div id="modal-detail" class="fixed inset-0 z-50 hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
             <div class="bg-white w-full h-[70vh] sm:h-[600px] sm:w-[450px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl overflow-hidden">
                 
-                <div class="relative h-32 bg-brand-500 flex items-center justify-center flex-col p-6 text-center">
-                    
+                <div id="detail-header" class="relative h-36 bg-brand-500 flex items-center justify-center flex-col p-6 text-center transition-all duration-500">
+
                     <button onclick="app.closeModal('modal-detail')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30"><i class="fa-solid fa-times"></i></button>
-                    
+
                     <button id="btn-fav-toggle" class="absolute top-4 right-16 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition active:scale-90">
                         <i class="fa-regular fa-heart"></i>
                     </button>
 
-                    <h2 id="detail-title" class="text-2xl font-bold text-white tracking-wide mb-1"></h2>
+                    <div id="detail-emoji" class="text-4xl mb-1 drop-shadow"></div>
+                    <h2 id="detail-title" class="text-xl font-bold text-white tracking-wide mb-1"></h2>
                     <span id="detail-cal" class="bg-white/20 px-3 py-1 rounded-full text-xs text-white font-medium"></span>
                 </div>
 
@@ -1402,6 +1403,7 @@
                         【嚴格 JSON 格式要求】
                         回傳 JSON Array (10個物件)，不含 Markdown。欄位：
                         "name"（便當完整名稱，例如「照燒雞腿便當」）,
+                        "emoji"（1個最能代表主菜的食物 emoji，例如 🍗🐟🥩🦐🥚🥬🫘，不可用 🍱）,
                         "main_tag", "cal", "p", "c", "f",
                         "sides" (Array of string, 配菜名稱列表 2~3 項, 例如: ["清炒花椰菜", "滷蛋", "玉米"]),
                         "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
@@ -1422,7 +1424,9 @@
 
                         【嚴格 JSON 格式要求】
                         回傳 JSON Array (1個物件)，不含 Markdown。欄位：
-                        "name", "main_tag", "cal", "p", "c", "f",
+                        "name",
+                        "emoji"（1個最能代表主菜的食物 emoji，例如 🍗🐟🥩🦐🥚🥬🫘，不可用 🍱）,
+                        "main_tag", "cal", "p", "c", "f",
                         "sides" (Array of string, 配菜名稱列表 2~3 項),
                         "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
                         "instructions" (字串, \\n 分隔，包含主菜與配菜做法)。
@@ -2216,7 +2220,7 @@
 
             // 2. 身體數值卡片 (維持您原本的邏輯)
             let statsContainer = document.getElementById('dash-body-stats');
-            const dashboardCard = document.querySelector('#view-dashboard > div:first-child');
+            const dashboardCard = document.querySelector('#view-dashboard > div.bg-white');
             
             if (!statsContainer && dashboardCard) {
                 statsContainer = document.createElement('div');
@@ -3142,6 +3146,7 @@
                 // 5. 更新狀態與存檔
                 app.state.recipes = data.map((r, i) => ({
                     ...r, id: Date.now() + i, tags: [r.main_tag || '一般'], favorite: false,
+                    emoji: r.emoji || '🍱',
                     sides: Array.isArray(r.sides) ? r.sides : [],
                     ingredients: Array.isArray(r.ingredients) ? r.ingredients.map(ing => `${ing.name} ${ing.qty}`) : [],
                     structured_ingredients: Array.isArray(r.ingredients) ? r.ingredients : []
