@@ -210,9 +210,14 @@
                 <div id="tomorrow-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-orange-100/50">
                     </div>
             </div>
-            <button onclick="app.navigateTo('planner')" class="w-full bg-white border border-gray-200 text-gray-500 font-bold py-4 rounded-2xl hover:bg-brand-50 hover:text-brand-600 hover:border-brand-100 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2 tracking-widest">
-                <i class="fa-solid fa-calendar-plus"></i> 規劃下週便當
-            </button>
+            <div class="flex gap-3">
+                <button onclick="app.quickInspiration()" class="flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-lightbulb"></i> 今日找靈感
+                </button>
+                <button onclick="app.navigateTo('planner')" class="flex-1 bg-white border border-gray-200 text-gray-500 font-bold py-3.5 rounded-2xl hover:bg-brand-50 hover:text-brand-600 hover:border-brand-100 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-calendar-plus"></i> 規劃菜單
+                </button>
+            </div>
         </section>
 
         <section id="view-planner" class="view-section fade-in hidden">
@@ -675,6 +680,7 @@
                     <button onclick="app.applyRecipeFilter('fav')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="fav"><i class="fa-solid fa-heart mr-1 text-pink-400"></i>收藏</button>
                     <button onclick="app.applyRecipeFilter('low')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="low">低卡 &lt;400</button>
                     <button onclick="app.applyRecipeFilter('high-p')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="high-p">高蛋白 &gt;30g</button>
+                    <button onclick="app.applyRecipeFilter('quick')" class="filter-chip px-4 py-1.5 bg-gray-50 text-gray-400 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100" data-filter="quick">⏱ 10分鐘</button>
                 </div>
 
                 <div id="selector-list" class="flex-1 overflow-y-auto p-5 space-y-3"></div>
@@ -830,6 +836,19 @@
             <p id="cook-tap-hint" class="text-brand-400/60 text-xs mt-12 tracking-widest uppercase font-mono animate-pulse z-10 flex items-center gap-2 transition-opacity duration-700">
                 <i class="fa-solid fa-hand-pointer"></i> 點擊畫面任意處繼續
             </p>
+
+            <!-- 計時器區塊 (A3) -->
+            <div id="cook-timer-section" class="hidden z-10 mt-6 flex flex-col items-center gap-3">
+                <button id="cook-timer-btn" onclick="app.toggleCookingTimer(event)"
+                    class="px-6 py-2.5 rounded-full bg-brand-500/20 border border-brand-500/40 text-brand-300 text-sm font-bold flex items-center gap-2 active:scale-95 transition-all">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="cook-timer-label">計時</span>
+                </button>
+                <div id="cook-timer-display" class="hidden text-center">
+                    <div id="cook-timer-count" class="text-7xl font-mono font-bold text-white tabular-nums leading-none tracking-tight">0:00</div>
+                    <div class="text-[10px] text-gray-500 mt-2 tracking-widest uppercase">倒數計時</div>
+                </div>
+            </div>
         </div>
 
         <div class="p-8 pb-12 safe-pb relative z-10 bg-gradient-to-t from-[#0a0b0a] to-transparent">
@@ -960,6 +979,17 @@
                                 </div>
                             </div>
                         </label>
+                    </div>
+                </div>
+
+                <!-- A5 製作時間偏好 -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2"><i class="fa-regular fa-clock"></i> 每道便當製作時間上限</label>
+                    <div class="flex gap-2">
+                        <button id="ai-time-any" onclick="app.setAITimePref('any', this)" class="flex-1 py-2 text-xs font-bold rounded-xl bg-brand-100 text-brand-600 border border-brand-200 transition active:scale-95">不限</button>
+                        <button id="ai-time-10" onclick="app.setAITimePref('10', this)" class="flex-1 py-2 text-xs font-bold rounded-xl bg-gray-50 text-gray-400 border border-gray-100 transition active:scale-95">⏱ 10 分</button>
+                        <button id="ai-time-20" onclick="app.setAITimePref('20', this)" class="flex-1 py-2 text-xs font-bold rounded-xl bg-gray-50 text-gray-400 border border-gray-100 transition active:scale-95">⏱ 20 分</button>
+                        <button id="ai-time-30" onclick="app.setAITimePref('30', this)" class="flex-1 py-2 text-xs font-bold rounded-xl bg-gray-50 text-gray-400 border border-gray-100 transition active:scale-95">⏱ 30 分</button>
                     </div>
                 </div>
 
@@ -1358,7 +1388,7 @@
         // 新增 AI 提示詞工廠 (純函式)
         ai: {
             promptFactory: {
-                createBatchPrompt: (user, cuisine, persona, isBatch, fridge, exclude, recentNames) => {
+                createBatchPrompt: (user, cuisine, persona, isBatch, fridge, exclude, recentNames, maxMins) => {
                     const targetCal = Math.round(user.tdee * 0.35);
                     let bodyNote = "";
                     if (user.bodyComp) {
@@ -1390,6 +1420,7 @@
                         【身體與需求指示】
                         ${bodyNote || "無特殊身體狀況。"}
                         ${batchNote}
+                        ${maxMins ? `★ 製作時間限制：每道便當的 prep_minutes 必須 ≤ ${maxMins} 分鐘，請選用最簡易的烹調方式。` : ""}
                         ${fridge ? `★ 優先使用冰箱食材：${fridge}` : ""}
                         ${exclude ? `★ 絕對避開食材：${exclude}` : ""}
 
@@ -1408,6 +1439,7 @@
                         "sides" (Array of string, 配菜名稱列表 2~3 項, 例如: ["清炒花椰菜", "滷蛋", "玉米"]),
                         "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
                         "instructions" (字串, \\n 分隔，包含主菜與配菜做法),
+                        "prep_minutes" (整數，整道便當從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一，越簡單越快者填 10，一般填 20，複雜填 30),
                         "prep_guide" (字串，用 " | " 分隔各類別，例如："肉類：雞胸肉切片醃漬10分鐘 | 蔬菜：花椰菜洗淨切小朵冷藏備用 | 澱粉：免預處理"。若無該類食材則省略該段)
                     `;
                 },
@@ -1429,7 +1461,8 @@
                         "main_tag", "cal", "p", "c", "f",
                         "sides" (Array of string, 配菜名稱列表 2~3 項),
                         "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
-                        "instructions" (字串, \\n 分隔，包含主菜與配菜做法)。
+                        "instructions" (字串, \\n 分隔，包含主菜與配菜做法),
+                        "prep_minutes" (整數，整道便當從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一)。
                     `;
                 }
             }
@@ -2008,7 +2041,8 @@
                     bodyLog: localStorage.getItem('bento_body_log'),
                     game: localStorage.getItem('bento_game'),
                     lastDate: localStorage.getItem('bento_last_date'),
-                    customStaples: localStorage.getItem('bento_custom_staples')
+                    customStaples: localStorage.getItem('bento_custom_staples'),
+                    mealLog: localStorage.getItem('bento_meal_log')
                 };
 
                 try {
@@ -2034,6 +2068,7 @@
                 if(data.game) localStorage.setItem('bento_game', data.game);
                 if(data.lastDate) localStorage.setItem('bento_last_date', data.lastDate);
                 if(data.customStaples) localStorage.setItem('bento_custom_staples', data.customStaples);
+                if(data.mealLog) localStorage.setItem('bento_meal_log', data.mealLog);
 
                 localStorage.setItem('bento_timestamp', data.timestamp);
                 
@@ -2086,6 +2121,7 @@
             app.state.bodyLog = safeParse('bento_body_log', []);
             app.state.game = safeParse('bento_game', { streak: 0, lastLogin: '', badges: [] });
             app.state.customShoppingItems = safeParse('bento_custom_shopping', []);
+            app.state.mealLog = safeParse('bento_meal_log', {});
 
             // 深色模式還原
             if (localStorage.getItem('bento_dark_mode') === '1') {
@@ -2194,12 +2230,23 @@
                 if (!hasPlan) {
                     html = `<i class="fa-solid fa-calendar-plus text-orange-400 shrink-0"></i><span class="text-orange-700">本週尚未規劃菜單！<span onclick="app.navigateTo('planner')" class="underline cursor-pointer ml-1">立即規劃 →</span></span>`;
                     cls += 'bg-orange-50 border border-orange-100';
+                } else if (dow === 0) {
+                    // 週日：備料提醒（A2）
+                    const monRid = app.state.plan['Mon'];
+                    const monR = app.state.recipes.find(x => x.id === monRid);
+                    if (monR) {
+                        html = `<i class="fa-solid fa-kitchen-set text-purple-500 shrink-0"></i><span class="text-purple-700">明日便當「<strong>${monR.name}</strong>」，今晚備料正是時候！<span onclick="app.navigateTo('shopping')" class="underline cursor-pointer ml-1">查看採買清單 →</span></span>`;
+                    } else {
+                        html = `<i class="fa-solid fa-calendar-plus text-purple-400 shrink-0"></i><span class="text-purple-700">週日了，<span onclick="app.navigateTo('planner')" class="underline cursor-pointer">安排下週便當菜單</span>開始美好一週！</span>`;
+                    }
+                    cls += 'bg-purple-50 border border-purple-100';
                 } else if (dow === 1) {
                     html = `<i class="fa-solid fa-seedling text-brand-500 shrink-0"></i><span class="text-brand-700">新的一週開始，今天的便當已就位！</span>`;
                     cls += 'bg-brand-50 border border-brand-100';
                 } else if (dow === 4 || dow === 5) {
-                    html = `<i class="fa-solid fa-calendar-week text-blue-400 shrink-0"></i><span class="text-blue-700">週末快到了，<span onclick="app.navigateTo('planner')" class="underline cursor-pointer">提前規劃下週菜單</span>？</span>`;
-                    cls += 'bg-blue-50 border border-blue-100';
+                    // 週四/五：採購提醒（A2）
+                    html = `<i class="fa-solid fa-cart-shopping text-green-500 shrink-0"></i><span class="text-green-700">週末採買提醒！<span onclick="app.navigateTo('shopping')" class="underline cursor-pointer">前往採買清單</span>，提前備妥食材輕鬆開伙 🛒</span>`;
+                    cls += 'bg-green-50 border border-green-100';
                 } else if (streak >= 7 && streak % 7 === 0) {
                     html = `<i class="fa-solid fa-fire text-orange-500 shrink-0"></i><span class="text-orange-700">🔥 連續 ${streak} 天！繼續保持，你是最棒的！</span>`;
                     cls += 'bg-orange-50 border border-orange-100';
@@ -2282,18 +2329,16 @@
                 // 1. 檢查今日是否已評分
                 const todayStr = new Date().toLocaleDateString('zh-TW');
                 const myRating = app.state.ratings ? app.state.ratings[todayStr] : 0;
-                
+
                 // 2. 決定評分按鈕的樣式 (黃色實心 vs 灰色空心)
                 let ratingBtnHtml = '';
                 if (myRating) {
-                    // 已評分：顯示黃色星星與分數
                     ratingBtnHtml = `
                         <button onclick="event.stopPropagation(); app.openRating('${todayKey}')" class="text-[10px] font-bold text-yellow-500 bg-yellow-50 border border-yellow-100 px-2 py-1 rounded-full transition">
                             <i class="fa-solid fa-star"></i> ${myRating} 分
                         </button>
                     `;
                 } else {
-                    // 未評分：顯示灰色「評分」按鈕
                     ratingBtnHtml = `
                         <button onclick="event.stopPropagation(); app.openRating('${todayKey}')" class="text-[10px] font-bold text-gray-400 hover:text-yellow-500 flex items-center gap-1 border border-gray-100 px-2 py-1 rounded-full transition bg-white">
                             <i class="fa-regular fa-star"></i> 評分
@@ -2301,18 +2346,25 @@
                     `;
                 }
 
-                // 3. 渲染卡片 (注意：原本的 button 標籤已替換為 ${ratingBtnHtml})
+                // B1 打卡按鈕
+                const madeIt = app.state.mealLog && app.state.mealLog[todayStr];
+                const madeItBtnHtml = madeIt
+                    ? `<span class="text-[10px] font-bold text-green-500 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> 已打卡</span>`
+                    : `<button onclick="event.stopPropagation(); app.logMadeIt('${todayKey}')" class="text-[10px] font-bold text-brand-500 bg-brand-50 border border-brand-100 px-2 py-1 rounded-full transition hover:bg-brand-100 active:scale-95 flex items-center gap-1"><i class="fa-solid fa-check"></i> 我做了！</button>`;
+
+                // 3. 渲染卡片
                 document.getElementById('today-meal-card').innerHTML = `
                         <div class="flex items-center gap-4 p-4 text-left">
-                            <div class="w-20 h-20 rounded-xl bg-brand-100 flex items-center justify-center text-brand-500 shrink-0">
-                                <i class="fa-solid fa-bowl-food text-3xl"></i>
+                            <div class="w-20 h-20 rounded-xl ${madeIt ? 'bg-green-100' : 'bg-brand-100'} flex items-center justify-center ${madeIt ? 'text-green-500' : 'text-brand-500'} shrink-0 transition-colors">
+                                <i class="fa-solid ${madeIt ? 'fa-bowl-food' : 'fa-bowl-food'} text-3xl"></i>
                             </div>
                             <div class="flex-1">
                                 <h3 class="font-bold text-gray-800 text-lg line-clamp-1">${r.name}</h3>
-                                <div class="text-xs text-gray-500 mt-1">🔥 ${r.cal} Kcal · P${r.p} C${r.c} F${r.f}</div>
-                                <div class="flex justify-between items-end mt-2">
-                                    <div class="flex gap-1">
+                                <div class="text-xs text-gray-500 mt-1">🔥 ${r.cal} Kcal · P${r.p} C${r.c} F${r.f}${r.prep_minutes ? ` · ⏱${r.prep_minutes}分` : ''}</div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <div class="flex gap-1 items-center">
                                         ${r.tags.map(t => `<span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full">${t}</span>`).join('')}
+                                        ${madeItBtnHtml}
                                     </div>
                                     ${ratingBtnHtml}
                                 </div>
@@ -3068,6 +3120,66 @@
 
         },
 
+        // A1 今日找靈感：快速生成一道今日便當靈感
+        quickInspiration: async () => {
+            const user = app.state.user;
+            if (!user || !user.apiKey) {
+                app.showToast('💡 請先設定 Gemini API Key 才能使用 AI 靈感功能');
+                setTimeout(() => { app.navigateTo('profile'); app.openEditProfile(); app.switchProfileTab('system'); }, 1000);
+                return;
+            }
+            app.showToast('✨ AI 正在尋找靈感，請稍候…');
+            try {
+                const currentNames = app.state.recipes.filter(r => r.name).map(r => r.name).join('、');
+                const prompt = app.domain.ai.promptFactory.createSinglePrompt(user, user.exclude, currentNames);
+                const data = await app.infrastructure.ai.generate(prompt, false);
+                if (!data || !data[0]) throw new Error('AI 回傳空資料');
+                const item = data[0];
+                const recipe = {
+                    ...item, id: Date.now(), tags: [item.main_tag || '一般'],
+                    favorite: false, emoji: item.emoji || '🍱',
+                    prep_minutes: [10, 20, 30].includes(item.prep_minutes) ? item.prep_minutes : 20,
+                    sides: Array.isArray(item.sides) ? item.sides : [],
+                    ingredients: Array.isArray(item.ingredients) ? item.ingredients.map(ing => `${ing.name} ${ing.qty}`) : [],
+                    structured_ingredients: Array.isArray(item.ingredients) ? item.ingredients : []
+                };
+                // 加入食譜庫並指定到今天
+                app.state.recipes.push(recipe);
+                const dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const todayKey = dayMap[new Date().getDay()];
+                app.state.plan[todayKey] = recipe.id;
+                app.infrastructure.storage.set('bento_recipes', app.state.recipes);
+                app.infrastructure.storage.set('bento_plan', app.state.plan);
+                app.showToast(`💡 今日靈感：${recipe.name}！`);
+                app.renderDashboard();
+            } catch(e) {
+                app.showToast('⚠️ 靈感生成失敗，請重試');
+            }
+        },
+
+        // B1 飲食紀錄打卡
+        logMadeIt: (dayKey) => {
+            const todayStr = new Date().toLocaleDateString('zh-TW');
+            if (!app.state.mealLog) app.state.mealLog = {};
+            app.state.mealLog[todayStr] = { madeIt: true, dayKey, timestamp: Date.now() };
+            app.infrastructure.storage.set('bento_meal_log', app.state.mealLog);
+            app.showToast('✅ 今日便當打卡成功！繼續加油 🎉');
+            app.renderDashboard();
+            app.cloudSync.upload();
+        },
+
+        setAITimePref: (val, el) => {
+            app.state.aiTimePref = val;
+            document.querySelectorAll('#ai-time-any, #ai-time-10, #ai-time-20, #ai-time-30').forEach(btn => {
+                btn.classList.remove('bg-brand-100', 'text-brand-600', 'border-brand-200', 'bg-gray-50', 'text-gray-400', 'border-gray-100');
+                if (btn === el) {
+                    btn.classList.add('bg-brand-100', 'text-brand-600', 'border-brand-200');
+                } else {
+                    btn.classList.add('bg-gray-50', 'text-gray-400', 'border-gray-100');
+                }
+            });
+        },
+
         // --- 1. 修改 generateAIPlan (只負責開視窗) ---
         generateAIPlan: async () => {
             const user = app.state.user;
@@ -3124,6 +3236,7 @@
             localStorage.setItem('bento_last_cuisine', cuisine); // 記住料理偏好
             const persona = document.querySelector('input[name="ai-persona"]:checked')?.value || "lazy";
             const isBatch = document.getElementById('ai-opt-batch').checked;
+            const maxMins = app.state.aiTimePref && app.state.aiTimePref !== 'any' ? parseInt(app.state.aiTimePref) : null;
 
             // 2. 切換 UI Loading
             document.querySelector('button[onclick="app.generateAIPlan()"]').classList.add('hidden');
@@ -3137,7 +3250,7 @@
                     .flatMap(h => (h.recipes || []).map(r => r.name))
                     .filter(Boolean).slice(0, 20).join('、');
                 const prompt = app.domain.ai.promptFactory.createBatchPrompt(
-                    app.state.user, cuisine, persona, isBatch, fridge, exclude, recentNames
+                    app.state.user, cuisine, persona, isBatch, fridge, exclude, recentNames, maxMins
                 );
 
                 // 4. 基礎設施層：獲取資料
@@ -3147,6 +3260,7 @@
                 app.state.recipes = data.map((r, i) => ({
                     ...r, id: Date.now() + i, tags: [r.main_tag || '一般'], favorite: false,
                     emoji: r.emoji || '🍱',
+                    prep_minutes: [10, 20, 30].includes(r.prep_minutes) ? r.prep_minutes : 20,
                     sides: Array.isArray(r.sides) ? r.sides : [],
                     ingredients: Array.isArray(r.ingredients) ? r.ingredients.map(ing => `${ing.name} ${ing.qty}`) : [],
                     structured_ingredients: Array.isArray(r.ingredients) ? r.ingredients : []
@@ -3273,7 +3387,7 @@
                         
                         <div class="flex-1 min-w-0 cursor-pointer pl-1" onclick="app.openDetailById(${r.id})">
                             <h4 class="font-bold text-gray-800 text-sm truncate tracking-wide">${r.name}</h4>
-                            <div class="text-[11px] text-gray-400 mt-0.5 tracking-wider">${r.cal} Kcal · ${r.tags[0]}</div>
+                            <div class="text-[11px] text-gray-400 mt-0.5 tracking-wider">${r.cal} Kcal · ${r.tags[0]}${r.prep_minutes ? ` · <i class="fa-regular fa-clock"></i> ${r.prep_minutes}分` : ''}</div>
                             ${r.sides && r.sides.length ? `<div class="text-[10px] text-green-600 mt-0.5 truncate">${r.sides.join(' · ')}</div>` : ''}
                         </div>
 
@@ -3729,12 +3843,25 @@
 
                 const totalRecipes = Object.keys(recipeCount).length;
 
+                // B1 便當實作率（本月打卡天數 / 本月工作日數）
+                const mealLog = app.state.mealLog || {};
+                const now = new Date();
+                const monthPrefix = `${now.getFullYear()}/${now.getMonth() + 1}/`;
+                const loggedThisMonth = Object.keys(mealLog).filter(k => k.startsWith(monthPrefix)).length;
+                const dayOfMonth = now.getDate();
+                const workdaysElapsed = Math.max(1, Math.round(dayOfMonth * 5 / 7));
+                const cookRate = Math.min(100, Math.round((loggedThisMonth / workdaysElapsed) * 100));
+                const cookRateBadge = loggedThisMonth > 0
+                    ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full" title="本月便當實作率">🍳 ${cookRate}%</span>`
+                    : '';
+
                 // 3 項統計→ 頂列小標籤
                 if (miniContainer) {
                     miniContainer.innerHTML = `
                         <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">${history.length} 週</span>
                         <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">${avgDiversity} 均</span>
                         <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">${totalRecipes} 菜</span>
+                        ${cookRateBadge}
                     `;
                 }
 
@@ -3886,6 +4013,31 @@
                 clearTimeout(hint._hideTimer);
                 hint._hideTimer = setTimeout(() => { hint.style.opacity = '0'; }, 3000);
             }
+
+            // A3 計時器：清除舊計時，偵測新步驟的時間
+            if (s.timerInterval) { clearInterval(s.timerInterval); s.timerInterval = null; }
+            const timerSection = document.getElementById('cook-timer-section');
+            const timerDisplay = document.getElementById('cook-timer-display');
+            const timerBtn = document.getElementById('cook-timer-btn');
+            const timerCount = document.getElementById('cook-timer-count');
+            if (timerDisplay) timerDisplay.classList.add('hidden');
+            if (timerCount) { timerCount.textContent = '0:00'; timerCount.classList.remove('text-brand-400'); }
+
+            const stepText = s.steps[s.current];
+            const minMatch = stepText.match(/(\d+)\s*分鐘/);
+            const secMatch = stepText.match(/[^分](\d+)\s*秒/);
+            if (minMatch || secMatch) {
+                const totalSec = (minMatch ? parseInt(minMatch[1]) * 60 : 0) + (secMatch ? parseInt(secMatch[1]) : 0);
+                const displayLabel = minMatch ? `⏱ 計時 ${minMatch[1]} 分鐘` : `⏱ 計時 ${secMatch[1]} 秒`;
+                if (timerBtn) {
+                    timerBtn.dataset.totalSec = totalSec;
+                    timerBtn.className = 'px-6 py-2.5 rounded-full bg-brand-500/20 border border-brand-500/40 text-brand-300 text-sm font-bold flex items-center gap-2 active:scale-95 transition-all';
+                    timerBtn.innerHTML = `<i class="fa-regular fa-clock"></i><span id="cook-timer-label">${displayLabel}</span>`;
+                }
+                if (timerSection) timerSection.classList.remove('hidden');
+            } else {
+                if (timerSection) timerSection.classList.add('hidden');
+            }
         },
 
         nextCookingStep: async () => {
@@ -3913,10 +4065,68 @@
         },
 
         exitCooking: () => {
-            // 釋放鎖定與清理狀態
             app.infrastructure.device.screenLocker.release();
+            if (app.state.cookingSession?.timerInterval) {
+                clearInterval(app.state.cookingSession.timerInterval);
+            }
             app.state.cookingSession = null;
             document.getElementById('modal-cooking').classList.add('hidden');
+        },
+
+        toggleCookingTimer: (e) => {
+            e.stopPropagation();
+            const s = app.state.cookingSession;
+            if (!s) return;
+            const timerDisplay = document.getElementById('cook-timer-display');
+            const timerBtn = document.getElementById('cook-timer-btn');
+            const timerCount = document.getElementById('cook-timer-count');
+
+            // 若正在計時，停止
+            if (s.timerInterval) {
+                clearInterval(s.timerInterval);
+                s.timerInterval = null;
+                timerDisplay.classList.add('hidden');
+                const totalSec = parseInt(timerBtn.dataset.totalSec || 60);
+                const displayLabel = totalSec >= 60 ? `⏱ 計時 ${Math.floor(totalSec / 60)} 分鐘` : `⏱ 計時 ${totalSec} 秒`;
+                timerBtn.className = 'px-6 py-2.5 rounded-full bg-brand-500/20 border border-brand-500/40 text-brand-300 text-sm font-bold flex items-center gap-2 active:scale-95 transition-all';
+                timerBtn.innerHTML = `<i class="fa-regular fa-clock"></i><span>${displayLabel}</span>`;
+                return;
+            }
+
+            // 開始計時
+            let remaining = parseInt(timerBtn.dataset.totalSec || 60);
+            timerDisplay.classList.remove('hidden');
+            timerBtn.className = 'px-6 py-2.5 rounded-full bg-red-500/20 border border-red-400/50 text-red-300 text-sm font-bold flex items-center gap-2 active:scale-95 transition-all';
+            timerBtn.innerHTML = '<i class="fa-solid fa-stop"></i><span>停止計時</span>';
+            timerCount.classList.remove('text-brand-400');
+
+            const fmt = sec => `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`;
+            timerCount.textContent = fmt(remaining);
+
+            s.timerInterval = setInterval(() => {
+                remaining--;
+                timerCount.textContent = fmt(remaining);
+                if (remaining <= 0) {
+                    clearInterval(s.timerInterval);
+                    s.timerInterval = null;
+                    timerCount.textContent = '完成！';
+                    timerCount.classList.add('text-brand-400');
+                    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 600]);
+                    try {
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        [0, 0.35, 0.7].forEach(t => {
+                            const o = ctx.createOscillator(), g = ctx.createGain();
+                            o.connect(g); g.connect(ctx.destination);
+                            o.frequency.value = 880;
+                            g.gain.setValueAtTime(0.4, ctx.currentTime + t);
+                            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.3);
+                            o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.35);
+                        });
+                    } catch (_) {}
+                    timerBtn.className = 'px-6 py-2.5 rounded-full bg-brand-500/20 border border-brand-500/40 text-brand-300 text-sm font-bold flex items-center gap-2 active:scale-95 transition-all';
+                    timerBtn.innerHTML = '<i class="fa-solid fa-check"></i><span>計時完成！</span>';
+                }
+            }, 1000);
         },
             // --- 請替換 app.openDetail 函式 ---
             openDetail: (r) => {
@@ -4097,6 +4307,7 @@
                 else if (activeTag === 'fav')    list = app.state.recipes.filter(r => r.favorite);
                 else if (activeTag === 'low')    list = app.state.recipes.filter(r => r.cal < 400);
                 else if (activeTag === 'high-p') list = app.state.recipes.filter(r => r.p > 30);
+                else if (activeTag === 'quick')  list = app.state.recipes.filter(r => r.prep_minutes && r.prep_minutes <= 10);
                 else list = [...app.state.recipes];
 
                 // 套用搜尋文字
@@ -4267,9 +4478,10 @@
                     bodyLog: ls.getItem('bento_body_log'),    // 體態趨勢紀錄
                     game: ls.getItem('bento_game'),           // 遊戲化 (徽章/連續登入)
                     lastDate: ls.getItem('bento_last_date'),  // 最後登入日 (用於飲水重置判斷)
-                    customStaples: ls.getItem('bento_custom_staples')
+                    customStaples: ls.getItem('bento_custom_staples'),
+                    mealLog: ls.getItem('bento_meal_log')
                 };
-                
+
                 const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -4303,6 +4515,7 @@
                         if(d.game) ls.setItem('bento_game', d.game);
                         if(d.lastDate) ls.setItem('bento_last_date', d.lastDate);
                         if(d.customStaples) ls.setItem('bento_custom_staples', d.customStaples);
+                        if(d.mealLog) ls.setItem('bento_meal_log', d.mealLog);
 
                         await app.showModal("✅ 資料匯入成功！頁面將自動重新整理。", "還原完成");
                         location.reload();
