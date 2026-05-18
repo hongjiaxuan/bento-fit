@@ -1440,7 +1440,12 @@
                         "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
                         "instructions" (字串, \\n 分隔，包含主菜與配菜做法),
                         "prep_minutes" (整數，整道便當從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一，越簡單越快者填 10，一般填 20，複雜填 30),
-                        "prep_guide" (字串，用 " | " 分隔各類別，例如："肉類：雞胸肉切片醃漬10分鐘 | 蔬菜：花椰菜洗淨切小朵冷藏備用 | 澱粉：免預處理"。若無該類食材則省略該段)
+                        "prep_guide" (字串，用 " | " 分隔各類別。格式規則：
+                          ① 肉類/海鮮段：必須寫明食材名稱、重量、具體切法（如「逆紋切片」「切丁」「對半切」）、醃漬調料及用量，例如「雞胸肉200g逆紋切薄片，醬油1大匙、米酒1小匙、太白粉1小匙醃10分鐘」。
+                          ② 蔬菜段：每種蔬菜必須逐一列出，並寫明具體切法（切片/切絲/切丁/切塊/切小朵/剝片/去蒂切片等），不可僅寫「洗淨切好」。例如：「青花菜切小朵、香菇去蒂切片、紅蘿蔔切絲、洋蔥切半圓薄片，沖洗瀝乾冷藏分裝」。
+                          ③ 澱粉段：寫明白飯/麵/地瓜等是否需預煮或免處理。
+                          ④ 若無某類食材則省略該段。
+                          完整範例："肉類：豬里肌150g切薄片，醬油1匙、糖半匙、蒜末醃15分鐘 | 蔬菜：青花菜切小朵，香菇去蒂切片，紅蘿蔔切絲，分裝冷藏備用 | 澱粉：白飯冷藏備用")
                     `;
                 },
                 createSinglePrompt: (user, exclude, currentNames) => {
@@ -1462,7 +1467,8 @@
                         "sides" (Array of string, 配菜名稱列表 2~3 項),
                         "ingredients" (Array of {name, qty, type}, 涵蓋主菜與全部配菜食材),
                         "instructions" (字串, \\n 分隔，包含主菜與配菜做法),
-                        "prep_minutes" (整數，整道便當從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一)。
+                        "prep_minutes" (整數，整道便當從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一),
+                        "prep_guide" (字串，用 " | " 分隔各類別。每種蔬菜須逐一列出具體切法（切片/切絲/切丁/切小朵等），肉類須寫明切法與醃料用量，澱粉視情況，無則省略。範例："肉類：雞腿肉200g切大塊，醬油2匙、蒜末醃15分鐘 | 蔬菜：青花菜切小朵，香菇去蒂切片，玉米筍對半切 | 澱粉：白飯備用")。
                     `;
                 }
             }
@@ -2024,13 +2030,12 @@
                 }
             },
 
-            // 3. 上傳 (保持不變)
+            // 3. 上傳 (比對內容，無變動則略過)
             upload: async () => {
                 const u = app.state.user;
                 if (!u || !u.syncUrl) return;
 
-                const payload = {
-                    timestamp: Date.now(),
+                const dataSnap = {
                     user: localStorage.getItem('bento_user'),
                     plan: localStorage.getItem('bento_plan'),
                     shopping: localStorage.getItem('bento_shopping'),
@@ -2045,12 +2050,22 @@
                     mealLog: localStorage.getItem('bento_meal_log')
                 };
 
+                // 與上次上傳內容比對；若無變動則略過，避免重複備份
+                const snapStr = JSON.stringify(dataSnap);
+                if (app.state._lastSyncSnap === snapStr) {
+                    // console.log("☁️ 資料未變動，略過上傳");
+                    return;
+                }
+
+                const payload = { timestamp: Date.now(), ...dataSnap };
+
                 try {
                     await fetch(u.syncUrl, {
                         method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+                    app.state._lastSyncSnap = snapStr; // 更新快照
                     // console.log("✅ 上傳完成");
                 } catch (e) { console.error(e); }
             },
@@ -2157,6 +2172,21 @@
                         }
                     }
                 });
+            });
+            // 啟動時記錄初始快照，後續 upload 才能正確比對是否有新增修改
+            app.state._lastSyncSnap = JSON.stringify({
+                user: localStorage.getItem('bento_user'),
+                plan: localStorage.getItem('bento_plan'),
+                shopping: localStorage.getItem('bento_shopping'),
+                recipes: localStorage.getItem('bento_recipes'),
+                history: localStorage.getItem('bento_history'),
+                prep: localStorage.getItem('bento_prep'),
+                ratings: localStorage.getItem('bento_ratings'),
+                bodyLog: localStorage.getItem('bento_body_log'),
+                game: localStorage.getItem('bento_game'),
+                lastDate: localStorage.getItem('bento_last_date'),
+                customStaples: localStorage.getItem('bento_custom_staples'),
+                mealLog: localStorage.getItem('bento_meal_log')
             });
             setTimeout(() => {
                 if(app.state.user && app.state.user.syncUrl) {
