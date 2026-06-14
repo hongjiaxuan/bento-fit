@@ -210,6 +210,19 @@
                 <div id="tomorrow-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-orange-100/50">
                     </div>
             </div>
+            <div class="bg-white p-4 rounded-[24px] shadow-soft border border-blue-50">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">🧊 冰箱庫存</h3>
+                    <button onclick="app.openFridge()" class="text-[10px] bg-blue-50 text-blue-500 px-2.5 py-1 rounded-full font-bold hover:bg-blue-100 transition">管理</button>
+                </div>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="input-dash-fridge-name" placeholder="食材名稱" class="flex-1 min-w-0 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-300">
+                    <input type="text" id="input-dash-fridge-qty" placeholder="份量" class="w-16 bg-gray-50 border border-gray-100 rounded-xl px-2 py-2 text-xs outline-none focus:border-brand-300" onkeydown="if(event.key==='Enter') app.addFridgeFromDash()">
+                    <button onclick="app.addFridgeFromDash()" class="bg-brand-500 text-white px-3 rounded-xl text-xs font-bold shadow-soft active:scale-95 transition shrink-0">新增</button>
+                </div>
+                <div id="dash-fridge-list" class="flex flex-wrap gap-2"></div>
+            </div>
+
             <div class="flex gap-3">
                 <button onclick="app.quickInspiration()" class="flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-lightbulb"></i> 今日找靈感
@@ -267,6 +280,10 @@
                         class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
                         <i class="fa-solid fa-gear text-xs"></i>
                     </button>
+                    <button onclick="app.openFridge()" title="冰箱庫存"
+                        class="w-9 h-9 rounded-full bg-blue-50 text-blue-400 flex items-center justify-center border border-blue-100 active:scale-90 transition">
+                        <i class="fa-solid fa-box-archive text-xs"></i>
+                    </button>
                 </div>
                 <div class="flex gap-1.5 items-center">
                     <button id="btn-hide-checked" onclick="app.toggleHideChecked()"
@@ -284,6 +301,11 @@
                 </div>
             </div>
             
+            <button onclick="app.finishShopping()"
+                class="w-full mb-5 bg-brand-500 text-white rounded-2xl py-3 font-bold shadow-soft active:scale-95 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-box-archive"></i> 完成採買，放入冰箱
+            </button>
+
             <div id="shopping-list-container" class="space-y-8 pb-36"></div>
 
             <div class="fixed bottom-24 left-0 w-full px-6 z-10 pointer-events-none">
@@ -444,7 +466,7 @@
 
             </div>
 
-            <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-6">
+            <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-24">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
                         <i class="fa-solid fa-chart-line text-brand-500"></i> 體重趨勢
@@ -456,13 +478,6 @@
                 </svg>
             </div>
 
-            <div class="bg-white p-6 rounded-[24px] shadow-soft mb-24">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-gray-800">成就與挑戰</h2>
-                    <span class="text-xs bg-orange-100 text-orange-600 px-3 py-1 rounded-full font-bold">🔥 連續 <span id="streak-count">0</span> 天</span>
-                </div>
-                <div id="badge-container" class="grid grid-cols-4 gap-2 sm:grid-cols-7"></div>
-            </div>
         </section>
 
         <div id="modal-profile-edit" class="fixed inset-0 z-[100] hidden bg-gray-900/50 backdrop-blur-sm flex items-end sm:items-center sm:justify-center">
@@ -1004,7 +1019,7 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 mb-1">清冰箱 (優先用)</label>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">清冰箱 (優先用) <span class="text-blue-300 font-normal">已帶入庫存，可刪改</span></label>
                         <input type="text" id="ai-opt-fridge" class="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-300" >
                     </div>
                     <div>
@@ -1037,7 +1052,7 @@
             <button onclick="app.closeModal('modal-rating')" class="text-xs text-gray-400 underline">略過</button>
         </div>
     </div>
-    <div id="modal-general" class="fixed inset-0 z-[80] hidden modal-backdrop flex items-center justify-center p-4">
+    <div id="modal-general" class="fixed inset-0 z-[130] hidden modal-backdrop flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl flex flex-col items-center animate-slide-up transform transition-all">
             <div id="modal-icon-bg" class="w-16 h-16 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center mb-4 text-2xl shadow-sm">
                 <i id="modal-icon" class="fa-solid fa-circle-question"></i>
@@ -1083,6 +1098,38 @@
                 <p class="text-[10px] text-gray-400 leading-relaxed tracking-wider text-center">
                     <i class="fa-solid fa-circle-info text-brand-300"></i> 當 AI 生成的菜單中包含常備庫內的食材時，點擊採買頁面的「一鍵隱藏」即可自動標記為已購買。
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 冰箱庫存 Modal ===== -->
+    <div id="modal-fridge" class="fixed inset-0 z-[90] hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
+        <div class="bg-paper w-full h-[80vh] sm:h-[600px] sm:w-[420px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl animate-slide-up border border-gray-100">
+
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white/50 backdrop-blur-md rounded-t-[30px]">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800 tracking-wide">🧊 冰箱庫存</h3>
+                    <p class="text-[10px] text-gray-400 mt-1 tracking-widest">採買完成後放入這裡，用完點「用畢」即可移除</p>
+                </div>
+                <button onclick="app.closeModal('modal-fridge')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition border border-gray-100/50">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6 pb-2">
+                <div class="flex gap-2">
+                    <input type="text" id="input-fridge-name" class="flex-1 min-w-0 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-brand-400 outline-none transition shadow-sm" placeholder="食材名稱">
+                    <input type="text" id="input-fridge-qty" class="w-20 bg-white border border-gray-200 rounded-xl px-3 py-3 text-sm focus:border-brand-400 outline-none transition shadow-sm" placeholder="份量"
+                        onkeydown="if(event.key==='Enter') app.addFridgeItem()">
+                    <button onclick="app.addFridgeItem()" class="bg-brand-500 text-white px-4 rounded-xl font-bold shadow-soft hover:bg-brand-600 active:scale-95 transition shrink-0">
+                        新增
+                    </button>
+                </div>
+                <p class="text-[10px] text-gray-300 mt-2 px-1 tracking-wider">臨時買了清單外的食材，也能直接記在這裡</p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 pt-2">
+                <div id="fridge-list-container" class="space-y-2"></div>
             </div>
         </div>
     </div>
@@ -2044,10 +2091,11 @@
                     prep: localStorage.getItem('bento_prep'),
                     ratings: localStorage.getItem('bento_ratings'),
                     bodyLog: localStorage.getItem('bento_body_log'),
-                    game: localStorage.getItem('bento_game'),
                     lastDate: localStorage.getItem('bento_last_date'),
                     customStaples: localStorage.getItem('bento_custom_staples'),
-                    mealLog: localStorage.getItem('bento_meal_log')
+                    mealLog: localStorage.getItem('bento_meal_log'),
+                    fridge: localStorage.getItem('bento_fridge'),
+                    planWeek: localStorage.getItem('bento_plan_week')
                 };
 
                 // 與上次上傳內容比對；若無變動則略過，避免重複備份
@@ -2080,10 +2128,11 @@
                 if(data.prep) localStorage.setItem('bento_prep', data.prep);
                 if(data.ratings) localStorage.setItem('bento_ratings', data.ratings);
                 if(data.bodyLog) localStorage.setItem('bento_body_log', data.bodyLog);
-                if(data.game) localStorage.setItem('bento_game', data.game);
                 if(data.lastDate) localStorage.setItem('bento_last_date', data.lastDate);
                 if(data.customStaples) localStorage.setItem('bento_custom_staples', data.customStaples);
                 if(data.mealLog) localStorage.setItem('bento_meal_log', data.mealLog);
+                if(data.fridge) localStorage.setItem('bento_fridge', data.fridge);
+                if(data.planWeek) localStorage.setItem('bento_plan_week', data.planWeek);
 
                 localStorage.setItem('bento_timestamp', data.timestamp);
                 
@@ -2134,9 +2183,10 @@
             app.state.prep = safeParse('bento_prep', {});
             app.state.ratings = safeParse('bento_ratings', {});
             app.state.bodyLog = safeParse('bento_body_log', []);
-            app.state.game = safeParse('bento_game', { streak: 0, lastLogin: '', badges: [] });
             app.state.customShoppingItems = safeParse('bento_custom_shopping', []);
             app.state.mealLog = safeParse('bento_meal_log', {});
+            app.state.fridge = safeParse('bento_fridge', []);
+            app.state.planWeek = safeParse('bento_plan_week', '');
 
             // 深色模式還原
             if (localStorage.getItem('bento_dark_mode') === '1') {
@@ -2144,21 +2194,14 @@
                 app.state.darkMode = true;
             }
 
-            // 🔥🔥🔥 關鍵修正：補回 today 變數定義 🔥🔥🔥
-            // 雖然刪除了飲水初始化，但下方的 checkStreak 仍需要這個變數！
-            const today = new Date().toLocaleDateString('zh-TW');
-
-            // 執行檢查
-            app.checkStreak(today);
-            app.checkBadges();
-
             // 導航邏輯
             if (!app.state.user) {
                 app.openOnboarding();
             } else {
                 app.navigateTo('dashboard');
+                app.maybeWeekendPrompt(); // 週六/日重開時，提示整理上週菜單與規劃下週
             }
-            
+
             // 鍵盤優化
             document.querySelectorAll('input').forEach((input, index, inputs) => {
                 input.addEventListener('keydown', (e) => {
@@ -2183,10 +2226,11 @@
                 prep: localStorage.getItem('bento_prep'),
                 ratings: localStorage.getItem('bento_ratings'),
                 bodyLog: localStorage.getItem('bento_body_log'),
-                game: localStorage.getItem('bento_game'),
                 lastDate: localStorage.getItem('bento_last_date'),
                 customStaples: localStorage.getItem('bento_custom_staples'),
-                mealLog: localStorage.getItem('bento_meal_log')
+                mealLog: localStorage.getItem('bento_meal_log'),
+                fridge: localStorage.getItem('bento_fridge'),
+                planWeek: localStorage.getItem('bento_plan_week')
             });
             setTimeout(() => {
                 if(app.state.user && app.state.user.syncUrl) {
@@ -2245,6 +2289,8 @@
             const u = app.state.user;
             if(!u) return;
 
+            app.renderDashFridge(); // 首頁冰箱卡片
+
             const tdee = u.tdee || 2000;
             const lunchTarget = Math.round(tdee * 0.35);
 
@@ -2254,7 +2300,6 @@
             if (banner) {
                 const dow = new Date().getDay(); // 0=日,1=一...5=五,6=六
                 const hasPlan = Object.values(app.state.plan).some(id => id);
-                const streak = (app.state.game && app.state.game.streak) || 0;
                 let html = '', cls = 'rounded-2xl p-4 flex items-center gap-3 text-sm font-bold transition-all ';
 
                 if (!hasPlan) {
@@ -2277,9 +2322,6 @@
                     // 週四/五：採購提醒（A2）
                     html = `<i class="fa-solid fa-cart-shopping text-green-500 shrink-0"></i><span class="text-green-700">週末採買提醒！<span onclick="app.navigateTo('shopping')" class="underline cursor-pointer">前往採買清單</span>，提前備妥食材輕鬆開伙 🛒</span>`;
                     cls += 'bg-green-50 border border-green-100';
-                } else if (streak >= 7 && streak % 7 === 0) {
-                    html = `<i class="fa-solid fa-fire text-orange-500 shrink-0"></i><span class="text-orange-700">🔥 連續 ${streak} 天！繼續保持，你是最棒的！</span>`;
-                    cls += 'bg-orange-50 border border-orange-100';
                 }
 
                 if (html) {
@@ -2628,80 +2670,6 @@
                 app.renderCookingStep();
             }
         },
-
-            // 檢查連續登入
-            checkStreak: (today) => {
-                const game = app.state.game;
-                const lastLogin = game.lastLogin;
-                
-                if (lastLogin !== today) {
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayStr = yesterday.toLocaleDateString('zh-TW');
-
-                    if (lastLogin === yesterdayStr) {
-                        game.streak += 1; // 連續登入
-                    } else {
-                        game.streak = 1; // 中斷或第一天
-                    }
-                    game.lastLogin = today;
-                    localStorage.setItem('bento_game', JSON.stringify(game));
-                }
-                
-                // 更新 Profile 頁面顯示
-                const streakEl = document.getElementById('streak-count');
-                if(streakEl) streakEl.innerText = game.streak;
-            },
-
-            // 檢查並渲染徽章
-            checkBadges: () => {
-                const game = app.state.game;
-                const user = app.state.user;
-                const history = app.state.history || [];
-                const bodyLog = app.state.bodyLog || [];
-
-                // 定義所有徽章 (已更新難度條件)
-                const allBadges = [
-                    { id: 'newbie',   icon: 'fa-seedling',       name: '新手上路', color: 'text-green-500',  bg: 'bg-green-100',  hint: '完成個人設定即可解鎖',          cond: () => true },
-                    { id: 'streak3',  icon: 'fa-fire-flame-simple', name: '連續 3 天', color: 'text-yellow-500', bg: 'bg-yellow-100', hint: '連續使用 App 3 天',             cond: () => game.streak >= 3 },
-                    { id: 'streak7',  icon: 'fa-fire',            name: '連續 7 天', color: 'text-orange-500', bg: 'bg-orange-100', hint: '連續使用 App 7 天',             cond: () => game.streak >= 7 },
-                    { id: 'streak30', icon: 'fa-trophy',          name: '連續月燃', color: 'text-red-500',    bg: 'bg-red-100',    hint: '連續使用 App 30 天',            cond: () => game.streak >= 30 },
-                    { id: 'planner',  icon: 'fa-calendar-check',  name: '規劃達人', color: 'text-blue-500',   bg: 'bg-blue-100',   hint: '累積規劃並儲存 10 週菜單',      cond: () => history.length >= 10 },
-                    { id: 'tracker',  icon: 'fa-weight-scale',    name: '數據控',   color: 'text-purple-500', bg: 'bg-purple-100', hint: '記錄 10 次以上體重或體態數據', cond: () => bodyLog.length >= 10 },
-                    { id: 'gourmet',  icon: 'fa-star',            name: '美食家',   color: 'text-pink-500',   bg: 'bg-pink-100',   hint: '對 5 道以上菜色評 4 星以上',
-                      cond: () => {
-                          const ratings = app.state.ratings || {};
-                          return Object.values(ratings).filter(v => v >= 4).length >= 5;
-                      }
-                    },
-                ];
-
-                // 檢查解鎖 (以下邏輯不變)
-                let newUnlock = false;
-                allBadges.forEach(b => {
-                    if (!game.badges.includes(b.id) && b.cond()) {
-                        game.badges.push(b.id);
-                        newUnlock = true;
-                        app.showToast(`🏆 解鎖成就：${b.name}`);
-                    }
-                });
-                if(newUnlock) localStorage.setItem('bento_game', JSON.stringify(game));
-
-                // 渲染 Profile 徽章列表 (增加未解鎖時的提示 tooltip 或是灰色狀態)
-                const container = document.getElementById('badge-container');
-                if(container) {
-                    container.innerHTML = allBadges.map(b => {
-                        const unlocked = game.badges.includes(b.id);
-                        // 這裡可以稍微優化 UI，未解鎖時顯示灰色
-                        return `
-                            <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${unlocked ? b.bg : 'bg-gray-50 opacity-40 grayscale'} transition-all relative group" title="${unlocked ? `✅ 已解鎖：${b.name}` : `🔒 解鎖條件：${b.hint}`}">
-                                <i class="fa-solid ${b.icon} text-xl ${unlocked ? b.color : 'text-gray-400'}"></i>
-                                <span class="text-[9px] font-bold text-gray-600">${b.name}</span>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            },
 
             // --- 新增：切換備料狀態 ---
             togglePrep: (dayKey, event) => {
@@ -3226,7 +3194,9 @@
             
             // 預填個人設定中的排除食材
             document.getElementById('ai-opt-exclude').value = user.exclude || '';
-            document.getElementById('ai-opt-fridge').value = ''; // 清空清冰箱
+            // 自動帶入目前冰箱庫存（優先清冰箱），仍可手動刪改
+            const fridgeNames = (app.state.fridge || []).map(x => x.name).filter(Boolean);
+            document.getElementById('ai-opt-fridge').value = fridgeNames.join('、');
 
             // 還原上次料理偏好
             const lastCuisine = localStorage.getItem('bento_last_cuisine');
@@ -3244,20 +3214,58 @@
         },
 
 // --- 替換原有的 confirmAIPlan ---
+        // 本週週一的日期字串（zh-TW）
+        mondayOfThisWeek: () => {
+            const d = new Date();
+            const day = d.getDay(); // 0=日..6=六
+            d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+            return d.toLocaleDateString('zh-TW');
+        },
+        // 這個週末的識別碼：週六用當天、週日用前一天(週六)，讓六、日視為同一個週末只提示一次
+        weekendId: () => {
+            const d = new Date();
+            if (d.getDay() === 0) d.setDate(d.getDate() - 1);
+            return d.toLocaleDateString('zh-TW');
+        },
+
+        // 將目前菜單歸檔進歷史紀錄（含去重：與最近一筆相同則略過）。回傳是否真的有歸檔。
+        archiveCurrentWeek: () => {
+            if (!Object.values(app.state.plan).some(id => id)) return false; // 無菜單不歸檔
+            if (!app.state.history) app.state.history = [];
+            const planStr = JSON.stringify(app.state.plan);
+            if (app.state.history[0] && JSON.stringify(app.state.history[0].plan) === planStr) return false; // 已歸檔過
+            app.state.history.unshift({
+                id: Date.now(), date: new Date().toLocaleDateString('zh-TW'),
+                weekOf: app.state.planWeek || '',
+                recipes: JSON.parse(JSON.stringify(app.state.recipes)), plan: {...app.state.plan}
+            });
+            app.infrastructure.storage.set('bento_history', app.state.history);
+            return true;
+        },
+
+        // 週六/日重開 App 時提示：是否把上週菜單存入歷史、是否規劃下週（每個週末只問一次）
+        maybeWeekendPrompt: async () => {
+            const dow = new Date().getDay();
+            if (dow !== 6 && dow !== 0) return;            // 只在週六、週日
+            const wid = app.weekendId();
+            if (localStorage.getItem('bento_weekend_prompt') === wid) return; // 這個週末已提示過
+            localStorage.setItem('bento_weekend_prompt', wid);
+
+            const hasPlan = Object.values(app.state.plan).some(id => id);
+            if (hasPlan && await app.showModal('要把目前這週的便當菜單存進歷史紀錄嗎？', '週末整理', 'confirm', '存入歷史')) {
+                if (app.archiveCurrentWeek()) app.showToast('✅ 已存入歷史紀錄');
+            }
+            if (await app.showModal('要現在規劃下週的便當菜單嗎？', '週末整理', 'confirm', '去規劃')) {
+                app.navigateTo('planner');
+                app.generateAIPlan();
+            }
+        },
+
         confirmAIPlan: async () => {
             app.closeModal('modal-ai-options');
-            
-            if (Object.values(app.state.plan).some(id => id)) {
-                if(await app.showModal("是否將目前的菜單存入歷史紀錄？", "保存確認")) {
-                    if (!app.state.history) app.state.history = [];
-                    app.state.history.unshift({
-                        id: Date.now(), date: new Date().toLocaleDateString('zh-TW'),
-                        recipes: JSON.parse(JSON.stringify(app.state.recipes)), plan: {...app.state.plan}
-                    });
-                    app.infrastructure.storage.set('bento_history', app.state.history);
-                    app.showToast('✅ 已保存至歷史紀錄');
-                }
-            }
+
+            // 覆蓋舊菜單前，靜默歸檔（有去重），避免舊菜單遺失；正式的「存入歷史」詢問改由週末提示統一處理
+            app.archiveCurrentWeek();
 
             // 1. 蒐集 UI 參數
             const fridge = document.getElementById('ai-opt-fridge').value.trim();
@@ -3301,7 +3309,11 @@
                     ? { Mon: app.state.recipes[0].id, Tue: app.state.recipes[0].id, Wed: app.state.recipes[1].id, Thu: app.state.recipes[1].id, Fri: app.state.recipes[2].id }
                     : { Mon: app.state.recipes[0].id, Tue: app.state.recipes[1].id, Wed: app.state.recipes[2].id, Thu: app.state.recipes[3].id, Fri: app.state.recipes[4].id };
                 app.infrastructure.storage.set('bento_plan', app.state.plan);
-                
+
+                // 記住這份菜單屬於哪一週（本週週一日期），供週末提示判斷
+                app.state.planWeek = app.mondayOfThisWeek();
+                app.infrastructure.storage.set('bento_plan_week', app.state.planWeek);
+
                 app.state.shopping = {};
                 app.infrastructure.storage.set('bento_shopping', app.state.shopping);
 
@@ -3499,6 +3511,178 @@
                 for(let k in app.state.shopping) { if(app.state.shopping[k]) delete app.state.shopping[k]; }
                 localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
                 app.renderShopping();
+                app.cloudSync.upload();
+            },
+
+            // ── 冰箱庫存 ──
+            // 完成採買：把所有「已勾選」的清單項目（含份量）一次轉入冰箱庫存，並從清單移除
+            finishShopping: async () => {
+                if (!app.state.fridge) app.state.fridge = [];
+                const { services } = app.domain.shopping;
+                const aggMap = services.aggregateIngredients(app.state.plan, app.state.recipes);
+                const today = new Date().toLocaleDateString('zh-TW');
+                let base = Date.now();
+                const added = [];
+
+                // 1. 菜單食材：已勾選者轉入
+                Object.keys(aggMap).forEach(name => {
+                    if (app.state.shopping[name]) {
+                        const itemData = aggMap[name];
+                        added.push({
+                            id: base++, name,
+                            qty: (itemData.qtys && itemData.qtys.length) ? itemData.qtys.join(' + ') : '',
+                            type: itemData.type || 'pantry', purchaseDate: today
+                        });
+                        delete app.state.shopping[name];
+                    }
+                });
+
+                // 2. 手動新增食材：已勾選者轉入（由大到小刪除避免索引位移）
+                const customs = app.state.customShoppingItems || [];
+                const checkedIdx = [];
+                customs.forEach((nm, idx) => { if (app.state.shopping['__custom_' + idx]) checkedIdx.push(idx); });
+                checkedIdx.forEach(idx => {
+                    added.push({ id: base++, name: customs[idx], qty: '', type: 'pantry', purchaseDate: today });
+                    delete app.state.shopping['__custom_' + idx];
+                });
+                checkedIdx.sort((a, b) => b - a).forEach(idx => customs.splice(idx, 1));
+
+                if (added.length === 0) {
+                    await app.showModal('還沒有勾選任何已買的食材喔', '完成採買', 'alert');
+                    return;
+                }
+
+                app.state.fridge.push(...added);
+                app.infrastructure.storage.set('bento_fridge', app.state.fridge);
+                localStorage.setItem('bento_shopping', JSON.stringify(app.state.shopping));
+                localStorage.setItem('bento_custom_shopping', JSON.stringify(customs));
+                app.renderShopping();
+                app.showToast(`🧊 已將 ${added.length} 項放入冰箱庫存`);
+                app.openFridge();
+                app.cloudSync.upload();
+            },
+
+            openFridge: () => {
+                document.getElementById('modal-fridge').classList.remove('hidden');
+                app.refreshFridgeViews();
+            },
+
+            // 同步刷新「冰箱 modal 清單」與「首頁冰箱卡片」兩處
+            refreshFridgeViews: () => { app.renderFridge(); app.renderDashFridge(); },
+
+            // 首頁冰箱卡片清單（chips，點 × 即用畢）
+            renderDashFridge: () => {
+                const el = document.getElementById('dash-fridge-list');
+                if (!el) return;
+                const list = (app.state.fridge || []).slice().sort((a, b) => a.id - b.id);
+                if (list.length === 0) {
+                    el.innerHTML = `<span class="text-[11px] text-gray-300 tracking-wider">冰箱目前是空的，新增後規劃菜單可優先清冰箱</span>`;
+                    return;
+                }
+                el.innerHTML = list.map(item => `
+                    <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 text-[11px] font-bold px-2.5 py-1 rounded-full border border-blue-100">
+                        ${item.name}${item.qty ? ` <span class="text-blue-400 font-normal">${item.qty}</span>` : ''}
+                        <button onclick="app.removeFridgeItem(${item.id})" title="用畢" class="text-blue-300 hover:text-red-400 transition"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </span>`).join('');
+            },
+
+            // 首頁快速新增冰箱食材
+            addFridgeFromDash: () => {
+                const nameEl = document.getElementById('input-dash-fridge-name');
+                const qtyEl = document.getElementById('input-dash-fridge-qty');
+                const name = (nameEl.value || '').trim();
+                const qty = (qtyEl.value || '').trim();
+                if (!name) { nameEl.focus(); return; }
+                if (!app.state.fridge) app.state.fridge = [];
+                app.state.fridge.push({ id: Date.now(), name, qty, type: 'pantry', purchaseDate: new Date().toLocaleDateString('zh-TW') });
+                app.infrastructure.storage.set('bento_fridge', app.state.fridge);
+                nameEl.value = ''; qtyEl.value = '';
+                app.refreshFridgeViews();
+                app.showToast(`🧊 已加入冰箱：${name}`);
+                app.cloudSync.upload();
+            },
+
+            renderFridge: () => {
+                const container = document.getElementById('fridge-list-container');
+                if (!container) return;
+                const list = (app.state.fridge || []).slice().sort((a, b) => a.id - b.id); // 先買的先用
+                if (list.length === 0) {
+                    container.innerHTML = `<div class="text-center text-gray-300 py-16 text-sm tracking-widest">冰箱還是空的<br><span class="text-[11px]">採買完成後按「完成採買」即可放入</span></div>`;
+                    return;
+                }
+                container.innerHTML = list.map(item => {
+                    const editing = app.state._fridgeEditId === item.id;
+                    const qtyPart = editing
+                        ? `<div class="flex gap-2 mt-2">
+                                <input type="text" id="fridge-edit-input-${item.id}" value="${(item.qty || '').replace(/"/g, '&quot;')}" placeholder="剩餘份量"
+                                    class="flex-1 min-w-0 bg-white border border-brand-300 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                    onkeydown="if(event.key==='Enter') app.saveFridgeQty(${item.id})">
+                                <button onclick="app.saveFridgeQty(${item.id})" class="bg-brand-500 text-white px-3 rounded-lg text-xs font-bold active:scale-95">存</button>
+                                <button onclick="app.cancelFridgeQty()" class="bg-gray-100 text-gray-400 px-3 rounded-lg text-xs active:scale-95">取消</button>
+                           </div>`
+                        : `<div class="text-[11px] text-gray-400 mt-0.5"><i class="fa-regular fa-calendar"></i> ${item.purchaseDate || ''}${item.qty ? ` · 剩 ${item.qty}` : ''}</div>`;
+                    return `
+                        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-bold text-sm text-gray-800 truncate">${item.name}</div>
+                                    ${qtyPart}
+                                </div>
+                                ${editing ? '' : `
+                                <button onclick="app.editFridgeQty(${item.id})" title="修改份量"
+                                    class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 active:scale-90 transition shrink-0">
+                                    <i class="fa-solid fa-pen text-[11px]"></i>
+                                </button>
+                                <button onclick="app.removeFridgeItem(${item.id})"
+                                    class="px-3 h-8 rounded-full bg-brand-50 text-brand-500 text-xs font-bold border border-brand-100 active:scale-90 transition shrink-0">
+                                    用畢
+                                </button>`}
+                            </div>
+                        </div>`;
+                }).join('');
+            },
+
+            addFridgeItem: () => {
+                const nameEl = document.getElementById('input-fridge-name');
+                const qtyEl = document.getElementById('input-fridge-qty');
+                const name = (nameEl.value || '').trim();
+                const qty = (qtyEl.value || '').trim();
+                if (!name) { nameEl.focus(); return; }
+                if (!app.state.fridge) app.state.fridge = [];
+                app.state.fridge.push({ id: Date.now(), name, qty, type: 'pantry', purchaseDate: new Date().toLocaleDateString('zh-TW') });
+                app.infrastructure.storage.set('bento_fridge', app.state.fridge);
+                nameEl.value = ''; qtyEl.value = '';
+                app.refreshFridgeViews();
+                app.showToast(`🧊 已加入冰箱：${name}`);
+                app.cloudSync.upload();
+            },
+
+            editFridgeQty: (id) => {
+                app.state._fridgeEditId = id;
+                app.renderFridge();
+                setTimeout(() => { const el = document.getElementById('fridge-edit-input-' + id); if (el) el.focus(); }, 50);
+            },
+            cancelFridgeQty: () => {
+                app.state._fridgeEditId = null;
+                app.renderFridge();
+            },
+            saveFridgeQty: (id) => {
+                const el = document.getElementById('fridge-edit-input-' + id);
+                const item = (app.state.fridge || []).find(x => x.id === id);
+                if (item && el) item.qty = (el.value || '').trim();
+                app.state._fridgeEditId = null;
+                app.infrastructure.storage.set('bento_fridge', app.state.fridge);
+                app.refreshFridgeViews();
+                app.cloudSync.upload();
+            },
+
+            removeFridgeItem: async (id) => {
+                const item = (app.state.fridge || []).find(x => x.id === id);
+                if (!(await app.showModal(`確定「${item ? item.name : '這項'}」已用畢？將從冰箱庫存移除。`, '冰箱庫存', 'danger', '用畢'))) return;
+                app.state.fridge = (app.state.fridge || []).filter(x => x.id !== id);
+                app.infrastructure.storage.set('bento_fridge', app.state.fridge);
+                app.refreshFridgeViews();
+                app.showToast('✅ 已移除');
                 app.cloudSync.upload();
             },
 
@@ -3925,7 +4109,7 @@
                     div.onclick = () => app.openHistoryDetail(idx);
                     div.innerHTML = `
                         <div class="flex-1 min-w-0">
-                            <div class="text-[10px] font-bold text-brand-500 uppercase mb-1">${h.date}</div>
+                            <div class="text-[10px] font-bold text-brand-500 uppercase mb-1">${h.date}${h.weekOf ? `　·　該週起 ${h.weekOf}` : ''}</div>
                             <div class="text-sm font-bold text-gray-700 mb-1">週菜單紀錄 #${app.state.history.length - idx}</div>
                             <div class="text-[10px] text-gray-400 truncate">${names.join('・') || '無菜色資料'}</div>
                         </div>
@@ -4506,10 +4690,11 @@
                     prep: ls.getItem('bento_prep'),           // 備料狀態
                     ratings: ls.getItem('bento_ratings'),     // 評分紀錄
                     bodyLog: ls.getItem('bento_body_log'),    // 體態趨勢紀錄
-                    game: ls.getItem('bento_game'),           // 遊戲化 (徽章/連續登入)
                     lastDate: ls.getItem('bento_last_date'),  // 最後登入日 (用於飲水重置判斷)
                     customStaples: ls.getItem('bento_custom_staples'),
-                    mealLog: ls.getItem('bento_meal_log')
+                    mealLog: ls.getItem('bento_meal_log'),
+                    fridge: ls.getItem('bento_fridge'),               // 冰箱庫存
+                    planWeek: ls.getItem('bento_plan_week')           // 本週菜單所屬週一日期
                 };
 
                 const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
@@ -4542,10 +4727,11 @@
                         if(d.prep) ls.setItem('bento_prep', d.prep);
                         if(d.ratings) ls.setItem('bento_ratings', d.ratings);
                         if(d.bodyLog) ls.setItem('bento_body_log', d.bodyLog);
-                        if(d.game) ls.setItem('bento_game', d.game);
                         if(d.lastDate) ls.setItem('bento_last_date', d.lastDate);
                         if(d.customStaples) ls.setItem('bento_custom_staples', d.customStaples);
                         if(d.mealLog) ls.setItem('bento_meal_log', d.mealLog);
+                        if(d.fridge) ls.setItem('bento_fridge', d.fridge);
+                        if(d.planWeek) ls.setItem('bento_plan_week', d.planWeek);
 
                         await app.showModal("✅ 資料匯入成功！頁面將自動重新整理。", "還原完成");
                         location.reload();
