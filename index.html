@@ -223,6 +223,20 @@
                 <div id="dash-fridge-list" class="flex flex-wrap gap-2"></div>
             </div>
 
+            <!-- ⚖️ 體重快速記錄 -->
+            <div class="bg-white p-4 rounded-[24px] shadow-soft border border-purple-50">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">⚖️ 今日體重</h3>
+                    <span id="dash-last-weight" class="text-xs text-purple-400 font-bold"></span>
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" id="input-dash-weight" placeholder="輸入體重 (kg)" step="0.1" min="20" max="300"
+                        class="flex-1 min-w-0 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-purple-300"
+                        onkeydown="if(event.key==='Enter') app.quickLogWeight()">
+                    <button onclick="app.quickLogWeight()" class="bg-purple-500 text-white px-3 rounded-xl text-xs font-bold shadow-soft active:scale-95 transition shrink-0">記錄</button>
+                </div>
+            </div>
+
             <div class="flex gap-3">
                 <button onclick="app.quickInspiration()" class="flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-lightbulb"></i> 今日找靈感
@@ -2095,7 +2109,8 @@
                     customStaples: localStorage.getItem('bento_custom_staples'),
                     mealLog: localStorage.getItem('bento_meal_log'),
                     fridge: localStorage.getItem('bento_fridge'),
-                    planWeek: localStorage.getItem('bento_plan_week')
+                    planWeek: localStorage.getItem('bento_plan_week'),
+                    quickLog: localStorage.getItem('bento_quick_log')
                 };
 
                 // 與上次上傳內容比對；若無變動則略過，避免重複備份
@@ -2133,6 +2148,7 @@
                 if(data.mealLog) localStorage.setItem('bento_meal_log', data.mealLog);
                 if(data.fridge) localStorage.setItem('bento_fridge', data.fridge);
                 if(data.planWeek) localStorage.setItem('bento_plan_week', data.planWeek);
+                if(data.quickLog) localStorage.setItem('bento_quick_log', data.quickLog);
 
                 localStorage.setItem('bento_timestamp', data.timestamp);
                 
@@ -2187,6 +2203,7 @@
             app.state.mealLog = safeParse('bento_meal_log', {});
             app.state.fridge = safeParse('bento_fridge', []);
             app.state.planWeek = safeParse('bento_plan_week', '');
+            app.state.quickLog = safeParse('bento_quick_log', {});
 
             // 深色模式還原
             if (localStorage.getItem('bento_dark_mode') === '1') {
@@ -2290,6 +2307,13 @@
             if(!u) return;
 
             app.renderDashFridge(); // 首頁冰箱卡片
+
+            // 顯示上次記錄的體重
+            const lastWeightEl = document.getElementById('dash-last-weight');
+            if (lastWeightEl && app.state.bodyLog && app.state.bodyLog.length > 0) {
+                const last = app.state.bodyLog[app.state.bodyLog.length - 1];
+                lastWeightEl.textContent = `上次：${last.weight} kg`;
+            }
 
             const tdee = u.tdee || 2000;
             const lunchTarget = Math.round(tdee * 0.35);
@@ -2462,17 +2486,36 @@
                 document.getElementById('dash-carb-val').innerText = '-';
                 document.getElementById('dash-fat-val').innerText = '-';
                 const isWeekend = ['Sat','Sun'].includes(todayKey);
-                document.getElementById('today-meal-card').innerHTML = isWeekend
-                    ? `<div class="p-6 text-center">
-                           <div class="text-2xl mb-2">🌿</div>
-                           <p class="text-sm text-gray-400 mb-3">今日未安排便當</p>
-                           <button onclick="app.navigateTo('planner')" class="text-xs text-brand-500 font-bold bg-brand-50 px-4 py-1.5 rounded-full hover:bg-brand-100 transition">規劃週末菜單 →</button>
+                const todayStr2 = new Date().toLocaleDateString('zh-TW');
+                const existingLog = app.state.quickLog && app.state.quickLog[todayStr2];
+                const quickInputHtml = existingLog
+                    ? `<div class="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2 mt-2">
+                           <i class="fa-solid fa-circle-check text-green-500 text-xs"></i>
+                           <span class="text-xs text-green-700 font-bold flex-1 truncate">${existingLog.text}</span>
+                           <button onclick="app.clearQuickLog()" class="text-[10px] text-gray-400 hover:text-red-400 transition shrink-0">✕</button>
                        </div>`
-                    : `<div class="p-6 text-center">
-                           <div class="text-2xl mb-2">🍱</div>
-                           <p class="text-sm text-gray-400 mb-3">今日尚未安排便當</p>
-                           <button onclick="app.navigateTo('planner')" class="text-xs text-brand-500 font-bold bg-brand-50 px-4 py-1.5 rounded-full hover:bg-brand-100 transition">立即規劃 →</button>
+                    : `<div class="flex gap-2 mt-2">
+                           <input type="text" id="input-quick-log" placeholder="今天吃了什麼？快速記錄 →"
+                               class="flex-1 min-w-0 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-300"
+                               onkeydown="if(event.key==='Enter') app.quickLogMeal()">
+                           <button onclick="app.quickLogMeal()" class="bg-brand-500 text-white px-3 rounded-xl text-xs font-bold active:scale-95 transition shrink-0">記錄</button>
                        </div>`;
+                document.getElementById('today-meal-card').innerHTML = `
+                    <div class="p-4">
+                        <div class="flex items-center gap-3 mb-1">
+                            <span class="text-2xl">${isWeekend ? '🌿' : '🍱'}</span>
+                            <span class="text-sm text-gray-400">${isWeekend ? '今日未安排便當' : '今日尚未安排便當'}</span>
+                        </div>
+                        ${quickInputHtml}
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="app.quickInspiration()" class="flex-1 text-xs text-brand-500 font-bold bg-brand-50 px-3 py-2 rounded-xl hover:bg-brand-100 transition">
+                                <i class="fa-solid fa-lightbulb mr-1"></i>找靈感
+                            </button>
+                            <button onclick="app.navigateTo('planner')" class="flex-1 text-xs text-gray-500 font-bold bg-gray-50 px-3 py-2 rounded-xl hover:bg-gray-100 transition">
+                                <i class="fa-solid fa-calendar-plus mr-1"></i>${isWeekend ? '規劃週末' : '立即規劃'}
+                            </button>
+                        </div>
+                    </div>`;
             }
 
             // 明日備餐邏輯 (維持不變)
@@ -3155,6 +3198,64 @@
             }
         },
 
+        // 快速記錄今日餐點（不需 AI 計劃）
+        quickLogMeal: () => {
+            const input = document.getElementById('input-quick-log');
+            const text = (input ? input.value : '').trim();
+            if (!text) return app.showToast('請輸入今天吃了什麼');
+            if (!app.state.quickLog) app.state.quickLog = {};
+            const todayStr = new Date().toLocaleDateString('zh-TW');
+            app.state.quickLog[todayStr] = { text, timestamp: Date.now() };
+            // 只保留最近 30 天
+            const keys = Object.keys(app.state.quickLog).sort();
+            if (keys.length > 30) delete app.state.quickLog[keys[0]];
+            app.infrastructure.storage.set('bento_quick_log', app.state.quickLog);
+            app.showToast(`📝 已記錄：${text}`);
+            app.renderDashboard();
+            app.cloudSync.upload();
+        },
+
+        // 清除今日快速記錄
+        clearQuickLog: () => {
+            const todayStr = new Date().toLocaleDateString('zh-TW');
+            if (app.state.quickLog) delete app.state.quickLog[todayStr];
+            app.infrastructure.storage.set('bento_quick_log', app.state.quickLog || {});
+            app.renderDashboard();
+        },
+
+        // 首頁體重快速輸入
+        quickLogWeight: () => {
+            const input = document.getElementById('input-dash-weight');
+            const w = parseFloat(input ? input.value : '');
+            if (!w || w < 20 || w > 300) return app.showToast('❌ 請輸入正確體重（20–300 kg）');
+            const todayDate = new Date().toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+            if (!Array.isArray(app.state.bodyLog)) app.state.bodyLog = [];
+            const logEntry = { date: todayDate, weight: w, bf: 0 };
+            const existingIndex = app.state.bodyLog.findIndex(log => log.date === todayDate);
+            if (existingIndex >= 0) app.state.bodyLog[existingIndex] = logEntry;
+            else {
+                app.state.bodyLog.push(logEntry);
+                if (app.state.bodyLog.length > 30) app.state.bodyLog.shift();
+            }
+            app.infrastructure.storage.set('bento_body_log', app.state.bodyLog);
+            if (input) input.value = '';
+            app.showToast(`⚖️ 體重 ${w} kg 記錄成功！`);
+            const el = document.getElementById('dash-last-weight');
+            if (el) el.textContent = `${w} kg`;
+            app.cloudSync.upload();
+        },
+
+        // 清除單日計劃（允許只規劃幾天）
+        clearDayPlan: async (dayKey) => {
+            const confirmed = await app.showModal(`確定要清除${DAY_LABELS[dayKey] || dayKey}的菜單安排嗎？`, '清除安排', 'confirm', '確認清除');
+            if (!confirmed) return;
+            app.state.plan[dayKey] = null;
+            app.infrastructure.storage.set('bento_plan', app.state.plan);
+            app.renderPlanner();
+            app.renderDashboard();
+            app.cloudSync.upload();
+        },
+
         // B1 飲食紀錄打卡
         logMadeIt: (dayKey) => {
             const todayStr = new Date().toLocaleDateString('zh-TW');
@@ -3442,6 +3543,9 @@
                             </button>
                             <button onclick="app.openSelector('${d}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="換菜">
                                 <i class="fa-solid fa-rotate text-[8px]"></i>
+                            </button>
+                            <button onclick="app.clearDayPlan('${d}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center hover:bg-red-50 hover:text-red-400 transition border border-gray-100 active:scale-90" title="清除這天的安排">
+                                <i class="fa-solid fa-xmark text-[8px]"></i>
                             </button>
                         </div>
                     `;
@@ -4732,6 +4836,7 @@
                         if(d.mealLog) ls.setItem('bento_meal_log', d.mealLog);
                         if(d.fridge) ls.setItem('bento_fridge', d.fridge);
                         if(d.planWeek) ls.setItem('bento_plan_week', d.planWeek);
+                        if(d.quickLog) ls.setItem('bento_quick_log', d.quickLog);
 
                         await app.showModal("✅ 資料匯入成功！頁面將自動重新整理。", "還原完成");
                         location.reload();
@@ -4833,7 +4938,7 @@
                     if ('wakeLock' in navigator) {
                         app.wakeLock = await navigator.wakeLock.request('screen');
                         console.log('螢幕恆亮已自動恢復');
-                    }
+                            }
                 } catch (err) {
                     console.log('無法恢復 Wake Lock:', err);
                 }
