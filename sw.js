@@ -1,10 +1,16 @@
-// Bento Fit Service Worker v1.0
-const CACHE_NAME = 'bento-fit-v2.13';
-const urlsToCache = [
+// Bento Fit Service Worker
+const CACHE_NAME = 'bento-fit-v2.14';
+// 核心本地資源：缺一不可，快取失敗則安裝失敗
+const coreAssets = [
   './',
   './index.html',
   './manifest.json',
-  './icon.png', // 請確保您有一張 icon.png 圖片
+  './tailwind.css',
+  './icon-192.png',
+  './icon-512.png'
+];
+// CDN 資源：盡力快取，抓不到也不能擋住 SW 安裝
+const optionalAssets = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
@@ -14,7 +20,10 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             console.log('[SW] Caching core assets');
-            return cache.addAll(urlsToCache);
+            const optional = optionalAssets.map(url =>
+                cache.add(url).catch(err => console.warn('[SW] Optional asset skipped:', url, err))
+            );
+            return Promise.all([cache.addAll(coreAssets), ...optional]);
         })
     );
 });
@@ -45,31 +54,42 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const url = event.request.url;
 
-    // ⛔ 排除清單：絕對不要快取 Tailwind CDN 與 Google Gemini API
-    if (url.includes('cdn.tailwindcss.com') || url.includes('generativelanguage.googleapis.com')) {
+    // ⛔ 排除清單：API 請求（Gemini、Apps Script 同步）不經過快取
+    if (event.request.method !== 'GET' ||
+        url.includes('generativelanguage.googleapis.com') ||
+        url.includes('script.google.com')) {
         return; // 直接放行，交給網路處理
     }
 
-    // ✅ 快取優先策略 (Cache First, fallback to Network)
+    // 抓到回應後順便寫入快取（含字型/CDN 等跨域資源，離線才有完整樣式）
+    const fetchAndCache = () => fetch(event.request).then(networkResponse => {
+        if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, responseToCache);
+            });
+        }
+        return networkResponse;
+    });
+
+    // 🔄 HTML 導覽請求：網路優先（部署新版即時生效），斷線時退回快取
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetchAndCache().catch(() =>
+                caches.match(event.request).then(cached => cached || caches.match('./index.html'))
+            )
+        );
+        return;
+    }
+
+    // ✅ 其餘靜態資源：快取優先 (Cache First, fallback to Network)
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             if (cachedResponse) {
                 return cachedResponse; // 命中快取，直接回傳 (秒開關鍵)
             }
-            
-            // 沒命中，去網路抓
-            return fetch(event.request).then(networkResponse => {
-                // 如果抓回來的是正常的靜態檔案，就順便存進快取
-                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-                    const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
-                }
-                return networkResponse;
-            }).catch(() => {
-                // 網路斷線且快取沒有時的防呆 (如果想做離線恐龍頁可以放這裡)
-                console.log('[SW] 網路斷線且無快取可支援');
+            return fetchAndCache().catch(() => {
+                console.log('[SW] 網路斷線且無快取可支援:', url);
             });
         })
     );

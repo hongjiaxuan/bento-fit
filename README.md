@@ -27,7 +27,7 @@ Bento Fit 是一款專為忙碌現代人設計的 **AI 智能備餐 (Meal Prep) 
 ## 🛠️ 技術棧
 
 * **Frontend**: HTML5, Vanilla JavaScript (ES6+)
-* **Styling**: Tailwind CSS (via CDN)
+* **Styling**: Tailwind CSS（預先編譯的靜態 `tailwind.css`，修改樣式後可用 `npx tailwindcss@3 -c tailwind.config.js -i tailwind.src.css -o tailwind.css --minify` 重新產生，詳見 `tailwind.config.js` 註解）
 * **Icons**: FontAwesome
 * **AI Model**: Google Gemini Pro / Flash
 * **Storage**: LocalStorage (資料僅儲存於瀏覽器端，隱私安全)
