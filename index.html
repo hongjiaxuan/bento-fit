@@ -220,7 +220,7 @@
         <section id="view-planner" class="view-section fade-in hidden">
             <h2 class="text-lg font-bold text-gray-800 mb-4 ml-1">本週菜單</h2>
             
-            <div class="flex gap-3 mb-6">
+            <div class="flex gap-3 mb-3">
                 <button onclick="app.generateAIPlan()" class="flex-1 bg-brand-500 text-white p-4 rounded-2xl shadow-float flex items-center justify-center gap-2 transform active:scale-95 transition-all hover:bg-brand-600">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                     <span class="font-bold">AI 智慧生成</span>
@@ -230,6 +230,11 @@
                     <span>沿用上週</span>
                 </button>
             </div>
+
+            <button onclick="app.openMealPrepPlanner()" class="w-full mb-6 bg-white border border-brand-200 text-brand-600 py-3.5 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-brand-50 text-sm font-bold">
+                <i class="fa-solid fa-bowl-rice"></i>
+                <span>週間備餐規劃師（2人x5天・優先消耗庫存）</span>
+            </button>
 
             <div id="ai-loading" class="hidden space-y-4">
                 <div class="flex flex-col items-center justify-center gap-2 text-brand-500 font-medium py-4">
@@ -322,6 +327,59 @@
         <div class="p-6 border-t border-gray-100 bg-white safe-pb flex gap-3">
             <button id="btn-batch-prev" class="flex-1 bg-gray-100 text-gray-500 font-bold py-4 rounded-xl hidden">上一步</button>
             <button id="btn-batch-next" class="flex-[2] bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float">下一步</button>
+        </div>
+    </div>
+
+    <div id="modal-mealprep" class="fixed inset-0 z-[90] hidden bg-white flex flex-col animate-fade-in">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800">週間備餐規劃師</h3>
+                <p class="text-xs text-brand-500 font-bold mt-1">2 人 x 5 天・溫沙拉 / 波奇碗</p>
+            </div>
+            <button onclick="app.closeModal('modal-mealprep')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div id="mealprep-form" class="flex-1 overflow-y-auto p-6 space-y-4 pb-32">
+            <div id="mealprep-inputs" class="space-y-4">
+                <p class="text-xs text-gray-400 leading-relaxed">請填入目前家中現有的食材，AI 會優先安排消耗這些庫存，不足的份量才會列入補買清單。留空欄位視為「無庫存」。</p>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 mb-1.5 block">🍚 現有主食</label>
+                    <textarea id="mealprep-inv-carb" rows="2" placeholder="例：糙米 2 杯、地瓜 2 條" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-200 focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 mb-1.5 block">🥩 現有蛋白質</label>
+                    <textarea id="mealprep-inv-protein" rows="2" placeholder="例：冷凍鯛魚片 4 片、雞胸肉 2 片" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-200 focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 mb-1.5 block">🥦 現有蔬菜/蕈菇</label>
+                    <textarea id="mealprep-inv-veg" rows="2" placeholder="例：青花菜 1 朵、玉米筍 1 盒" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-200 focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 mb-1.5 block">🥚 現有蛋類/常備調味醬汁</label>
+                    <textarea id="mealprep-inv-egg" rows="2" placeholder="例：雞蛋 6 顆、日式醬油、橄欖油" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-200 focus:outline-none"></textarea>
+                </div>
+            </div>
+
+            <div id="mealprep-loading" class="hidden flex flex-col items-center justify-center gap-2 text-brand-500 font-medium py-10">
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i>
+                <span class="text-sm">AI 正在規劃一週備餐...</span>
+            </div>
+        </div>
+
+        <div id="mealprep-result" class="hidden flex-1 overflow-y-auto p-6 space-y-5 pb-32"></div>
+
+        <div id="mealprep-footer" class="p-6 border-t border-gray-100 bg-white safe-pb flex gap-3">
+            <button id="btn-mealprep-generate" onclick="app.generateMealPrepPlan()" class="flex-1 bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 開始規劃
+            </button>
+            <button id="btn-mealprep-redo" onclick="app.openMealPrepPlanner()" class="hidden flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-xl active:scale-95 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i> 重新規劃
+            </button>
+            <button id="btn-mealprep-apply" onclick="app.applyMealPrepToWeek()" class="hidden flex-[2] bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-check"></i> 套用到本週菜單
+            </button>
         </div>
     </div>
         <section id="view-history" class="view-section fade-in hidden">
@@ -1350,15 +1408,51 @@
                 return mockBatch;
             },
 
+            // 假資料客戶端 (Mock)：週間備餐規劃師
+            mockMealPrepClient: async () => {
+                console.log("🚧 開發模式：使用 MealPrep MockClient");
+                await new Promise(r => setTimeout(r, 800));
+                const days = ['週一', '週二', '週三', '週四', '週五'];
+                return [{
+                    consumed: ["【測試】開發用糙米 2 杯 → 用於週一、週三主食"],
+                    shopping_list: [{ name: "【測試】雞胸肉", qty: "600g", category: "生鮮" }],
+                    week_table: days.map((day, i) => ({
+                        day, name: `【測試】週間備餐便當 #${i + 1}`, emoji: '🥗', main_tag: '雞胸',
+                        cal: 550, p: 40, c: 55, f: 15,
+                        carb: "藜麥糙米飯", protein: "香煎雞胸",
+                        sideA: "烤時蔬", sideB: "炒青花菜", sideC: "鹽漬小黃瓜",
+                        egg: "日式溏心蛋", sauce: "和風醬",
+                        sides: ["烤時蔬", "炒青花菜", "鹽漬小黃瓜", "日式溏心蛋"],
+                        ingredients: [
+                            { name: "【測試】雞胸肉", qty: "300g", type: "生鮮" },
+                            { name: "【測試】藜麥糙米", qty: "1杯", type: "澱粉" },
+                            { name: "【測試】青花菜", qty: "1朵", type: "蔬果" }
+                        ],
+                        instructions: "1. 這是測試資料，運作正常！\n2. 雞胸肉煎至金黃。\n3. 蔬菜燙熟拌醬。",
+                        prep_minutes: 20,
+                        prep_guide: "肉類：【測試】雞胸肉300g逆紋切片，醬油1大匙醃10分鐘 | 蔬菜：青花菜切小朵 | 澱粉：藜麥糙米飯冷藏備用"
+                    })),
+                    prep_sop: {
+                        prep: ["【測試】蔬菜洗淨切好，廚房紙巾吸乾水分"],
+                        cook: ["【測試】烤箱預熱 200 度，烤時蔬 15 分鐘"],
+                        cooldown: ["【測試】食材完全放涼後再進保鮮盒"]
+                    },
+                    storage_guide: [{ category: "熟菜", container: "NAKAYA 中盒 x2", storage: "冷藏", note: "分裝時鋪廚房紙巾防潮" }],
+                    freeze_thaw: "【測試】週三晚上將週四、週五份量移至冷藏退冰。"
+                }];
+            },
+
             // Facade：負責判斷路由
-            generate: async (promptText, isBatchMode) => {
+            generate: async (promptText, isBatchMode, type = 'recipe') => {
                 const u = app.state.user;
                 if (!u) throw new Error("找不到使用者資料");
-                
+
                 if (u.isDev) {
-                    return await app.infrastructure.ai.mockClient(isBatchMode);
+                    return type === 'mealprep'
+                        ? await app.infrastructure.ai.mockMealPrepClient()
+                        : await app.infrastructure.ai.mockClient(isBatchMode);
                 }
-                
+
                 if (!u.apiKey) throw new Error("未設定 API Key");
                 return await app.infrastructure.ai.liveClient(promptText, u.apiKey);
             }
@@ -1500,6 +1594,79 @@
                         "instructions" (字串, \\n 分隔，包含主菜與配菜做法),
                         "prep_minutes" (整數，整道便當從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一),
                         "prep_guide" (字串，用 " | " 分隔各類別。每種蔬菜須逐一列出具體切法（切片/切絲/切丁/切小朵等），肉類須寫明切法與醃料用量，澱粉視情況，無則省略。範例："肉類：雞腿肉200g切大塊，醬油2匙、蒜末醃15分鐘 | 蔬菜：青花菜切小朵，香菇去蒂切片，玉米筍對半切 | 澱粉：白飯備用")。
+                    `;
+                },
+
+                // 週間備餐規劃師：2人x5天(10份)整體備餐計畫，優先消耗現有庫存
+                createMealPrepPlanPrompt: (inventory) => {
+                    const inv = (v) => (v && v.trim()) ? v.trim() : '無庫存';
+                    const seed = Date.now();
+                    return `
+                        你是一位專業的「備餐規劃師（Meal Prep Planner）」，請為一對情侶/夫妻規劃「下週一至週五（共 5 天、2 人份，合計 10 個便當）」的高效備餐計畫。
+
+                        【現有食材庫存 — 請優先消耗，減少浪費，不足的份量才列入補買清單】
+                        主食：${inv(inventory.carb)}
+                        蛋白質：${inv(inventory.protein)}
+                        蔬菜/蕈菇：${inv(inventory.veg)}
+                        蛋類/常備調味醬汁：${inv(inventory.egg)}
+
+                        【核心飲食風格與便當結構】
+                        1. 便當風格：以「溫沙拉（Warm Salad）」或「波奇碗（Poke Bowl）」為主，清爽、耐蒸/耐微波或可微溫食用。
+                        2. 每份便當須包含：
+                           - 優質碳水主食 1 種
+                           - 核心蛋白質 1~2 種
+                           - 熟配菜 2 種（烤/炒/燙後耐放、不易變色出水）
+                           - 鮮配菜或生配菜 1 種（保持脆度）
+                           - 雞蛋料理 1 種
+                           - 搭配醬汁 1 種（需獨立分裝）
+                        3. 5 天菜色需交錯變化，不可單調重複；蛋白質來源盡量輪替。
+
+                        【容器與保存限制】
+                        - 容器：NAKAYA 塑膠保鮮盒，輕量、可冷藏/冷凍分裝。
+                        - 週末一次備好全部基底，平日早晨或前晚只需快速夾取組裝。
+                        - 週一至週三冷藏；週四、週五的肉類與主食需規劃冷凍保存與退冰方案。
+                        - 生熟分開；出水蔬菜需說明去水與防潮措施（例如廚房紙巾鋪底）。
+
+                        【隨機種子 ${seed}】請確保本次規劃菜色與上次不同，不可照搬。
+
+                        【嚴格 JSON 格式要求 — 只回傳單一 JSON 物件，不含 Markdown、不含註解】
+                        {
+                          "consumed": [已消耗的現有庫存項目說明，字串陣列，例如 "糙米 2 杯 → 用於週一、週三主食"，若無庫存則回傳空陣列],
+                          "shopping_list": [{"name":"食材名稱","qty":"需補買重量或數量","category":"生鮮/蔬果/澱粉/雜貨 其中之一"}]（僅列出庫存不足、需額外採買的項目，需精準換算成 10 份便當所需總量。★ name 必須與 week_table 中 ingredients 使用的食材名稱完全一致，以利系統比對哪些食材已由庫存涵蓋）,
+                          "week_table": [
+                            {
+                              "day":"週一",
+                              "name"（此日便當完整名稱，例如「香煎鯛魚溫沙拉便當」）,
+                              "emoji"（1個最能代表主菜的食物 emoji，例如 🍗🐟🥩🦐🥚🥬🫘，不可用 🍱）,
+                              "main_tag"（主要蛋白質種類，例如「雞胸」「鯛魚」）,
+                              "cal","p","c","f"（此便當「單人份」的熱量與三大營養素，數值）,
+                              "carb":"主食名稱（表格用）","protein":"蛋白質名稱（表格用）",
+                              "sideA":"熟配菜A（表格用）","sideB":"熟配菜B（表格用）","sideC":"生/鮮配菜（表格用）",
+                              "egg":"雞蛋料理（表格用）","sauce":"搭配醬汁（表格用）",
+                              "sides" (Array of string，配菜完整列表，涵蓋 sideA/sideB/sideC/egg 共 4 項),
+                              "ingredients" (Array of {name, qty, type}，涵蓋此日「2人份」主食+蛋白質+全部配菜+醬汁所需的完整食材與總重量，type 為 生鮮/蔬果/澱粉/雜貨 其中之一),
+                              "instructions" (字串, \\n 分隔，包含主食/主菜/配菜/醬汁的完整做法，含溫度與時間),
+                              "prep_minutes" (整數，此日份量從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一),
+                              "prep_guide" (字串，用 " | " 分隔各類別，格式規則同下方【備料指南格式規則】)
+                            }
+                          ]（陣列須恰好 5 筆，day 依序為 週一、週二、週三、週四、週五）,
+                          "prep_sop": {
+                            "prep": [前置準備階段步驟，字串陣列。須詳列各類蔬菜蕈菇的清洗、切法與吸水/脫水技巧，以及肉類海鮮的去腥、切法與抓醃配方，含用量],
+                            "cook": [平行烹調階段步驟，字串陣列。按烤箱、汆燙、煮蛋、煎肉、拌醬的順序規劃，並標明每步驟預估耗時，總時長控制在 90~100 分鐘內],
+                            "cooldown": [降溫與進盒階段步驟，字串陣列。標明食材徹底冷卻防變質的要點]
+                          },
+                          "storage_guide": [
+                            {"category":"主食/肉類/熟菜/生脆菜/溏心蛋 其中之一","container":"建議使用的 NAKAYA 保鮮盒配置說明","storage":"冷藏 或 冷凍","note":"分裝與擺放注意事項"}
+                          ],
+                          "freeze_thaw": "字串，說明週四、週五便當肉類與主食的冷凍回溫/解凍步驟，以及蔬菜防水的廚房紙巾鋪法"
+                        }
+
+                        【備料指南格式規則（week_table[].prep_guide 適用）】
+                        ① 肉類/海鮮段：必須寫明食材名稱、重量（2人份總量）、具體切法（如「逆紋切片」「切丁」「對半切」）、醃漬調料及用量，例如「雞胸肉300g逆紋切薄片，醬油1大匙、米酒1小匙、太白粉1小匙醃10分鐘」。
+                        ② 蔬菜段：每種蔬菜必須逐一列出，並寫明具體切法（切片/切絲/切丁/切塊/切小朵/剝片/去蒂切片等），不可僅寫「洗淨切好」。
+                        ③ 澱粉段：寫明白飯/藜麥/地瓜等是否需預煮或免處理。
+                        ④ 若無某類食材則省略該段。
+                        完整範例："肉類：雞胸肉300g逆紋切薄片，醬油1大匙、米酒1小匙醃10分鐘 | 蔬菜：青花菜切小朵，小黃瓜切片鹽漬去水 | 澱粉：藜麥糙米飯冷藏備用"
                     `;
                 }
             }
@@ -3790,6 +3957,236 @@
                 }
                 app.renderShopping();
             },
+
+        // --- 🥗 新增：週間備餐規劃師 (獨立於 planner/recipes，純諮詢式輸出) ---
+        openMealPrepPlanner: () => {
+            document.getElementById('mealprep-inputs').classList.remove('hidden');
+            document.getElementById('mealprep-loading').classList.add('hidden');
+            document.getElementById('mealprep-form').classList.remove('hidden');
+            document.getElementById('mealprep-result').classList.add('hidden');
+            document.getElementById('btn-mealprep-generate').classList.remove('hidden');
+            document.getElementById('btn-mealprep-redo').classList.add('hidden');
+            document.getElementById('btn-mealprep-apply').classList.add('hidden');
+            app.state.currentMealPrepPlan = null;
+
+            const saved = app.infrastructure.storage.get('bento_mealprep_inventory', {});
+            document.getElementById('mealprep-inv-carb').value = saved.carb || '';
+            document.getElementById('mealprep-inv-protein').value = saved.protein || '';
+            document.getElementById('mealprep-inv-veg').value = saved.veg || '';
+            document.getElementById('mealprep-inv-egg').value = saved.egg || '';
+
+            document.getElementById('modal-mealprep').classList.remove('hidden');
+        },
+
+        generateMealPrepPlan: async () => {
+            const user = app.state.user;
+            if (!user || (!user.isDev && !user.apiKey)) {
+                app.showToast('💡 請先設定 Gemini API Key 才能使用 AI 備餐規劃功能');
+                setTimeout(() => {
+                    app.closeModal('modal-mealprep');
+                    app.navigateTo('profile'); app.openEditProfile(); app.switchProfileTab('system');
+                }, 1000);
+                return;
+            }
+
+            const inventory = {
+                carb: document.getElementById('mealprep-inv-carb').value.trim(),
+                protein: document.getElementById('mealprep-inv-protein').value.trim(),
+                veg: document.getElementById('mealprep-inv-veg').value.trim(),
+                egg: document.getElementById('mealprep-inv-egg').value.trim()
+            };
+            app.infrastructure.storage.set('bento_mealprep_inventory', inventory);
+
+            document.getElementById('mealprep-inputs').classList.add('hidden');
+            document.getElementById('mealprep-loading').classList.remove('hidden');
+            document.getElementById('btn-mealprep-generate').classList.add('hidden');
+
+            try {
+                const prompt = app.domain.ai.promptFactory.createMealPrepPlanPrompt(inventory);
+                const data = await app.infrastructure.ai.generate(prompt, false, 'mealprep');
+                const plan = Array.isArray(data) ? data[0] : data;
+                if (!plan || !Array.isArray(plan.week_table) || !plan.week_table.length) {
+                    throw new Error('AI 回傳格式不完整');
+                }
+
+                app.state.currentMealPrepPlan = plan;
+                app.renderMealPrepPlan(plan);
+                document.getElementById('mealprep-form').classList.add('hidden');
+                document.getElementById('mealprep-result').classList.remove('hidden');
+                document.getElementById('btn-mealprep-redo').classList.remove('hidden');
+                document.getElementById('btn-mealprep-apply').classList.remove('hidden');
+            } catch (e) {
+                const errMsg = (e.message === 'Failed to fetch' || e.message.includes('NetworkError'))
+                    ? '網路連線失敗，請確認網路後重試。'
+                    : `規劃失敗：${e.message}`;
+                await app.showModal(errMsg, "生成失敗", "error");
+                document.getElementById('mealprep-inputs').classList.remove('hidden');
+                document.getElementById('mealprep-loading').classList.add('hidden');
+                document.getElementById('btn-mealprep-generate').classList.remove('hidden');
+            }
+        },
+
+        // 套用到本週菜單：轉為與 AI 智慧生成相同的 recipes/plan 結構，
+        // 讓週末備料模式、烹飪模式、購物清單全部直接共用
+        applyMealPrepToWeek: async () => {
+            const plan = app.state.currentMealPrepPlan;
+            if (!plan) return;
+            if (!(await app.showModal("套用後將覆蓋本週已規劃的菜單（原菜單會先存入歷史紀錄），確定要套用嗎？", "套用確認"))) return;
+
+            app.archiveCurrentWeek();
+
+            const newRecipes = plan.week_table.map((d, i) => {
+                const ingredients = Array.isArray(d.ingredients) ? d.ingredients : [];
+                return {
+                    id: Date.now() + i,
+                    name: d.name || [d.protein, d.carb].filter(Boolean).join(' ') || `週間便當 #${i + 1}`,
+                    emoji: d.emoji || '🥗',
+                    tags: [d.main_tag || '一般'],
+                    favorite: false,
+                    cal: d.cal || 0, p: d.p || 0, c: d.c || 0, f: d.f || 0,
+                    sides: Array.isArray(d.sides) && d.sides.length
+                        ? d.sides
+                        : [d.sideA, d.sideB, d.sideC, d.egg].filter(Boolean),
+                    prep_minutes: [10, 20, 30].includes(d.prep_minutes) ? d.prep_minutes : 20,
+                    prep_guide: d.prep_guide || '',
+                    ingredients: ingredients.map(ing => `${ing.name} ${ing.qty}`),
+                    structured_ingredients: ingredients,
+                    instructions: d.instructions || ''
+                };
+            });
+
+            app.state.recipes = newRecipes;
+            app.infrastructure.storage.set('bento_recipes', app.state.recipes);
+
+            app.state.plan = {
+                Mon: newRecipes[0]?.id, Tue: newRecipes[1]?.id, Wed: newRecipes[2]?.id,
+                Thu: newRecipes[3]?.id, Fri: newRecipes[4]?.id
+            };
+            app.infrastructure.storage.set('bento_plan', app.state.plan);
+            app.state.planWeek = app.mondayOfThisWeek();
+            app.infrastructure.storage.set('bento_plan_week', app.state.planWeek);
+
+            // 購物清單：食譜食材彙總後的總量是「烹調總用量」而非「需補買量」（可能含庫存內已有的部分），
+            // 精準的補買量只有 shopping_list 才算得出，因此食譜食材列一律預先勾選(視為已備妥/略過)，
+            // 避免與下方的補買手動項目重複顯示、造成同一食材兩種數量互相矛盾
+            app.state.shopping = {};
+            newRecipes.forEach(r => {
+                (r.structured_ingredients || []).forEach(ing => {
+                    const name = (ing.name || '').trim();
+                    if (name) app.state.shopping[name] = true;
+                });
+            });
+            app.infrastructure.storage.set('bento_shopping', app.state.shopping);
+
+            const customEntries = (plan.shopping_list || [])
+                .map(x => `${x.name || ''} ${x.qty || ''}`.trim())
+                .filter(Boolean);
+            app.state.customShoppingItems = [...(app.state.customShoppingItems || []), ...customEntries];
+            app.infrastructure.storage.set('bento_custom_shopping', app.state.customShoppingItems);
+
+            app.closeModal('modal-mealprep');
+            app.navigateTo('planner');
+            app.showToast('✅ 已套用到本週菜單！');
+            app.cloudSync.scheduleUpload();
+        },
+
+        renderMealPrepPlan: (plan) => {
+            const esc = (s) => (s ?? '').toString();
+            const nl2br = (s) => esc(s).replace(/\n/g, '<br>');
+
+            const consumedHtml = (plan.consumed || []).map(x => `
+                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-brand-400 text-[10px] mt-1.5"></i><span>${esc(x)}</span></li>
+            `).join('') || '<li class="text-gray-400">（無庫存可消耗）</li>';
+
+            const shopHtml = (plan.shopping_list || []).map(x => `
+                <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <span class="text-sm text-gray-700">${esc(x.name)}</span>
+                    <span class="text-xs text-gray-400">${esc(x.qty)}</span>
+                </div>
+            `).join('') || '<div class="text-gray-400 text-sm">（無需補買）</div>';
+
+            const tableRows = (plan.week_table || []).map(d => `
+                <tr class="border-b border-gray-50 last:border-0">
+                    <td class="py-2 pr-3 font-bold text-brand-600 whitespace-nowrap">${esc(d.day)}</td>
+                    <td class="py-2 pr-3">${esc(d.carb)}</td>
+                    <td class="py-2 pr-3">${esc(d.protein)}</td>
+                    <td class="py-2 pr-3">${esc(d.sideA)}</td>
+                    <td class="py-2 pr-3">${esc(d.sideB)}</td>
+                    <td class="py-2 pr-3">${esc(d.sideC)}</td>
+                    <td class="py-2 pr-3">${esc(d.egg)}</td>
+                    <td class="py-2">${esc(d.sauce)}</td>
+                </tr>
+            `).join('');
+
+            const sopSection = (title, icon, steps) => `
+                <div>
+                    <div class="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1.5"><i class="fa-solid ${icon} text-brand-400"></i> ${title}</div>
+                    <ol class="space-y-1.5 text-sm text-gray-700 list-decimal list-inside">
+                        ${(steps || []).map(s => `<li>${esc(s)}</li>`).join('') || '<li class="text-gray-400 list-none">（無資料）</li>'}
+                    </ol>
+                </div>
+            `;
+
+            const storageRows = (plan.storage_guide || []).map(x => `
+                <tr class="border-b border-gray-50 last:border-0">
+                    <td class="py-2 pr-3 font-bold text-gray-700 whitespace-nowrap">${esc(x.category)}</td>
+                    <td class="py-2 pr-3">${esc(x.container)}</td>
+                    <td class="py-2 pr-3">${esc(x.storage)}</td>
+                    <td class="py-2">${esc(x.note)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('mealprep-result').innerHTML = `
+                <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-100">
+                    <div class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-box-open text-brand-400"></i> 現有食材消化</div>
+                    <ul class="space-y-1.5 text-sm text-gray-700">${consumedHtml}</ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-100">
+                    <div class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-brand-400"></i> 補買採購清單</div>
+                    ${shopHtml}
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-100">
+                    <div class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-table text-brand-400"></i> 週一至週五便當配置表</div>
+                    <div class="overflow-x-auto -mx-1">
+                        <table class="text-xs min-w-[560px] px-1">
+                            <thead>
+                                <tr class="text-gray-400 text-left border-b border-gray-100">
+                                    <th class="py-1.5 pr-3">日期</th><th class="py-1.5 pr-3">主食</th><th class="py-1.5 pr-3">蛋白質</th>
+                                    <th class="py-1.5 pr-3">熟配菜A</th><th class="py-1.5 pr-3">熟配菜B</th><th class="py-1.5 pr-3">生鮮配菜</th>
+                                    <th class="py-1.5 pr-3">雞蛋</th><th class="py-1.5">醬汁</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-100 space-y-4">
+                    <div class="text-sm font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-kitchen-set text-brand-400"></i> 週末高效備料 SOP</div>
+                    ${sopSection('前置準備階段', 'fa-scissors', plan.prep_sop?.prep)}
+                    ${sopSection('平行烹調階段（90~100 分鐘動線）', 'fa-fire-burner', plan.prep_sop?.cook)}
+                    ${sopSection('降溫與進盒', 'fa-snowflake', plan.prep_sop?.cooldown)}
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-100">
+                    <div class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-box-archive text-brand-400"></i> NAKAYA 保鮮盒分裝指南</div>
+                    <div class="overflow-x-auto -mx-1">
+                        <table class="text-xs min-w-[480px] px-1">
+                            <thead>
+                                <tr class="text-gray-400 text-left border-b border-gray-100">
+                                    <th class="py-1.5 pr-3">類別</th><th class="py-1.5 pr-3">保鮮盒</th><th class="py-1.5 pr-3">保存方式</th><th class="py-1.5">備註</th>
+                                </tr>
+                            </thead>
+                            <tbody>${storageRows}</tbody>
+                        </table>
+                    </div>
+                    ${plan.freeze_thaw ? `<div class="mt-3 bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i>${nl2br(plan.freeze_thaw)}</div>` : ''}
+                </div>
+            `;
+        },
+
         // --- 🍱 新增：週末批量備料模式 (Batch Prep) ---
         openBatchPrep: () => {
             // 1. 統計所有天（含週末）菜色出現次數
