@@ -377,6 +377,9 @@
             <button id="btn-mealprep-redo" onclick="app.openMealPrepPlanner()" class="hidden flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-xl active:scale-95 transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-rotate-left"></i> 重新規劃
             </button>
+            <button id="btn-mealprep-apply" onclick="app.applyMealPrepToWeek()" class="hidden flex-[2] bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-check"></i> 套用到本週菜單
+            </button>
         </div>
     </div>
         <section id="view-history" class="view-section fade-in hidden">
@@ -1413,10 +1416,21 @@
                 return [{
                     consumed: ["【測試】開發用糙米 2 杯 → 用於週一、週三主食"],
                     shopping_list: [{ name: "【測試】雞胸肉", qty: "600g", category: "生鮮" }],
-                    week_table: days.map(day => ({
-                        day, carb: "藜麥糙米飯", protein: "香煎雞胸",
+                    week_table: days.map((day, i) => ({
+                        day, name: `【測試】週間備餐便當 #${i + 1}`, emoji: '🥗', main_tag: '雞胸',
+                        cal: 550, p: 40, c: 55, f: 15,
+                        carb: "藜麥糙米飯", protein: "香煎雞胸",
                         sideA: "烤時蔬", sideB: "炒青花菜", sideC: "鹽漬小黃瓜",
-                        egg: "日式溏心蛋", sauce: "和風醬"
+                        egg: "日式溏心蛋", sauce: "和風醬",
+                        sides: ["烤時蔬", "炒青花菜", "鹽漬小黃瓜", "日式溏心蛋"],
+                        ingredients: [
+                            { name: "【測試】雞胸肉", qty: "300g", type: "生鮮" },
+                            { name: "【測試】藜麥糙米", qty: "1杯", type: "澱粉" },
+                            { name: "【測試】青花菜", qty: "1朵", type: "蔬果" }
+                        ],
+                        instructions: "1. 這是測試資料，運作正常！\n2. 雞胸肉煎至金黃。\n3. 蔬菜燙熟拌醬。",
+                        prep_minutes: 20,
+                        prep_guide: "肉類：【測試】雞胸肉300g逆紋切片，醬油1大匙醃10分鐘 | 蔬菜：青花菜切小朵 | 澱粉：藜麥糙米飯冷藏備用"
                     })),
                     prep_sop: {
                         prep: ["【測試】蔬菜洗淨切好，廚房紙巾吸乾水分"],
@@ -1618,9 +1632,23 @@
                         【嚴格 JSON 格式要求 — 只回傳單一 JSON 物件，不含 Markdown、不含註解】
                         {
                           "consumed": [已消耗的現有庫存項目說明，字串陣列，例如 "糙米 2 杯 → 用於週一、週三主食"，若無庫存則回傳空陣列],
-                          "shopping_list": [{"name":"食材名稱","qty":"需補買重量或數量","category":"生鮮/蔬果/澱粉/雜貨 其中之一"}]（僅列出庫存不足、需額外採買的項目，需精準換算成 10 份便當所需總量）,
+                          "shopping_list": [{"name":"食材名稱","qty":"需補買重量或數量","category":"生鮮/蔬果/澱粉/雜貨 其中之一"}]（僅列出庫存不足、需額外採買的項目，需精準換算成 10 份便當所需總量。★ name 必須與 week_table 中 ingredients 使用的食材名稱完全一致，以利系統比對哪些食材已由庫存涵蓋）,
                           "week_table": [
-                            {"day":"週一","carb":"主食名稱","protein":"蛋白質名稱","sideA":"熟配菜A","sideB":"熟配菜B","sideC":"生/鮮配菜","egg":"雞蛋料理","sauce":"搭配醬汁"}
+                            {
+                              "day":"週一",
+                              "name"（此日便當完整名稱，例如「香煎鯛魚溫沙拉便當」）,
+                              "emoji"（1個最能代表主菜的食物 emoji，例如 🍗🐟🥩🦐🥚🥬🫘，不可用 🍱）,
+                              "main_tag"（主要蛋白質種類，例如「雞胸」「鯛魚」）,
+                              "cal","p","c","f"（此便當「單人份」的熱量與三大營養素，數值）,
+                              "carb":"主食名稱（表格用）","protein":"蛋白質名稱（表格用）",
+                              "sideA":"熟配菜A（表格用）","sideB":"熟配菜B（表格用）","sideC":"生/鮮配菜（表格用）",
+                              "egg":"雞蛋料理（表格用）","sauce":"搭配醬汁（表格用）",
+                              "sides" (Array of string，配菜完整列表，涵蓋 sideA/sideB/sideC/egg 共 4 項),
+                              "ingredients" (Array of {name, qty, type}，涵蓋此日「2人份」主食+蛋白質+全部配菜+醬汁所需的完整食材與總重量，type 為 生鮮/蔬果/澱粉/雜貨 其中之一),
+                              "instructions" (字串, \\n 分隔，包含主食/主菜/配菜/醬汁的完整做法，含溫度與時間),
+                              "prep_minutes" (整數，此日份量從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一),
+                              "prep_guide" (字串，用 " | " 分隔各類別，格式規則同下方【備料指南格式規則】)
+                            }
                           ]（陣列須恰好 5 筆，day 依序為 週一、週二、週三、週四、週五）,
                           "prep_sop": {
                             "prep": [前置準備階段步驟，字串陣列。須詳列各類蔬菜蕈菇的清洗、切法與吸水/脫水技巧，以及肉類海鮮的去腥、切法與抓醃配方，含用量],
@@ -1632,6 +1660,13 @@
                           ],
                           "freeze_thaw": "字串，說明週四、週五便當肉類與主食的冷凍回溫/解凍步驟，以及蔬菜防水的廚房紙巾鋪法"
                         }
+
+                        【備料指南格式規則（week_table[].prep_guide 適用）】
+                        ① 肉類/海鮮段：必須寫明食材名稱、重量（2人份總量）、具體切法（如「逆紋切片」「切丁」「對半切」）、醃漬調料及用量，例如「雞胸肉300g逆紋切薄片，醬油1大匙、米酒1小匙、太白粉1小匙醃10分鐘」。
+                        ② 蔬菜段：每種蔬菜必須逐一列出，並寫明具體切法（切片/切絲/切丁/切塊/切小朵/剝片/去蒂切片等），不可僅寫「洗淨切好」。
+                        ③ 澱粉段：寫明白飯/藜麥/地瓜等是否需預煮或免處理。
+                        ④ 若無某類食材則省略該段。
+                        完整範例："肉類：雞胸肉300g逆紋切薄片，醬油1大匙、米酒1小匙醃10分鐘 | 蔬菜：青花菜切小朵，小黃瓜切片鹽漬去水 | 澱粉：藜麥糙米飯冷藏備用"
                     `;
                 }
             }
@@ -3931,6 +3966,8 @@
             document.getElementById('mealprep-result').classList.add('hidden');
             document.getElementById('btn-mealprep-generate').classList.remove('hidden');
             document.getElementById('btn-mealprep-redo').classList.add('hidden');
+            document.getElementById('btn-mealprep-apply').classList.add('hidden');
+            app.state.currentMealPrepPlan = null;
 
             const saved = app.infrastructure.storage.get('bento_mealprep_inventory', {});
             document.getElementById('mealprep-inv-carb').value = saved.carb || '';
@@ -3972,10 +4009,12 @@
                     throw new Error('AI 回傳格式不完整');
                 }
 
+                app.state.currentMealPrepPlan = plan;
                 app.renderMealPrepPlan(plan);
                 document.getElementById('mealprep-form').classList.add('hidden');
                 document.getElementById('mealprep-result').classList.remove('hidden');
                 document.getElementById('btn-mealprep-redo').classList.remove('hidden');
+                document.getElementById('btn-mealprep-apply').classList.remove('hidden');
             } catch (e) {
                 const errMsg = (e.message === 'Failed to fetch' || e.message.includes('NetworkError'))
                     ? '網路連線失敗，請確認網路後重試。'
@@ -3985,6 +4024,70 @@
                 document.getElementById('mealprep-loading').classList.add('hidden');
                 document.getElementById('btn-mealprep-generate').classList.remove('hidden');
             }
+        },
+
+        // 套用到本週菜單：轉為與 AI 智慧生成相同的 recipes/plan 結構，
+        // 讓週末備料模式、烹飪模式、購物清單全部直接共用
+        applyMealPrepToWeek: async () => {
+            const plan = app.state.currentMealPrepPlan;
+            if (!plan) return;
+            if (!(await app.showModal("套用後將覆蓋本週已規劃的菜單（原菜單會先存入歷史紀錄），確定要套用嗎？", "套用確認"))) return;
+
+            app.archiveCurrentWeek();
+
+            const newRecipes = plan.week_table.map((d, i) => {
+                const ingredients = Array.isArray(d.ingredients) ? d.ingredients : [];
+                return {
+                    id: Date.now() + i,
+                    name: d.name || [d.protein, d.carb].filter(Boolean).join(' ') || `週間便當 #${i + 1}`,
+                    emoji: d.emoji || '🥗',
+                    tags: [d.main_tag || '一般'],
+                    favorite: false,
+                    cal: d.cal || 0, p: d.p || 0, c: d.c || 0, f: d.f || 0,
+                    sides: Array.isArray(d.sides) && d.sides.length
+                        ? d.sides
+                        : [d.sideA, d.sideB, d.sideC, d.egg].filter(Boolean),
+                    prep_minutes: [10, 20, 30].includes(d.prep_minutes) ? d.prep_minutes : 20,
+                    prep_guide: d.prep_guide || '',
+                    ingredients: ingredients.map(ing => `${ing.name} ${ing.qty}`),
+                    structured_ingredients: ingredients,
+                    instructions: d.instructions || ''
+                };
+            });
+
+            app.state.recipes = newRecipes;
+            app.infrastructure.storage.set('bento_recipes', app.state.recipes);
+
+            app.state.plan = {
+                Mon: newRecipes[0]?.id, Tue: newRecipes[1]?.id, Wed: newRecipes[2]?.id,
+                Thu: newRecipes[3]?.id, Fri: newRecipes[4]?.id
+            };
+            app.infrastructure.storage.set('bento_plan', app.state.plan);
+            app.state.planWeek = app.mondayOfThisWeek();
+            app.infrastructure.storage.set('bento_plan_week', app.state.planWeek);
+
+            // 購物清單：食譜食材彙總後的總量是「烹調總用量」而非「需補買量」（可能含庫存內已有的部分），
+            // 精準的補買量只有 shopping_list 才算得出，因此食譜食材列一律預先勾選(視為已備妥/略過)，
+            // 避免與下方的補買手動項目重複顯示、造成同一食材兩種數量互相矛盾
+            app.state.shopping = {};
+            newRecipes.forEach(r => {
+                (r.structured_ingredients || []).forEach(ing => {
+                    const name = (ing.name || '').trim();
+                    if (name) app.state.shopping[name] = true;
+                });
+            });
+            app.infrastructure.storage.set('bento_shopping', app.state.shopping);
+
+            const customEntries = (plan.shopping_list || [])
+                .map(x => `${x.name || ''} ${x.qty || ''}`.trim())
+                .filter(Boolean);
+            app.state.customShoppingItems = [...(app.state.customShoppingItems || []), ...customEntries];
+            app.infrastructure.storage.set('bento_custom_shopping', app.state.customShoppingItems);
+
+            app.closeModal('modal-mealprep');
+            app.navigateTo('planner');
+            app.showToast('✅ 已套用到本週菜單！');
+            app.cloudSync.scheduleUpload();
         },
 
         renderMealPrepPlan: (plan) => {
