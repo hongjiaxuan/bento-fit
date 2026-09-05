@@ -1357,21 +1357,31 @@
 
                 // JSON 清洗與解析邏輯
                 let jsonString = data.candidates[0].content.parts[0].text.trim();
-                jsonString = jsonString.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '');
-                const firstBracket = jsonString.indexOf('[');
-                const lastBracket = jsonString.lastIndexOf(']');
-                
-                if (firstBracket !== -1 && lastBracket !== -1) {
-                    jsonString = jsonString.substring(firstBracket, lastBracket + 1);
-                } else {
-                    const firstBrace = jsonString.indexOf('{');
-                    const lastBrace = jsonString.lastIndexOf('}');
-                    if (firstBrace !== -1 && lastBrace !== -1) {
-                        jsonString = `[${jsonString.substring(firstBrace, lastBrace + 1)}]`;
-                    }
-                }
+                jsonString = jsonString.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
 
-                return JSON.parse(jsonString);
+                // 找出最外層 JSON 容器的正確邊界：用括號深度計數（忽略字串內容與跳脫字元），
+                // 而非單純找「第一個 [」到「最後一個 ]」——物件內若包含多個陣列欄位
+                // （例如 {"consumed":[...], "shopping_list":[...]}），舊寫法會被切成無效片段。
+                const startIdx = jsonString.search(/[[{]/);
+                if (startIdx === -1) throw new Error('AI 回傳內容非 JSON 格式');
+
+                let depth = 0, inStr = false, escape = false, endIdx = -1;
+                for (let i = startIdx; i < jsonString.length; i++) {
+                    const ch = jsonString[i];
+                    if (escape) { escape = false; continue; }
+                    if (ch === '\\') { escape = true; continue; }
+                    if (ch === '"') { inStr = !inStr; continue; }
+                    if (inStr) continue;
+                    if (ch === '{' || ch === '[') depth++;
+                    else if (ch === '}' || ch === ']') { depth--; if (depth === 0) { endIdx = i; break; } }
+                }
+                if (endIdx === -1) throw new Error('AI 回傳的 JSON 格式不完整');
+
+                jsonString = jsonString.substring(startIdx, endIdx + 1);
+                const parsed = JSON.parse(jsonString);
+                // 統一回傳陣列：單一 JSON 物件（如備餐規劃師）包裝成長度 1 的陣列，
+                // 與既有呼叫端 data[0] 的取值方式相容
+                return Array.isArray(parsed) ? parsed : [parsed];
             },
             
             // 假資料客戶端 (Mock)
