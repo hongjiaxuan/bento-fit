@@ -2109,6 +2109,9 @@
             app.infrastructure.storage.set('bento_plan', app.state.plan);
             app.state.shopping = {};
             app.infrastructure.storage.set('bento_shopping', {});
+            // 一併沿用上週的 NAKAYA 分裝指南（若上週是備餐規劃師產生的），否則清空
+            app.state.mealPrepStorageGuide = last.mealPrepStorageGuide || null;
+            app.infrastructure.storage.set('bento_mealprep_storage', app.state.mealPrepStorageGuide);
             app.showToast('✅ 已套用上週菜單！');
             app.renderPlanner();
             app.cloudSync.scheduleUpload();
@@ -2362,6 +2365,8 @@
             app.state.fridge = safeParse('bento_fridge', []);
             app.state.planWeek = safeParse('bento_plan_week', '');
             app.state.quickLog = safeParse('bento_quick_log', {});
+            // 週間備餐規劃師套用當週時附帶的 NAKAYA 保鮮盒分裝/冷凍退冰指南（僅該來源的週次才有）
+            app.state.mealPrepStorageGuide = safeParse('bento_mealprep_storage', null);
 
             // 深色模式還原
             if (localStorage.getItem('bento_dark_mode') === '1') {
@@ -3473,7 +3478,9 @@
             app.state.history.unshift({
                 id: Date.now(), date: new Date().toLocaleDateString('zh-TW'),
                 weekOf: app.state.planWeek || '',
-                recipes: JSON.parse(JSON.stringify(app.state.recipes)), plan: {...app.state.plan}
+                recipes: JSON.parse(JSON.stringify(app.state.recipes)), plan: {...app.state.plan},
+                mealPrepStorageGuide: app.state.mealPrepStorageGuide
+                    ? JSON.parse(JSON.stringify(app.state.mealPrepStorageGuide)) : null
             });
             app.infrastructure.storage.set('bento_history', app.state.history);
             return true;
@@ -3552,6 +3559,10 @@
 
                 app.state.shopping = {};
                 app.infrastructure.storage.set('bento_shopping', app.state.shopping);
+
+                // 這是一般 AI 生成的週菜單，沒有備餐規劃師的 NAKAYA 分裝指南，清空避免沿用到不相干的舊資料
+                app.state.mealPrepStorageGuide = null;
+                app.infrastructure.storage.set('bento_mealprep_storage', null);
 
                 app.showToast(`🎉 已生成「${cuisine}」清單！`);
                 app.renderPlanner();
@@ -4094,6 +4105,14 @@
             app.state.customShoppingItems = [...(app.state.customShoppingItems || []), ...customEntries];
             app.infrastructure.storage.set('bento_custom_shopping', app.state.customShoppingItems);
 
+            // 保存 NAKAYA 分裝/冷凍退冰指南，讓「週末備料模式」最後一步（裝盒）能直接沿用同一份資料，
+            // 不用另外開一份彼此脫節的「規劃報告」
+            app.state.mealPrepStorageGuide = {
+                storage_guide: Array.isArray(plan.storage_guide) ? plan.storage_guide : [],
+                freeze_thaw: plan.freeze_thaw || ''
+            };
+            app.infrastructure.storage.set('bento_mealprep_storage', app.state.mealPrepStorageGuide);
+
             app.closeModal('modal-mealprep');
             app.navigateTo('planner');
             app.showToast('✅ 已套用到本週菜單！');
@@ -4310,26 +4329,74 @@
                     });
                 }
             }
-            // --- 階段 3: 完成確認 ---
+            // --- 階段 3: 裝盒與保存（若本週是備餐規劃師套用的，顯示對應 NAKAYA 分裝/冷凍退冰指南） ---
             else if (state.step === 3) {
-                titleEl.innerText = "🎉 備料完成！";
+                const guide = app.state.mealPrepStorageGuide;
+                const hasGuide = guide && (guide.storage_guide?.length || guide.freeze_thaw);
+
+                titleEl.innerText = hasGuide ? "📦 階段三：裝盒與保存" : "🎉 備料完成！";
                 stepInd.innerText = "Step 3 / 3";
                 btnPrev.classList.remove('hidden');
                 btnNext.innerText = "打勾並回首頁";
                 btnPrev.onclick = () => { app.batchPrepState.step--; app.renderBatchPrepStep(); };
                 btnNext.onclick = () => { app.finishBatchPrep(); app.cloudSync.scheduleUpload(); };
 
+                if (!hasGuide) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 animate-bounce">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">辛苦了！</h3>
+                            <p class="text-gray-500 text-sm px-4">
+                                您已經完成了本週的食材預處理。<br>
+                                接下來的週間晚上，您只需要簡單加熱或烹煮即可上菜！
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const esc = (s) => (s ?? '').toString();
+                const nl2br = (s) => esc(s).replace(/\n/g, '<br>');
+                const storageRows = (guide.storage_guide || []).map(x => `
+                    <tr class="border-b border-gray-50 last:border-0">
+                        <td class="py-2 pr-3 font-bold text-gray-700 whitespace-nowrap">${esc(x.category)}</td>
+                        <td class="py-2 pr-3">${esc(x.container)}</td>
+                        <td class="py-2 pr-3">${esc(x.storage)}</td>
+                        <td class="py-2">${esc(x.note)}</td>
+                    </tr>
+                `).join('');
+
                 container.innerHTML = `
-                    <div class="text-center py-8">
-                        <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 animate-bounce">
+                    <div class="text-center py-4">
+                        <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">
                             <i class="fa-solid fa-check"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">辛苦了！</h3>
-                        <p class="text-gray-500 text-sm px-4">
-                            您已經完成了本週的食材預處理。<br>
-                            接下來的週間晚上，您只需要簡單加熱或烹煮即可上菜！
-                        </p>
+                        <p class="text-gray-500 text-sm px-4">肉、菜都處理好了，接下來依照這份週間備餐規劃師算好的分裝計畫裝盒即可。</p>
                     </div>
+
+                    ${storageRows ? `
+                        <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-100 mt-2">
+                            <div class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-box-archive text-brand-400"></i> NAKAYA 保鮮盒分裝指南</div>
+                            <div class="overflow-x-auto -mx-1">
+                                <table class="text-xs min-w-[480px] px-1">
+                                    <thead>
+                                        <tr class="text-gray-400 text-left border-b border-gray-100">
+                                            <th class="py-1.5 pr-3">類別</th><th class="py-1.5 pr-3">保鮮盒</th><th class="py-1.5 pr-3">保存方式</th><th class="py-1.5">備註</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${storageRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${guide.freeze_thaw ? `
+                        <div class="mt-3 bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 leading-relaxed">
+                            <i class="fa-solid fa-snowflake mr-1"></i>${nl2br(guide.freeze_thaw)}
+                        </div>
+                    ` : ''}
                 `;
             }
         },
