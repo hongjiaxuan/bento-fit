@@ -1858,7 +1858,11 @@
             if (customItems.length > 0) {
                 const grp = document.createElement('div');
                 grp.className = "mb-8";
-                grp.innerHTML = `<h3 class="text-[11px] font-bold text-purple-400/80 mb-3 px-2 tracking-widest border-b border-purple-50 pb-2">🛍️ 手動新增</h3>`;
+                grp.innerHTML = `
+                    <h3 class="text-[11px] font-bold text-purple-400/80 mb-3 px-2 tracking-widest border-b border-purple-50 pb-2 flex items-center justify-between">
+                        <span>🛍️ 手動新增</span>
+                        <button onclick="app.clearAllCustomShoppingItems()" class="text-gray-300 hover:text-red-400 font-normal tracking-normal normal-case text-[10px]">清空全部</button>
+                    </h3>`;
                 const listDiv = document.createElement('div');
                 listDiv.className = "grid grid-cols-2 gap-x-1 gap-y-0.5";
                 customItems.forEach((name, idx) => {
@@ -2112,6 +2116,16 @@
             // 一併沿用上週的 NAKAYA 分裝指南（若上週是備餐規劃師產生的），否則清空
             app.state.mealPrepStorageGuide = last.mealPrepStorageGuide || null;
             app.infrastructure.storage.set('bento_mealprep_storage', app.state.mealPrepStorageGuide);
+
+            // 沿用上週不會重新算補買清單，移除上一份備餐規劃師遺留在「手動新增」清單裡的舊補買項目
+            if (app.state.mealPrepShoppingEntries?.length) {
+                const staleEntries = new Set(app.state.mealPrepShoppingEntries);
+                app.state.customShoppingItems = (app.state.customShoppingItems || []).filter(item => !staleEntries.has(item));
+                app.infrastructure.storage.set('bento_custom_shopping', app.state.customShoppingItems);
+                app.state.mealPrepShoppingEntries = [];
+                app.infrastructure.storage.set('bento_mealprep_shopping_entries', []);
+            }
+
             app.showToast('✅ 已套用上週菜單！');
             app.renderPlanner();
             app.cloudSync.scheduleUpload();
@@ -2367,6 +2381,8 @@
             app.state.quickLog = safeParse('bento_quick_log', {});
             // 週間備餐規劃師套用當週時附帶的 NAKAYA 保鮮盒分裝/冷凍退冰指南（僅該來源的週次才有）
             app.state.mealPrepStorageGuide = safeParse('bento_mealprep_storage', null);
+            // 週間備餐規劃師上次套用時，加進「手動新增」清單的品項字串（用於下次套用時先移除舊的，避免重複累加）
+            app.state.mealPrepShoppingEntries = safeParse('bento_mealprep_shopping_entries', []);
 
             // 深色模式還原
             if (localStorage.getItem('bento_dark_mode') === '1') {
@@ -3564,6 +3580,15 @@
                 app.state.mealPrepStorageGuide = null;
                 app.infrastructure.storage.set('bento_mealprep_storage', null);
 
+                // 同時移除上一份備餐規劃師遺留在「手動新增」清單裡的補買項目，避免跟這次全新的菜單對不上
+                if (app.state.mealPrepShoppingEntries?.length) {
+                    const staleEntries = new Set(app.state.mealPrepShoppingEntries);
+                    app.state.customShoppingItems = (app.state.customShoppingItems || []).filter(item => !staleEntries.has(item));
+                    app.infrastructure.storage.set('bento_custom_shopping', app.state.customShoppingItems);
+                    app.state.mealPrepShoppingEntries = [];
+                    app.infrastructure.storage.set('bento_mealprep_shopping_entries', []);
+                }
+
                 app.showToast(`🎉 已生成「${cuisine}」清單！`);
                 app.renderPlanner();
             } catch (e) {
@@ -3962,6 +3987,18 @@
                 app.renderShopping();
             },
 
+            // 一次清空「手動新增」整區塊（含備餐規劃師先前累積的補買項目），用於清單被重複套用搞亂時重來
+            clearAllCustomShoppingItems: async () => {
+                if (!(await app.showModal('確定要清空「手動新增」的所有項目嗎？此操作無法復原。', '清空手動新增', 'danger', '確認清空'))) return;
+                app.state.customShoppingItems = [];
+                app.infrastructure.storage.set('bento_custom_shopping', []);
+                app.state.mealPrepShoppingEntries = [];
+                app.infrastructure.storage.set('bento_mealprep_shopping_entries', []);
+                app.renderShopping();
+                app.showToast('🗑️ 已清空手動新增清單');
+                app.cloudSync.scheduleUpload();
+            },
+
             toggleHideChecked: () => {
                 app.state.hideChecked = !app.state.hideChecked;
                 const btn = document.getElementById('btn-hide-checked');
@@ -4099,11 +4136,19 @@
             });
             app.infrastructure.storage.set('bento_shopping', app.state.shopping);
 
+            // 先移除「上一次套用備餐規劃師」時加進來的舊補買項目，再加入這次的，
+            // 避免重複點「套用」或反覆規劃時，同一批食材在清單裡越疊越多
+            const staleEntries = new Set(app.state.mealPrepShoppingEntries || []);
             const customEntries = (plan.shopping_list || [])
                 .map(x => `${x.name || ''} ${x.qty || ''}`.trim())
                 .filter(Boolean);
-            app.state.customShoppingItems = [...(app.state.customShoppingItems || []), ...customEntries];
+            app.state.customShoppingItems = (app.state.customShoppingItems || [])
+                .filter(item => !staleEntries.has(item))
+                .concat(customEntries);
             app.infrastructure.storage.set('bento_custom_shopping', app.state.customShoppingItems);
+
+            app.state.mealPrepShoppingEntries = customEntries;
+            app.infrastructure.storage.set('bento_mealprep_shopping_entries', customEntries);
 
             // 保存 NAKAYA 分裝/冷凍退冰指南，讓「週末備料模式」最後一步（裝盒）能直接沿用同一份資料，
             // 不用另外開一份彼此脫節的「規劃報告」
