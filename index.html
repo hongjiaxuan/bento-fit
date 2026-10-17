@@ -324,6 +324,33 @@
             <button id="btn-batch-next" class="flex-[2] bg-brand-500 text-white font-bold py-4 rounded-xl shadow-float">下一步</button>
         </div>
     </div>
+
+    <!-- 🧋 飲品食譜庫 -->
+    <div id="modal-drinks" class="fixed inset-0 z-[90] hidden bg-white flex flex-col animate-fade-in">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+            <h3 class="text-xl font-bold text-gray-800">🧋 飲品食譜庫</h3>
+            <button onclick="app.closeModal('modal-drinks')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div id="drinks-list-view" class="flex-1 overflow-y-auto p-6 space-y-3 pb-10">
+            <div id="drinks-list" class="space-y-3"></div>
+            <div id="drinks-empty" class="hidden text-center py-16 px-4">
+                <div class="text-4xl mb-3">🧋</div>
+                <p class="text-sm font-bold text-gray-500 mb-1">還沒有飲品食譜</p>
+                <p class="text-xs text-gray-400">從 TikTok 分享連結過來，就會自動出現在這裡</p>
+            </div>
+        </div>
+
+        <div id="drink-detail-view" class="hidden flex-1 overflow-y-auto p-6 pb-10"></div>
+    </div>
+
+    <!-- 🔄 分享確認頁（share_target 落地畫面） -->
+    <div id="modal-share-receiver" class="fixed inset-0 z-[120] hidden bg-white flex flex-col items-center justify-center px-8 text-center safe-pb">
+        <div id="share-receiver-content" class="w-full flex flex-col items-center"></div>
+    </div>
+
         <section id="view-history" class="view-section fade-in hidden">
             <!-- 分頁切換 -->
             <div class="flex bg-gray-100 rounded-2xl p-1 mb-4">
@@ -449,6 +476,15 @@
                 </div>
 
             </div>
+
+            <button onclick="app.openDrinksLibrary()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
+                <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-500 flex items-center justify-center text-2xl shrink-0">🧋</div>
+                <div class="flex-1 text-left">
+                    <div class="text-sm font-bold text-gray-800">飲品食譜庫</div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">從 TikTok 分享連結，自動整理成食譜</div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
+            </button>
 
             <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-24">
                 <div class="flex justify-between items-center mb-2">
@@ -1383,6 +1419,29 @@
                 return await app.infrastructure.ai.liveClient(promptText, u.apiKey);
             }
         },
+        // 🧋 TikTok 飲品食譜解析：呼叫 GAS（action: parseDrink），由後端轉呼叫 TikWM + Gemini 2.5 Flash 視覺解析
+        drinks: {
+            parseFromTikTok: async (tiktokUrl) => {
+                const u = app.state.user;
+                if (!u || !u.syncUrl) throw new Error("尚未設定雲端同步網址，請先到「我的」→系統設定填寫");
+
+                // 關鍵：用 text/plain 而非 application/json，且不加 mode:'no-cors'。
+                // GAS Web App 對帶 application/json 的 POST 不會正確處理 CORS 預檢(OPTIONS)，
+                // 用 text/plain 可讓瀏覽器判定為 simple request，不觸發預檢；
+                // 同時因為不是 no-cors，才能讀到 GAS 回傳的解析結果（no-cors 的回應是無法讀取的 opaque response）。
+                const res = await fetch(u.syncUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'parseDrink', url: tiktokUrl })
+                });
+
+                if (!res.ok) throw new Error(`伺服器錯誤 (${res.status})`);
+                const data = await res.json();
+                if (!data || data.success === false) throw new Error(data?.error || "解析失敗，請確認連結是否正確");
+                if (!data.drink || !data.drink.name) throw new Error("GAS 回傳格式不完整");
+                return data.drink;
+            }
+        },
         device: {
             screenLocker: {
                 lock: async () => {
@@ -2102,7 +2161,8 @@
                 mealLog: localStorage.getItem('bento_meal_log'),
                 fridge: localStorage.getItem('bento_fridge'),
                 planWeek: localStorage.getItem('bento_plan_week'),
-                quickLog: localStorage.getItem('bento_quick_log')
+                quickLog: localStorage.getItem('bento_quick_log'),
+                drinks: localStorage.getItem('bento_drinks')
             }),
 
             // 排程上傳（debounce）：短時間內的連續變動只會觸發一次實際上傳
@@ -2156,6 +2216,7 @@
                 if(data.fridge) localStorage.setItem('bento_fridge', data.fridge);
                 if(data.planWeek) localStorage.setItem('bento_plan_week', data.planWeek);
                 if(data.quickLog) localStorage.setItem('bento_quick_log', data.quickLog);
+                if(data.drinks) localStorage.setItem('bento_drinks', data.drinks);
 
                 localStorage.setItem('bento_timestamp', data.timestamp);
                 
@@ -2211,6 +2272,7 @@
             app.state.fridge = safeParse('bento_fridge', []);
             app.state.planWeek = safeParse('bento_plan_week', '');
             app.state.quickLog = safeParse('bento_quick_log', {});
+            app.state.drinks = safeParse('bento_drinks', []);
 
             // 深色模式還原
             if (localStorage.getItem('bento_dark_mode') === '1') {
@@ -2219,7 +2281,14 @@
             }
 
             // 導航邏輯
-            if (!app.state.user) {
+            // 🧋 若是從 Android 分享（share_target）落地，優先顯示輕量分享確認頁，不走一般首頁流程
+            const shareParams = new URLSearchParams(location.search);
+            const sharedUrl = app.extractTikTokUrl(shareParams.get('text') || shareParams.get('url') || '');
+            if (app.state.user && sharedUrl) {
+                history.replaceState(null, '', location.pathname); // 清掉網址列，避免重整觸發
+                app.navigateTo('dashboard');
+                app.renderShareReceiver(sharedUrl);
+            } else if (!app.state.user) {
                 app.openOnboarding();
             } else {
                 app.navigateTo('dashboard');
@@ -4838,7 +4907,8 @@
                     customStaples: ls.getItem('bento_custom_staples'),
                     mealLog: ls.getItem('bento_meal_log'),
                     fridge: ls.getItem('bento_fridge'),               // 冰箱庫存
-                    planWeek: ls.getItem('bento_plan_week')           // 本週菜單所屬週一日期
+                    planWeek: ls.getItem('bento_plan_week'),          // 本週菜單所屬週一日期
+                    drinks: ls.getItem('bento_drinks')                // 飲品食譜庫
                 };
 
                 const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
@@ -4877,6 +4947,7 @@
                         if(d.fridge) ls.setItem('bento_fridge', d.fridge);
                         if(d.planWeek) ls.setItem('bento_plan_week', d.planWeek);
                         if(d.quickLog) ls.setItem('bento_quick_log', d.quickLog);
+                        if(d.drinks) ls.setItem('bento_drinks', d.drinks);
 
                         await app.showModal("✅ 資料匯入成功！頁面將自動重新整理。", "還原完成");
                         location.reload();
@@ -4899,6 +4970,182 @@
                 }
                 localStorage.clear();
                 location.reload();
+            },
+
+        // --- 🧋 飲品食譜庫 ---
+
+            // 從分享文字/網址中擷取 TikTok 連結（Android 分享常把連結夾在一段文字裡）
+            extractTikTokUrl: (text) => {
+                if (!text) return null;
+                const match = text.match(/https?:\/\/(?:www\.|vt\.|vm\.)?tiktok\.com\/\S+/i);
+                return match ? match[0] : null;
+            },
+
+            // 分享確認頁：處理中 → 成功/失敗。由 share_target 落地時呼叫
+            renderShareReceiver: async (tiktokUrl) => {
+                const esc = (s) => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const box = document.getElementById('share-receiver-content');
+                const modal = document.getElementById('modal-share-receiver');
+
+                modal.classList.remove('hidden');
+                box.innerHTML = `
+                    <i class="fa-solid fa-martini-glass-citrus text-5xl text-brand-400 mb-5"></i>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">正在解析飲品食譜...</h3>
+                    <p class="text-xs text-gray-400 mb-6">AI 正在分析影片內容，請稍候</p>
+                    <i class="fa-solid fa-circle-notch fa-spin text-2xl text-brand-500"></i>
+                `;
+
+                try {
+                    const drink = await app.infrastructure.drinks.parseFromTikTok(tiktokUrl);
+                    app.saveDrink({ ...drink, sourceUrl: tiktokUrl });
+                    box.innerHTML = `
+                        <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">已存入飲品庫</h3>
+                        <p class="text-sm font-bold text-brand-600 mb-6">${esc(drink.name)}</p>
+                        <div class="flex gap-3 w-full max-w-sm">
+                            <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
+                            <button onclick="app.closeModal('modal-share-receiver'); app.openDrinksLibrary();" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">查看飲品庫</button>
+                        </div>
+                    `;
+                } catch (e) {
+                    box.innerHTML = `
+                        <i class="fa-solid fa-circle-exclamation text-5xl text-red-400 mb-5"></i>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">解析失敗</h3>
+                        <p class="text-xs text-gray-400 mb-6 px-4">${esc(e.message || '未知錯誤')}</p>
+                        <div class="flex gap-3 w-full max-w-sm">
+                            <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
+                            <button onclick="app.renderShareReceiver('${esc(tiktokUrl)}')" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">重試</button>
+                        </div>
+                    `;
+                }
+            },
+
+            // 新增/更新一筆飲品食譜（同一來源網址重新解析時覆蓋舊的，不重複累加）
+            saveDrink: (drink) => {
+                if (!app.state.drinks) app.state.drinks = [];
+                const existingIdx = app.state.drinks.findIndex(d => d.sourceUrl === drink.sourceUrl);
+                const record = {
+                    id: existingIdx >= 0 ? app.state.drinks[existingIdx].id : Date.now(),
+                    sourceUrl: drink.sourceUrl,
+                    name: drink.name || '未命名飲品',
+                    ingredients: Array.isArray(drink.ingredients) ? drink.ingredients : [],
+                    steps: Array.isArray(drink.steps) ? drink.steps : [],
+                    coverImageUrl: drink.coverImageUrl || '',
+                    createdAt: existingIdx >= 0 ? app.state.drinks[existingIdx].createdAt : Date.now()
+                };
+                if (existingIdx >= 0) app.state.drinks[existingIdx] = record;
+                else app.state.drinks.unshift(record);
+                app.infrastructure.storage.set('bento_drinks', app.state.drinks);
+                app.cloudSync.scheduleUpload();
+            },
+
+            openDrinksLibrary: () => {
+                document.getElementById('drinks-list-view').classList.remove('hidden');
+                document.getElementById('drink-detail-view').classList.add('hidden');
+                app.renderDrinksList();
+                document.getElementById('modal-drinks').classList.remove('hidden');
+            },
+
+            renderDrinksList: () => {
+                const esc = (s) => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const list = document.getElementById('drinks-list');
+                const empty = document.getElementById('drinks-empty');
+                const drinks = app.state.drinks || [];
+
+                if (drinks.length === 0) {
+                    list.innerHTML = '';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                empty.classList.add('hidden');
+                list.innerHTML = drinks.map(d => `
+                    <div class="bg-white rounded-2xl p-3 shadow-soft border border-gray-50 flex items-center gap-3">
+                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                            <div class="w-14 h-14 rounded-xl bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-2xl">
+                                ${d.coverImageUrl ? `<img src="${esc(d.coverImageUrl)}" onerror="this.parentElement.innerHTML='🧋'" class="w-full h-full object-cover">` : '🧋'}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-bold text-gray-800 truncate">${esc(d.name)}</div>
+                                <div class="text-[10px] text-gray-400 mt-0.5">來自 TikTok</div>
+                            </div>
+                        </div>
+                        <button onclick="event.stopPropagation(); app.shareDrink(${d.id})" class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center shrink-0 active:scale-90 transition"><i class="fa-solid fa-share-nodes text-xs"></i></button>
+                        <button onclick="event.stopPropagation(); app.deleteDrink(${d.id})" class="w-9 h-9 rounded-full bg-gray-50 text-red-400 flex items-center justify-center shrink-0 active:scale-90 transition"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                    </div>
+                `).join('');
+            },
+
+            openDrinkDetail: (id) => {
+                const esc = (s) => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const drink = (app.state.drinks || []).find(d => d.id === id);
+                if (!drink) return;
+
+                document.getElementById('drinks-list-view').classList.add('hidden');
+                const detail = document.getElementById('drink-detail-view');
+                detail.classList.remove('hidden');
+                detail.innerHTML = `
+                    <button onclick="app.closeDrinkDetail()" class="text-gray-400 hover:text-brand-500 text-sm font-bold mb-4 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-arrow-left"></i> 返回列表
+                    </button>
+                    <div class="w-full h-48 rounded-2xl bg-brand-50 overflow-hidden flex items-center justify-center text-5xl mb-4">
+                        ${drink.coverImageUrl ? `<img src="${esc(drink.coverImageUrl)}" onerror="this.parentElement.innerHTML='🧋'" class="w-full h-full object-cover">` : '🧋'}
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">${esc(drink.name)}</h2>
+
+                    <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-50 mb-4">
+                        <div class="text-xs font-bold text-gray-500 mb-2">🧾 食材</div>
+                        <ul class="space-y-1.5 text-sm text-gray-700">
+                            ${(drink.ingredients || []).map(i => `<li class="flex items-start gap-2"><i class="fa-solid fa-circle text-[4px] text-brand-400 mt-2"></i><span>${esc(i)}</span></li>`).join('') || '<li class="text-gray-400">無資料</li>'}
+                        </ul>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-50 mb-4">
+                        <div class="text-xs font-bold text-gray-500 mb-2">📝 做法</div>
+                        <ol class="space-y-1.5 text-sm text-gray-700 list-decimal list-inside">
+                            ${(drink.steps || []).map(s => `<li>${esc(s)}</li>`).join('') || '<li class="text-gray-400 list-none">無資料</li>'}
+                        </ol>
+                    </div>
+
+                    ${drink.sourceUrl ? `<a href="${esc(drink.sourceUrl)}" target="_blank" rel="noopener" class="text-xs text-brand-500 underline break-all mb-4 block">查看原始影片 →</a>` : ''}
+
+                    <button onclick="app.shareDrink(${drink.id})" class="w-full bg-brand-500 text-white font-bold py-3.5 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-share-nodes"></i> 複製分享
+                    </button>
+                `;
+            },
+
+            closeDrinkDetail: () => {
+                document.getElementById('drink-detail-view').classList.add('hidden');
+                document.getElementById('drinks-list-view').classList.remove('hidden');
+            },
+
+            shareDrink: async (id) => {
+                const drink = (app.state.drinks || []).find(d => d.id === id);
+                if (!drink) return;
+
+                let text = `🧋 ${drink.name}\n\n【食材】\n`;
+                (drink.ingredients || []).forEach(i => text += `- ${i}\n`);
+                text += `\n【做法】\n`;
+                (drink.steps || []).forEach((s, i) => text += `${i + 1}. ${s}\n`);
+                if (drink.sourceUrl) text += `\n來源：${drink.sourceUrl}\n`;
+                text += `—— 整理自 Bento Fit`;
+
+                if (navigator.share) {
+                    try { await navigator.share({ title: drink.name, text }); } catch (err) { console.log('取消分享'); }
+                } else {
+                    navigator.clipboard.writeText(text);
+                    app.showToast('✅ 已複製到剪貼簿');
+                }
+            },
+
+            deleteDrink: async (id) => {
+                if (!(await app.showModal('確定要刪除這份飲品食譜嗎？', '刪除確認', 'danger', '確認刪除'))) return;
+                app.state.drinks = (app.state.drinks || []).filter(d => d.id !== id);
+                app.infrastructure.storage.set('bento_drinks', app.state.drinks);
+                app.renderDrinksList();
+                app.closeDrinkDetail();
+                app.showToast('🗑️ 已刪除');
+                app.cloudSync.scheduleUpload();
             }
         };
         window.addEventListener('DOMContentLoaded', app.init);
