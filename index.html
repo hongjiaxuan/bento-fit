@@ -1420,8 +1420,10 @@
             }
         },
         // 🧋 TikTok 飲品食譜解析：呼叫 GAS（action: parseDrink），由後端轉呼叫 TikWM + Gemini 2.5 Flash 視覺解析
-        drinks: {
-            parseFromTikTok: async (tiktokUrl) => {
+        // 🧋🍱 社群影片食譜擷取：飲品存進 bento_drinks 展示庫，料理則直接併入 app.state.recipes
+        // （沿用既有的便當食譜系統，解析完就能在「規劃」頁選用、排進本週菜單）
+        social: {
+            parseShare: async (shareUrl) => {
                 const u = app.state.user;
                 if (!u || !u.syncUrl) throw new Error("尚未設定雲端同步網址，請先到「我的」→系統設定填寫");
 
@@ -1432,14 +1434,18 @@
                 const res = await fetch(u.syncUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'parseDrink', url: tiktokUrl })
+                    body: JSON.stringify({ action: 'parseDrink', url: shareUrl })
                 });
 
                 if (!res.ok) throw new Error(`伺服器錯誤 (${res.status})`);
                 const data = await res.json();
                 if (!data || data.success === false) throw new Error(data?.error || "解析失敗，請確認連結是否正確");
-                if (!data.drink || !data.drink.name) throw new Error("GAS 回傳格式不完整");
-                return data.drink;
+
+                // 相容舊版 GAS 契約（只回傳 data.drink，沒有 type/item）
+                const type = data.type || 'drink';
+                const item = data.item || data.drink;
+                if (!item || !item.name) throw new Error("GAS 回傳格式不完整");
+                return { type, item };
             }
         },
         device: {
@@ -4982,31 +4988,46 @@
             },
 
             // 分享確認頁：處理中 → 成功/失敗。由 share_target 落地時呼叫
-            renderShareReceiver: async (tiktokUrl) => {
+            // AI 會自動判斷這是「飲品」還是「料理」，分別存進飲品庫或併入便當食譜庫，不需要使用者手動選擇
+            renderShareReceiver: async (shareUrl) => {
                 const esc = (s) => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
                 const box = document.getElementById('share-receiver-content');
                 const modal = document.getElementById('modal-share-receiver');
 
                 modal.classList.remove('hidden');
                 box.innerHTML = `
-                    <i class="fa-solid fa-martini-glass-citrus text-5xl text-brand-400 mb-5"></i>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">正在解析飲品食譜...</h3>
+                    <i class="fa-solid fa-wand-magic-sparkles text-5xl text-brand-400 mb-5"></i>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">正在解析食譜...</h3>
                     <p class="text-xs text-gray-400 mb-6">AI 正在分析影片內容，請稍候</p>
                     <i class="fa-solid fa-circle-notch fa-spin text-2xl text-brand-500"></i>
                 `;
 
                 try {
-                    const drink = await app.infrastructure.drinks.parseFromTikTok(tiktokUrl);
-                    app.saveDrink({ ...drink, sourceUrl: tiktokUrl });
-                    box.innerHTML = `
-                        <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
-                        <h3 class="text-lg font-bold text-gray-800 mb-1">已存入飲品庫</h3>
-                        <p class="text-sm font-bold text-brand-600 mb-6">${esc(drink.name)}</p>
-                        <div class="flex gap-3 w-full max-w-sm">
-                            <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
-                            <button onclick="app.closeModal('modal-share-receiver'); app.openDrinksLibrary();" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">查看飲品庫</button>
-                        </div>
-                    `;
+                    const { type, item } = await app.infrastructure.social.parseShare(shareUrl);
+
+                    if (type === 'dish') {
+                        app.saveSharedRecipe({ ...item, sourceUrl: shareUrl });
+                        box.innerHTML = `
+                            <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">已加入食譜庫</h3>
+                            <p class="text-sm font-bold text-brand-600 mb-6">${esc(item.name)}</p>
+                            <div class="flex gap-3 w-full max-w-sm">
+                                <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
+                                <button onclick="app.closeModal('modal-share-receiver'); app.navigateTo('planner');" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">前往規劃菜單</button>
+                            </div>
+                        `;
+                    } else {
+                        app.saveDrink({ ...item, sourceUrl: shareUrl });
+                        box.innerHTML = `
+                            <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">已存入飲品庫</h3>
+                            <p class="text-sm font-bold text-brand-600 mb-6">${esc(item.name)}</p>
+                            <div class="flex gap-3 w-full max-w-sm">
+                                <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
+                                <button onclick="app.closeModal('modal-share-receiver'); app.openDrinksLibrary();" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">查看飲品庫</button>
+                            </div>
+                        `;
+                    }
                 } catch (e) {
                     box.innerHTML = `
                         <i class="fa-solid fa-circle-exclamation text-5xl text-red-400 mb-5"></i>
@@ -5014,10 +5035,37 @@
                         <p class="text-xs text-gray-400 mb-6 px-4">${esc(e.message || '未知錯誤')}</p>
                         <div class="flex gap-3 w-full max-w-sm">
                             <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
-                            <button onclick="app.renderShareReceiver('${esc(tiktokUrl)}')" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">重試</button>
+                            <button onclick="app.renderShareReceiver('${esc(shareUrl)}')" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">重試</button>
                         </div>
                     `;
                 }
+            },
+
+            // 新增/更新一筆由分享解析出的「料理」，直接併入便當食譜庫（app.state.recipes），
+            // 比照 confirmAIPlan 的食譜結構，可直接在「規劃」頁選用、排進本週菜單
+            saveSharedRecipe: (dish) => {
+                if (!app.state.recipes) app.state.recipes = [];
+                const ingredients = Array.isArray(dish.ingredients) ? dish.ingredients : [];
+                const existingIdx = app.state.recipes.findIndex(r => r.sourceUrl === dish.sourceUrl);
+                const record = {
+                    id: existingIdx >= 0 ? app.state.recipes[existingIdx].id : Date.now(),
+                    sourceUrl: dish.sourceUrl,
+                    name: dish.name || '未命名料理',
+                    emoji: dish.emoji || '🍱',
+                    tags: [dish.main_tag || '一般'],
+                    favorite: existingIdx >= 0 ? app.state.recipes[existingIdx].favorite : false,
+                    cal: dish.cal || 0, p: dish.p || 0, c: dish.c || 0, f: dish.f || 0,
+                    sides: Array.isArray(dish.sides) ? dish.sides : [],
+                    prep_minutes: [10, 20, 30].includes(dish.prep_minutes) ? dish.prep_minutes : 20,
+                    prep_guide: dish.prep_guide || '',
+                    ingredients: ingredients.map(ing => `${ing.name} ${ing.qty}`),
+                    structured_ingredients: ingredients,
+                    instructions: dish.instructions || ''
+                };
+                if (existingIdx >= 0) app.state.recipes[existingIdx] = record;
+                else app.state.recipes.push(record);
+                app.infrastructure.storage.set('bento_recipes', app.state.recipes);
+                app.cloudSync.scheduleUpload();
             },
 
             // 新增/更新一筆飲品食譜（同一來源網址重新解析時覆蓋舊的，不重複累加）
