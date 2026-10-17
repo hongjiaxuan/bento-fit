@@ -351,6 +351,19 @@
         <div id="share-receiver-content" class="w-full flex flex-col items-center"></div>
     </div>
 
+    <!-- 🔗 貼上連結手動解析（分享選單找不到 App 時的備用方案） -->
+    <div id="modal-paste-link" class="fixed inset-0 z-[130] hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white rounded-[24px] p-6 w-full max-w-sm">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">貼上影片連結</h3>
+            <p class="text-xs text-gray-400 mb-4">從 TikTok App 複製分享連結，貼在這裡即可自動解析成食譜</p>
+            <textarea id="input-paste-link" rows="3" placeholder="貼上 TikTok 連結或分享文字..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm mb-4 resize-none focus:outline-none focus:border-brand-400"></textarea>
+            <div class="flex gap-3">
+                <button onclick="app.closeModal('modal-paste-link')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">取消</button>
+                <button onclick="app.submitPasteLink()" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">開始解析</button>
+            </div>
+        </div>
+    </div>
+
         <section id="view-history" class="view-section fade-in hidden">
             <!-- 分頁切換 -->
             <div class="flex bg-gray-100 rounded-2xl p-1 mb-4">
@@ -482,6 +495,15 @@
                 <div class="flex-1 text-left">
                     <div class="text-sm font-bold text-gray-800">飲品食譜庫</div>
                     <div class="text-[10px] text-gray-400 mt-0.5">從 TikTok 分享連結，自動整理成食譜</div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
+            </button>
+
+            <button onclick="app.openPasteLinkModal()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
+                <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-link"></i></div>
+                <div class="flex-1 text-left">
+                    <div class="text-sm font-bold text-gray-800">貼上連結手動解析</div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">手機分享選單找不到 App 時，改用這裡貼連結</div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
             </button>
@@ -5039,6 +5061,25 @@
                         </div>
                     `;
                 }
+            },
+
+            // 貼上連結手動解析（備用方案：部分手機如三星，Android 分享選單找不到本 App 時使用）
+            openPasteLinkModal: () => {
+                const input = document.getElementById('input-paste-link');
+                input.value = '';
+                document.getElementById('modal-paste-link').classList.remove('hidden');
+                setTimeout(() => input.focus(), 100);
+            },
+
+            submitPasteLink: () => {
+                const raw = document.getElementById('input-paste-link').value.trim();
+                const url = app.extractTikTokUrl(raw) || (/^https?:\/\//i.test(raw) ? raw : null);
+                if (!url) {
+                    app.showModal('找不到有效的 TikTok 連結，請確認貼上的內容', '格式錯誤', 'error');
+                    return;
+                }
+                app.closeModal('modal-paste-link');
+                app.renderShareReceiver(url);
             },
 
             // 新增/更新一筆由分享解析出的「料理」，直接併入便當食譜庫（app.state.recipes），
