@@ -338,8 +338,8 @@
             </button>
         </div>
 
-        <div id="drinks-list-view" class="flex-1 overflow-y-auto p-6 space-y-3 pb-10">
-            <div id="drinks-list" class="space-y-3"></div>
+        <div id="drinks-list-view" class="flex-1 overflow-y-auto p-6 pb-10">
+            <div id="drinks-list" class="grid grid-cols-2 gap-3"></div>
             <div id="drinks-empty" class="hidden text-center py-16 px-4">
                 <div class="text-4xl mb-3">🧋</div>
                 <p class="text-sm font-bold text-gray-500 mb-1">還沒有飲品食譜</p>
@@ -5152,18 +5152,20 @@
                 }
                 empty.classList.add('hidden');
                 list.innerHTML = drinks.map(d => `
-                    <div class="bg-white rounded-2xl p-3 shadow-soft border border-gray-50 flex items-center gap-3">
-                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-                            <div class="w-14 h-14 rounded-xl bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-2xl">
+                    <div class="bg-white rounded-2xl p-2.5 shadow-soft border border-gray-50">
+                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-center gap-2 min-w-0 cursor-pointer mb-2">
+                            <div class="w-7 h-7 rounded-lg bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-sm">
                                 ${d.coverImageUrl ? `<img src="${esc(d.coverImageUrl)}" onerror="this.parentElement.innerHTML='🧋'" class="w-full h-full object-cover">` : '🧋'}
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-sm font-bold text-gray-800 truncate">${esc(d.name)}</div>
-                                <div class="text-[10px] text-gray-400 mt-0.5">來自 TikTok</div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-xs font-bold text-gray-800 truncate">${esc(d.name)}</div>
+                                <div class="text-[9px] text-gray-400 mt-0.5">來自 TikTok</div>
                             </div>
                         </div>
-                        <button onclick="event.stopPropagation(); app.shareDrink(${d.id})" class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center shrink-0 active:scale-90 transition"><i class="fa-solid fa-share-nodes text-xs"></i></button>
-                        <button onclick="event.stopPropagation(); app.deleteDrink(${d.id})" class="w-9 h-9 rounded-full bg-gray-50 text-red-400 flex items-center justify-center shrink-0 active:scale-90 transition"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                        <div class="flex gap-1.5">
+                            <button onclick="event.stopPropagation(); app.shareDrink(${d.id})" class="flex-1 h-7 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center active:scale-90 transition"><i class="fa-solid fa-share-nodes text-[10px]"></i></button>
+                            <button onclick="event.stopPropagation(); app.deleteDrink(${d.id})" class="flex-1 h-7 rounded-lg bg-gray-50 text-red-400 flex items-center justify-center active:scale-90 transition"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
+                        </div>
                     </div>
                 `).join('');
             },
