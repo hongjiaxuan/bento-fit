@@ -683,8 +683,13 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">IG 美食解析網址 (選填，不填則用預設)</label>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">IG 美食解析網址 (管家 GAS，選填功能)</label>
                             <input type="text" id="input-ig-gas-url" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-brand-500 transition font-mono" placeholder="https://script.google.com...">
+                            <p class="text-[10px] text-gray-400 mt-1">僅存在本機瀏覽器，不會寫進程式碼</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">IG 美食解析 Token (若管家 GAS 有設定 IG_RECIPE_TOKEN 請填)</label>
+                            <input type="password" id="input-ig-gas-token" class="w-full bg-gray-800 text-white rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-brand-400 transition font-mono" placeholder="（選填）">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 (AI 避開)</label>
@@ -1510,12 +1515,19 @@
 
             // 📸 Instagram 美食貼文解析：改走「管家 GAS」既有的 igRecipe API（GET，無 CORS 預檢問題）
             // 管家 GAS 已有 fetchInstagramDataWithFallback_() + Gemini 萃取邏輯，這裡只是單純轉呼叫
+            //
+            // ⚠️ 安全考量：這個網址是「管家 GAS」整個系統共用的（同一支部署還服務群組訂單/鎖團等其他
+            // 功能），bento-fit 又是公開 repo，絕對不能把網址寫死在原始碼裡——否則任何人看原始碼就能
+            // 拿到這個網址，進而亂打其他 action 參數。網址 + token 只存在使用者自己瀏覽器的
+            // localStorage（跟 syncUrl 同一個模式），沒設定就直接報錯、不會呼叫任何地方。
             parseInstagram: async (shareUrl) => {
-                const DEFAULT_IG_GAS_URL = 'https://script.google.com/macros/s/AKfycbxlNrN_C9yoqsg78TWyOjJcq7zhGyMUpfPb0knO4L8dRXlh9e1GtYhZ0Z6WlOuKZAGBiw/exec';
                 const u = app.state.user;
-                const base = (u && u.igGasUrl) || DEFAULT_IG_GAS_URL;
+                if (!u || !u.igGasUrl) throw new Error("尚未設定「IG 美食解析網址」，請先到「我的」→系統設定填寫");
 
-                const res = await fetch(base + '?action=igRecipe&url=' + encodeURIComponent(shareUrl));
+                let endpoint = u.igGasUrl + '?action=igRecipe&url=' + encodeURIComponent(shareUrl);
+                if (u.igGasToken) endpoint += '&token=' + encodeURIComponent(u.igGasToken);
+
+                const res = await fetch(endpoint);
                 if (!res.ok) throw new Error(`管家 GAS 錯誤 (${res.status})`);
                 const data = await res.json();
                 if (!data || data.ok === false) throw new Error(data?.error || "解析失敗，請確認連結是否正確");
@@ -2939,6 +2951,7 @@
                 apiKey: document.getElementById('input-apikey').value.trim(),
                 syncUrl: syncUrl,
                 igGasUrl: document.getElementById('input-ig-gas-url').value.trim(),
+                igGasToken: document.getElementById('input-ig-gas-token').value.trim(),
                 exclude: document.getElementById('input-exclude').value.trim(), 
                 isDev: document.getElementById('input-dev-mode').checked,
                 bodyComp: { 
@@ -3016,6 +3029,7 @@
             if (u.apiKey) document.getElementById('input-apikey').value = u.apiKey;
             document.getElementById('input-sync-url').value = u.syncUrl || '';
             document.getElementById('input-ig-gas-url').value = u.igGasUrl || '';
+            if (u.igGasToken) document.getElementById('input-ig-gas-token').value = u.igGasToken;
             // 新增：回填開發模式開關
             document.getElementById('input-dev-mode').checked = u.isDev
 
