@@ -338,8 +338,8 @@
             </button>
         </div>
 
-        <div id="drinks-list-view" class="flex-1 overflow-y-auto p-6 space-y-3 pb-10">
-            <div id="drinks-list" class="space-y-3"></div>
+        <div id="drinks-list-view" class="flex-1 overflow-y-auto p-6 pb-10">
+            <div id="drinks-list" class="grid grid-cols-2 gap-3"></div>
             <div id="drinks-empty" class="hidden text-center py-16 px-4">
                 <div class="text-4xl mb-3">🧋</div>
                 <p class="text-sm font-bold text-gray-500 mb-1">還沒有飲品食譜</p>
@@ -350,6 +350,27 @@
         <div id="drink-detail-view" class="hidden flex-1 overflow-y-auto p-6 pb-10"></div>
     </div>
 
+    <!-- 📸 IG 美食收藏 -->
+    <div id="modal-ig-recipes" class="fixed inset-0 z-[90] hidden bg-white flex flex-col animate-fade-in">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+            <h3 class="text-xl font-bold text-gray-800">📸 IG 美食收藏</h3>
+            <button onclick="app.closeModal('modal-ig-recipes')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div id="ig-recipes-list-view" class="flex-1 overflow-y-auto p-6 pb-10">
+            <div id="ig-recipes-list" class="grid grid-cols-2 gap-3"></div>
+            <div id="ig-recipes-empty" class="hidden text-center py-16 px-4">
+                <div class="text-4xl mb-3">📸</div>
+                <p class="text-sm font-bold text-gray-500 mb-1">還沒有收藏的 IG 美食</p>
+                <p class="text-xs text-gray-400">從 Instagram 分享連結過來，就會自動出現在這裡</p>
+            </div>
+        </div>
+
+        <div id="ig-recipe-detail-view" class="hidden flex-1 overflow-y-auto p-6 pb-10"></div>
+    </div>
+
     <!-- 🔄 分享確認頁（share_target 落地畫面） -->
     <div id="modal-share-receiver" class="fixed inset-0 z-[120] hidden bg-white flex flex-col items-center justify-center px-8 text-center safe-pb">
         <div id="share-receiver-content" class="w-full flex flex-col items-center"></div>
@@ -358,9 +379,9 @@
     <!-- 🔗 貼上連結手動解析（分享選單找不到 App 時的備用方案） -->
     <div id="modal-paste-link" class="fixed inset-0 z-[130] hidden modal-backdrop flex items-center justify-center p-4">
         <div class="bg-white rounded-[24px] p-6 w-full max-w-sm">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">貼上影片連結</h3>
-            <p class="text-xs text-gray-400 mb-4">從 TikTok App 複製分享連結，貼在這裡即可自動解析成食譜</p>
-            <textarea id="input-paste-link" rows="3" placeholder="貼上 TikTok 連結或分享文字..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm mb-4 resize-none focus:outline-none focus:border-brand-400"></textarea>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">貼上影片/貼文連結</h3>
+            <p class="text-xs text-gray-400 mb-4">從 TikTok 或 Instagram 複製分享連結，貼在這裡即可自動解析成食譜</p>
+            <textarea id="input-paste-link" rows="3" placeholder="貼上 TikTok / Instagram 連結或分享文字..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm mb-4 resize-none focus:outline-none focus:border-brand-400"></textarea>
             <div class="flex gap-3">
                 <button onclick="app.closeModal('modal-paste-link')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">取消</button>
                 <button onclick="app.submitPasteLink()" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">開始解析</button>
@@ -499,6 +520,15 @@
                 <div class="flex-1 text-left">
                     <div class="text-sm font-bold text-gray-800">飲品食譜庫</div>
                     <div class="text-[10px] text-gray-400 mt-0.5">從 TikTok 分享連結，自動整理成食譜</div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
+            </button>
+
+            <button onclick="app.openIgCollection()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
+                <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-500 flex items-center justify-center text-2xl shrink-0">📸</div>
+                <div class="flex-1 text-left">
+                    <div class="text-sm font-bold text-gray-800">IG 美食收藏</div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">從 Instagram 分享連結，自動整理成食譜</div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
             </button>
@@ -651,6 +681,10 @@
                                     <i class="fa-solid fa-cloud-arrow-down"></i>
                                 </button>
                             </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">IG 美食解析網址 (選填，不填則用預設)</label>
+                            <input type="text" id="input-ig-gas-url" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-brand-500 transition font-mono" placeholder="https://script.google.com...">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 (AI 避開)</label>
@@ -1472,6 +1506,21 @@
                 const item = data.item || data.drink;
                 if (!item || !item.name) throw new Error("GAS 回傳格式不完整");
                 return { type, item };
+            },
+
+            // 📸 Instagram 美食貼文解析：改走「管家 GAS」既有的 igRecipe API（GET，無 CORS 預檢問題）
+            // 管家 GAS 已有 fetchInstagramDataWithFallback_() + Gemini 萃取邏輯，這裡只是單純轉呼叫
+            parseInstagram: async (shareUrl) => {
+                const DEFAULT_IG_GAS_URL = 'https://script.google.com/macros/s/AKfycbxlNrN_C9yoqsg78TWyOjJcq7zhGyMUpfPb0knO4L8dRXlh9e1GtYhZ0Z6WlOuKZAGBiw/exec';
+                const u = app.state.user;
+                const base = (u && u.igGasUrl) || DEFAULT_IG_GAS_URL;
+
+                const res = await fetch(base + '?action=igRecipe&url=' + encodeURIComponent(shareUrl));
+                if (!res.ok) throw new Error(`管家 GAS 錯誤 (${res.status})`);
+                const data = await res.json();
+                if (!data || data.ok === false) throw new Error(data?.error || "解析失敗，請確認連結是否正確");
+                if (!data.name) throw new Error(data.note || "AI 判斷不出這篇貼文的料理名稱");
+                return data;
             }
         },
         device: {
@@ -2194,7 +2243,8 @@
                 fridge: localStorage.getItem('bento_fridge'),
                 planWeek: localStorage.getItem('bento_plan_week'),
                 quickLog: localStorage.getItem('bento_quick_log'),
-                drinks: localStorage.getItem('bento_drinks')
+                drinks: localStorage.getItem('bento_drinks'),
+                igRecipes: localStorage.getItem('bento_ig_recipes')
             }),
 
             // 排程上傳（debounce）：短時間內的連續變動只會觸發一次實際上傳
@@ -2249,6 +2299,7 @@
                 if(data.planWeek) localStorage.setItem('bento_plan_week', data.planWeek);
                 if(data.quickLog) localStorage.setItem('bento_quick_log', data.quickLog);
                 if(data.drinks) localStorage.setItem('bento_drinks', data.drinks);
+                if(data.igRecipes) localStorage.setItem('bento_ig_recipes', data.igRecipes);
 
                 localStorage.setItem('bento_timestamp', data.timestamp);
                 
@@ -2305,6 +2356,7 @@
             app.state.planWeek = safeParse('bento_plan_week', '');
             app.state.quickLog = safeParse('bento_quick_log', {});
             app.state.drinks = safeParse('bento_drinks', []);
+            app.state.igRecipes = safeParse('bento_ig_recipes', []);
 
             // 深色模式還原
             if (localStorage.getItem('bento_dark_mode') === '1') {
@@ -2315,7 +2367,7 @@
             // 導航邏輯
             // 🧋 若是從 Android 分享（share_target）落地，優先顯示輕量分享確認頁，不走一般首頁流程
             const shareParams = new URLSearchParams(location.search);
-            const sharedUrl = app.extractTikTokUrl(shareParams.get('text') || shareParams.get('url') || '');
+            const sharedUrl = app.extractShareUrl(shareParams.get('text') || shareParams.get('url') || '');
             if (app.state.user && sharedUrl) {
                 history.replaceState(null, '', location.pathname); // 清掉網址列，避免重整觸發
                 app.navigateTo('dashboard');
@@ -2884,8 +2936,9 @@
             app.state.user = {
                 height: h, weight: w, age: age, gender: gender, activity: activity,
                 goal: goal, tdee: tdee, 
-                apiKey: document.getElementById('input-apikey').value.trim(), 
+                apiKey: document.getElementById('input-apikey').value.trim(),
                 syncUrl: syncUrl,
+                igGasUrl: document.getElementById('input-ig-gas-url').value.trim(),
                 exclude: document.getElementById('input-exclude').value.trim(), 
                 isDev: document.getElementById('input-dev-mode').checked,
                 bodyComp: { 
@@ -2962,6 +3015,7 @@
             document.getElementById('input-exclude').value = u.exclude || '';
             if (u.apiKey) document.getElementById('input-apikey').value = u.apiKey;
             document.getElementById('input-sync-url').value = u.syncUrl || '';
+            document.getElementById('input-ig-gas-url').value = u.igGasUrl || '';
             // 新增：回填開發模式開關
             document.getElementById('input-dev-mode').checked = u.isDev
 
@@ -4940,7 +4994,8 @@
                     mealLog: ls.getItem('bento_meal_log'),
                     fridge: ls.getItem('bento_fridge'),               // 冰箱庫存
                     planWeek: ls.getItem('bento_plan_week'),          // 本週菜單所屬週一日期
-                    drinks: ls.getItem('bento_drinks')                // 飲品食譜庫
+                    drinks: ls.getItem('bento_drinks'),               // 飲品食譜庫
+                    igRecipes: ls.getItem('bento_ig_recipes')         // IG 美食收藏
                 };
 
                 const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
@@ -4980,6 +5035,7 @@
                         if(d.planWeek) ls.setItem('bento_plan_week', d.planWeek);
                         if(d.quickLog) ls.setItem('bento_quick_log', d.quickLog);
                         if(d.drinks) ls.setItem('bento_drinks', d.drinks);
+                        if(d.igRecipes) ls.setItem('bento_ig_recipes', d.igRecipes);
 
                         await app.showModal("✅ 資料匯入成功！頁面將自動重新整理。", "還原完成");
                         location.reload();
@@ -5013,22 +5069,49 @@
                 return match ? match[0] : null;
             },
 
-            // 分享確認頁：處理中 → 成功/失敗。由 share_target 落地時呼叫
-            // AI 會自動判斷這是「飲品」還是「料理」，分別存進飲品庫或併入便當食譜庫，不需要使用者手動選擇
+            // 從分享文字/網址中擷取 Instagram 連結（貼文/Reels）
+            extractInstagramUrl: (text) => {
+                if (!text) return null;
+                const match = text.match(/https?:\/\/(?:www\.)?instagram\.com\/(?:reel|reels|p|tv)\/[A-Za-z0-9_\-]+\S*/i);
+                return match ? match[0] : null;
+            },
+
+            // 統一入口：依序嘗試 TikTok → Instagram，找不到則回傳 null
+            extractShareUrl: (text) => app.extractTikTokUrl(text) || app.extractInstagramUrl(text),
+
+            // 分享確認頁：處理中 → 成功/失敗。由 share_target 落地或貼上連結時呼叫
+            // TikTok 連結：AI 自動判斷「飲品」還是「料理」，分別存進飲品庫或併入便當食譜庫
+            // Instagram 連結：走管家 GAS 的 igRecipe API，存進 IG 美食收藏
             renderShareReceiver: async (shareUrl) => {
                 const esc = (s) => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
                 const box = document.getElementById('share-receiver-content');
                 const modal = document.getElementById('modal-share-receiver');
+                const isInstagram = /instagram\.com\//i.test(shareUrl);
 
                 modal.classList.remove('hidden');
                 box.innerHTML = `
                     <i class="fa-solid fa-wand-magic-sparkles text-5xl text-brand-400 mb-5"></i>
                     <h3 class="text-lg font-bold text-gray-800 mb-2">正在解析食譜...</h3>
-                    <p class="text-xs text-gray-400 mb-6">AI 正在分析影片內容，請稍候</p>
+                    <p class="text-xs text-gray-400 mb-6">AI 正在分析${isInstagram ? '貼文' : '影片'}內容，請稍候</p>
                     <i class="fa-solid fa-circle-notch fa-spin text-2xl text-brand-500"></i>
                 `;
 
                 try {
+                    if (isInstagram) {
+                        const item = await app.infrastructure.social.parseInstagram(shareUrl);
+                        app.saveIgRecipe({ ...item, sourceUrl: shareUrl });
+                        box.innerHTML = `
+                            <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">已加入 IG 美食收藏</h3>
+                            <p class="text-sm font-bold text-brand-600 mb-6">${esc(item.name)}</p>
+                            <div class="flex gap-3 w-full max-w-sm">
+                                <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
+                                <button onclick="app.closeModal('modal-share-receiver'); app.openIgCollection();" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">查看 IG 收藏</button>
+                            </div>
+                        `;
+                        return;
+                    }
+
                     const { type, item } = await app.infrastructure.social.parseShare(shareUrl);
 
                     if (type === 'dish') {
@@ -5077,9 +5160,9 @@
 
             submitPasteLink: () => {
                 const raw = document.getElementById('input-paste-link').value.trim();
-                const url = app.extractTikTokUrl(raw) || (/^https?:\/\//i.test(raw) ? raw : null);
+                const url = app.extractShareUrl(raw) || (/^https?:\/\//i.test(raw) ? raw : null);
                 if (!url) {
-                    app.showModal('找不到有效的 TikTok 連結，請確認貼上的內容', '格式錯誤', 'error');
+                    app.showModal('找不到有效的 TikTok / Instagram 連結，請確認貼上的內容', '格式錯誤', 'error');
                     return;
                 }
                 app.closeModal('modal-paste-link');
@@ -5152,18 +5235,20 @@
                 }
                 empty.classList.add('hidden');
                 list.innerHTML = drinks.map(d => `
-                    <div class="bg-white rounded-2xl p-3 shadow-soft border border-gray-50 flex items-center gap-3">
-                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-                            <div class="w-14 h-14 rounded-xl bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-2xl">
+                    <div class="bg-white rounded-2xl p-2.5 shadow-soft border border-gray-50">
+                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-center gap-2 min-w-0 cursor-pointer mb-2">
+                            <div class="w-7 h-7 rounded-lg bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-sm">
                                 ${d.coverImageUrl ? `<img src="${esc(d.coverImageUrl)}" onerror="this.parentElement.innerHTML='🧋'" class="w-full h-full object-cover">` : '🧋'}
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-sm font-bold text-gray-800 truncate">${esc(d.name)}</div>
-                                <div class="text-[10px] text-gray-400 mt-0.5">來自 TikTok</div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-xs font-bold text-gray-800 truncate">${esc(d.name)}</div>
+                                <div class="text-[9px] text-gray-400 mt-0.5">來自 TikTok</div>
                             </div>
                         </div>
-                        <button onclick="event.stopPropagation(); app.shareDrink(${d.id})" class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center shrink-0 active:scale-90 transition"><i class="fa-solid fa-share-nodes text-xs"></i></button>
-                        <button onclick="event.stopPropagation(); app.deleteDrink(${d.id})" class="w-9 h-9 rounded-full bg-gray-50 text-red-400 flex items-center justify-center shrink-0 active:scale-90 transition"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                        <div class="flex gap-1.5">
+                            <button onclick="event.stopPropagation(); app.shareDrink(${d.id})" class="flex-1 h-7 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center active:scale-90 transition"><i class="fa-solid fa-share-nodes text-[10px]"></i></button>
+                            <button onclick="event.stopPropagation(); app.deleteDrink(${d.id})" class="flex-1 h-7 rounded-lg bg-gray-50 text-red-400 flex items-center justify-center active:scale-90 transition"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
+                        </div>
                     </div>
                 `).join('');
             },
@@ -5237,6 +5322,156 @@
                 app.infrastructure.storage.set('bento_drinks', app.state.drinks);
                 app.renderDrinksList();
                 app.closeDrinkDetail();
+                app.showToast('🗑️ 已刪除');
+                app.cloudSync.scheduleUpload();
+            },
+
+            // --- 📸 IG 美食收藏（來自管家 GAS 的 igRecipe API，無熱量/蛋白質等營養數據，
+            //      所以獨立收藏，不併入週菜單食譜庫）---
+
+            // 新增/更新一筆 IG 美食（同一來源網址重新解析時覆蓋舊的，不重複累加）
+            saveIgRecipe: (item) => {
+                if (!app.state.igRecipes) app.state.igRecipes = [];
+                const existingIdx = app.state.igRecipes.findIndex(r => r.sourceUrl === item.sourceUrl);
+                const record = {
+                    id: existingIdx >= 0 ? app.state.igRecipes[existingIdx].id : Date.now(),
+                    sourceUrl: item.sourceUrl,
+                    name: item.name || '未命名料理',
+                    cuisine: item.cuisine || '',
+                    hasFullRecipe: !!item.hasFullRecipe,
+                    ingredients: Array.isArray(item.ingredients) ? item.ingredients : [],
+                    steps: Array.isArray(item.steps) ? item.steps : [],
+                    highlight: item.highlight || '',
+                    servings: item.servings || '',
+                    imageUrl: item.imageUrl || '',
+                    likesCount: item.likesCount != null ? item.likesCount : null,
+                    createdAt: existingIdx >= 0 ? app.state.igRecipes[existingIdx].createdAt : Date.now()
+                };
+                if (existingIdx >= 0) app.state.igRecipes[existingIdx] = record;
+                else app.state.igRecipes.unshift(record);
+                app.infrastructure.storage.set('bento_ig_recipes', app.state.igRecipes);
+                app.cloudSync.scheduleUpload();
+            },
+
+            openIgCollection: () => {
+                document.getElementById('ig-recipes-list-view').classList.remove('hidden');
+                document.getElementById('ig-recipe-detail-view').classList.add('hidden');
+                app.renderIgRecipesList();
+                document.getElementById('modal-ig-recipes').classList.remove('hidden');
+            },
+
+            renderIgRecipesList: () => {
+                const esc = (s) => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const list = document.getElementById('ig-recipes-list');
+                const empty = document.getElementById('ig-recipes-empty');
+                const items = app.state.igRecipes || [];
+
+                if (items.length === 0) {
+                    list.innerHTML = '';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                empty.classList.add('hidden');
+                list.innerHTML = items.map(r => `
+                    <div class="bg-white rounded-2xl p-2.5 shadow-soft border border-gray-50">
+                        <div onclick="app.openIgRecipeDetail(${r.id})" class="flex items-center gap-2 min-w-0 cursor-pointer mb-2">
+                            <div class="w-7 h-7 rounded-lg bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-sm">
+                                ${r.imageUrl ? `<img src="${esc(r.imageUrl)}" onerror="this.parentElement.innerHTML='📸'" class="w-full h-full object-cover">` : '📸'}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-xs font-bold text-gray-800 truncate">${esc(r.name)}</div>
+                                <div class="text-[9px] text-gray-400 mt-0.5">${esc(r.cuisine) || '來自 IG'}${r.hasFullRecipe ? '' : '・摘要'}</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="event.stopPropagation(); app.shareIgRecipe(${r.id})" class="flex-1 h-7 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center active:scale-90 transition"><i class="fa-solid fa-share-nodes text-[10px]"></i></button>
+                            <button onclick="event.stopPropagation(); app.deleteIgRecipe(${r.id})" class="flex-1 h-7 rounded-lg bg-gray-50 text-red-400 flex items-center justify-center active:scale-90 transition"><i class="fa-regular fa-trash-can text-[10px]"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            openIgRecipeDetail: (id) => {
+                const esc = (s) => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const item = (app.state.igRecipes || []).find(r => r.id === id);
+                if (!item) return;
+
+                document.getElementById('ig-recipes-list-view').classList.add('hidden');
+                const detail = document.getElementById('ig-recipe-detail-view');
+                detail.classList.remove('hidden');
+                const metaTags = [item.cuisine, item.servings].filter(Boolean);
+                detail.innerHTML = `
+                    <button onclick="app.closeIgRecipeDetail()" class="text-gray-400 hover:text-brand-500 text-sm font-bold mb-4 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-arrow-left"></i> 返回列表
+                    </button>
+                    <div class="w-full h-48 rounded-2xl bg-brand-50 overflow-hidden flex items-center justify-center text-5xl mb-4">
+                        ${item.imageUrl ? `<img src="${esc(item.imageUrl)}" onerror="this.parentElement.innerHTML='📸'" class="w-full h-full object-cover">` : '📸'}
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-1">${esc(item.name)}</h2>
+                    ${metaTags.length ? `<div class="flex gap-2 mb-2">${metaTags.map(t => `<span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-1 rounded-full font-bold">${esc(t)}</span>`).join('')}</div>` : ''}
+                    ${item.highlight ? `<p class="text-xs text-gray-500 mb-4">${esc(item.highlight)}</p>` : '<div class="mb-4"></div>'}
+
+                    ${!item.hasFullRecipe ? `<div class="bg-yellow-50 text-yellow-700 text-xs rounded-xl p-3 mb-4">ℹ️ 這篇貼文沒有完整食材/步驟，以上僅為摘要，詳細做法請見原始貼文</div>` : ''}
+
+                    <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-50 mb-4">
+                        <div class="text-xs font-bold text-gray-500 mb-2">🧾 食材</div>
+                        <ul class="space-y-1.5 text-sm text-gray-700">
+                            ${(item.ingredients || []).map(i => `<li class="flex items-start gap-2"><i class="fa-solid fa-circle text-[4px] text-brand-400 mt-2"></i><span>${esc(i)}</span></li>`).join('') || '<li class="text-gray-400">無資料</li>'}
+                        </ul>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-4 shadow-soft border border-gray-50 mb-4">
+                        <div class="text-xs font-bold text-gray-500 mb-2">📝 做法</div>
+                        <ol class="space-y-1.5 text-sm text-gray-700 list-decimal list-inside">
+                            ${(item.steps || []).map(s => `<li>${esc(s)}</li>`).join('') || '<li class="text-gray-400 list-none">無資料</li>'}
+                        </ol>
+                    </div>
+
+                    ${item.sourceUrl ? `<a href="${esc(item.sourceUrl)}" target="_blank" rel="noopener" class="text-xs text-brand-500 underline break-all mb-4 block">查看原始貼文 →</a>` : ''}
+
+                    <button onclick="app.shareIgRecipe(${item.id})" class="w-full bg-brand-500 text-white font-bold py-3.5 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-share-nodes"></i> 複製分享
+                    </button>
+                `;
+            },
+
+            closeIgRecipeDetail: () => {
+                document.getElementById('ig-recipe-detail-view').classList.add('hidden');
+                document.getElementById('ig-recipes-list-view').classList.remove('hidden');
+            },
+
+            shareIgRecipe: async (id) => {
+                const item = (app.state.igRecipes || []).find(r => r.id === id);
+                if (!item) return;
+
+                let text = `📸 ${item.name}\n\n`;
+                if (item.ingredients && item.ingredients.length) {
+                    text += `【食材】\n`;
+                    item.ingredients.forEach(i => text += `- ${i}\n`);
+                    text += `\n`;
+                }
+                if (item.steps && item.steps.length) {
+                    text += `【做法】\n`;
+                    item.steps.forEach((s, i) => text += `${i + 1}. ${s}\n`);
+                    text += `\n`;
+                }
+                if (item.sourceUrl) text += `來源：${item.sourceUrl}\n`;
+                text += `—— 整理自 Bento Fit`;
+
+                if (navigator.share) {
+                    try { await navigator.share({ title: item.name, text }); } catch (err) { console.log('取消分享'); }
+                } else {
+                    navigator.clipboard.writeText(text);
+                    app.showToast('✅ 已複製到剪貼簿');
+                }
+            },
+
+            deleteIgRecipe: async (id) => {
+                if (!(await app.showModal('確定要刪除這份 IG 美食收藏嗎？', '刪除確認', 'danger', '確認刪除'))) return;
+                app.state.igRecipes = (app.state.igRecipes || []).filter(r => r.id !== id);
+                app.infrastructure.storage.set('bento_ig_recipes', app.state.igRecipes);
+                app.renderIgRecipesList();
+                app.closeIgRecipeDetail();
                 app.showToast('🗑️ 已刪除');
                 app.cloudSync.scheduleUpload();
             }
