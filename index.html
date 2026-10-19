@@ -5140,6 +5140,26 @@
                 try {
                     if (isInstagram) {
                         const item = await app.infrastructure.social.parseInstagram(shareUrl);
+
+                        // 管家 GAS 的 cuisine 欄位可能是「飲品」，比照 TikTok 流程自動分流到飲品食譜庫
+                        const isDrink = /飲/.test(item.cuisine || '');
+                        if (isDrink) {
+                            app.saveDrink({
+                                name: item.name, ingredients: item.ingredients, steps: item.steps,
+                                coverImageUrl: item.imageUrl, sourceUrl: shareUrl
+                            });
+                            box.innerHTML = `
+                                <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">已存入飲品庫</h3>
+                                <p class="text-sm font-bold text-brand-600 mb-6">${esc(item.name)}</p>
+                                <div class="flex gap-3 w-full max-w-sm">
+                                    <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
+                                    <button onclick="app.closeModal('modal-share-receiver'); app.openDrinksLibrary();" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">查看飲品庫</button>
+                                </div>
+                            `;
+                            return;
+                        }
+
                         app.saveIgRecipe({ ...item, sourceUrl: shareUrl });
                         box.innerHTML = `
                             <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
@@ -5277,13 +5297,12 @@
                 empty.classList.add('hidden');
                 list.innerHTML = drinks.map(d => `
                     <div class="bg-white rounded-2xl p-2.5 shadow-soft border border-gray-50">
-                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-center gap-2 min-w-0 cursor-pointer mb-2">
-                            <div class="w-7 h-7 rounded-lg bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-sm">
+                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-start gap-2 min-w-0 cursor-pointer mb-2">
+                            <div class="w-3.5 h-3.5 rounded bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-[8px] mt-0.5">
                                 ${d.coverImageUrl ? `<img src="${esc(d.coverImageUrl)}" onerror="this.parentElement.innerHTML='🧋'" class="w-full h-full object-cover">` : '🧋'}
                             </div>
                             <div class="min-w-0 flex-1">
-                                <div class="text-xs font-bold text-gray-800 truncate">${esc(d.name)}</div>
-                                <div class="text-[9px] text-gray-400 mt-0.5">來自 TikTok</div>
+                                <div class="text-xs font-bold text-gray-800 leading-snug">${esc(d.name)}</div>
                             </div>
                         </div>
                         <div class="flex gap-1.5">
