@@ -1,5 +1,5 @@
 // Bento Fit Service Worker
-const CACHE_NAME = 'bento-fit-v2.15';
+const CACHE_NAME = 'bento-fit-v2.16';
 // 核心本地資源：缺一不可，快取失敗則安裝失敗
 const coreAssets = [
   './',
@@ -53,6 +53,7 @@ self.addEventListener('activate', event => {
 // 攔截請求階段 (Fetch)
 self.addEventListener('fetch', event => {
     const url = event.request.url;
+    const isSameOrigin = url.startsWith(self.location.origin);
 
     // ⛔ 排除清單：API 請求（Gemini、Apps Script 同步）不經過快取
     if (event.request.method !== 'GET' ||
@@ -72,7 +73,7 @@ self.addEventListener('fetch', event => {
         return networkResponse;
     });
 
-    // 🔄 HTML 導覽請求：網路優先（部署新版即時生效），斷線時退回快取
+    // 🔄 HTML 導覽請求：網路優先，找不到快取時退回首頁快取（離線至少能開啟 App）
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetchAndCache().catch(() =>
@@ -82,7 +83,17 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // ✅ 其餘靜態資源：快取優先 (Cache First, fallback to Network)
+    // 🔄 本機靜態資源（tailwind.css/manifest.json/icons...）同樣網路優先，部署新版即時生效。
+    // 這類檔案會隨程式改版變動，若走快取優先，已安裝的使用者會卡在舊版樣式/設定檔，
+    // 看起來像「版面跑掉」，實際上是吃到舊的 tailwind.css——之前就發生過一次。
+    if (isSameOrigin) {
+        event.respondWith(
+            fetchAndCache().catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // ✅ 跨域 CDN 資源（字型等，不受我們部署影響）：快取優先 (Cache First, fallback to Network)
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             if (cachedResponse) {
