@@ -683,8 +683,13 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">IG 美食解析網址 (選填，不填則用預設)</label>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">IG 美食解析網址 (管家 GAS，選填功能)</label>
                             <input type="text" id="input-ig-gas-url" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-brand-500 transition font-mono" placeholder="https://script.google.com...">
+                            <p class="text-[10px] text-gray-400 mt-1">僅存在本機瀏覽器，不會寫進程式碼</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">IG 美食解析 Token (若管家 GAS 有設定 IG_RECIPE_TOKEN 請填)</label>
+                            <input type="password" id="input-ig-gas-token" class="w-full bg-gray-800 text-white rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-brand-400 transition font-mono" placeholder="（選填）">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">排除食材 (AI 避開)</label>
@@ -1510,12 +1515,19 @@
 
             // 📸 Instagram 美食貼文解析：改走「管家 GAS」既有的 igRecipe API（GET，無 CORS 預檢問題）
             // 管家 GAS 已有 fetchInstagramDataWithFallback_() + Gemini 萃取邏輯，這裡只是單純轉呼叫
+            //
+            // ⚠️ 安全考量：這個網址是「管家 GAS」整個系統共用的（同一支部署還服務群組訂單/鎖團等其他
+            // 功能），bento-fit 又是公開 repo，絕對不能把網址寫死在原始碼裡——否則任何人看原始碼就能
+            // 拿到這個網址，進而亂打其他 action 參數。網址 + token 只存在使用者自己瀏覽器的
+            // localStorage（跟 syncUrl 同一個模式），沒設定就直接報錯、不會呼叫任何地方。
             parseInstagram: async (shareUrl) => {
-                const DEFAULT_IG_GAS_URL = 'https://script.google.com/macros/s/AKfycbxlNrN_C9yoqsg78TWyOjJcq7zhGyMUpfPb0knO4L8dRXlh9e1GtYhZ0Z6WlOuKZAGBiw/exec';
                 const u = app.state.user;
-                const base = (u && u.igGasUrl) || DEFAULT_IG_GAS_URL;
+                if (!u || !u.igGasUrl) throw new Error("尚未設定「IG 美食解析網址」，請先到「我的」→系統設定填寫");
 
-                const res = await fetch(base + '?action=igRecipe&url=' + encodeURIComponent(shareUrl));
+                let endpoint = u.igGasUrl + '?action=igRecipe&url=' + encodeURIComponent(shareUrl);
+                if (u.igGasToken) endpoint += '&token=' + encodeURIComponent(u.igGasToken);
+
+                const res = await fetch(endpoint);
                 if (!res.ok) throw new Error(`管家 GAS 錯誤 (${res.status})`);
                 const data = await res.json();
                 if (!data || data.ok === false) throw new Error(data?.error || "解析失敗，請確認連結是否正確");
@@ -1639,6 +1651,33 @@
                           ④ 若無某類食材則省略該段。
                           完整範例："肉類：豬里肌150g切薄片，醬油1匙、糖半匙、蒜末醃15分鐘 | 蔬菜：青花菜切小朵，香菇去蒂切片，紅蘿蔔切絲，分裝冷藏備用 | 澱粉：白飯冷藏備用")
                         ${packGuide ? `,\n                        "storage_guide" (物件 {container, storage, note}：container 為建議使用的 NAKAYA 保鮮盒配置說明，storage 為「冷藏」或「冷凍」其中之一，note 為分裝與防潮注意事項；若這道菜適合安排在週間較後段的日子並需要提前冷凍，note 需提醒建議冷凍保存並於食用前一天移至冷藏退冰)` : ""}
+                    `;
+                },
+
+                // IG 美食收藏 → 加入本週菜單：這道菜的名稱/食材/做法已經是確定的（來自 IG 貼文解析），
+                // 不是要 AI 重新設計一道新菜，只是要它依照既有食材/做法估算營養數據並補齊便當食譜庫需要的欄位格式
+                createIgRecipeFillinPrompt: (item) => {
+                    return `
+                        你是一位營養分析師。以下是一道從 Instagram 美食貼文整理出來的料理，名稱與食材/做法已經確定，
+                        不要更改菜名或發明不同的做法，你的工作只是「估算營養數據」並補齊成標準格式。
+
+                        菜名：${item.name}
+                        料理類型：${item.cuisine || '未知'}
+                        份量：${item.servings || '約 1~2 人份'}
+                        已知食材：${(item.ingredients || []).join('、') || '（無資料，請依菜名合理推估）'}
+                        已知做法：${(item.steps || []).join('\n') || '（無資料，請依菜名與食材合理推估）'}
+
+                        【嚴格 JSON 格式要求】
+                        回傳 JSON Array (1個物件)，不含 Markdown。欄位：
+                        "name"（維持原菜名「${item.name}」不要更改）,
+                        "emoji"（1個最能代表這道菜的食物 emoji，不可用 🍱）,
+                        "main_tag"（主要食材種類，例如「雞肉」「海鮮」「素食」）,
+                        "cal", "p", "c", "f"（依已知食材與份量合理估算這整道菜的熱量/蛋白質/碳水/脂肪，單位分別為大卡與公克）,
+                        "sides" (Array of string，若本身就是一份完整料理可為空陣列),
+                        "ingredients" (Array of {name, qty, type}，依「已知食材」整理，份量不明時合理估算),
+                        "instructions" (字串, \\n 分隔，依「已知做法」整理，資料不足時依食材合理補齊步驟),
+                        "prep_minutes" (整數，從備料到盛盤的總預估時間，必須填入 10、20 或 30 其中之一),
+                        "prep_guide" (字串，用 " | " 分隔各類別。肉類/海鮮須寫明切法與醃料用量，蔬菜須逐一列出具體切法，澱粉視情況，無則省略該段)
                     `;
                 },
                 createSinglePrompt: (user, exclude, currentNames) => {
@@ -2939,6 +2978,7 @@
                 apiKey: document.getElementById('input-apikey').value.trim(),
                 syncUrl: syncUrl,
                 igGasUrl: document.getElementById('input-ig-gas-url').value.trim(),
+                igGasToken: document.getElementById('input-ig-gas-token').value.trim(),
                 exclude: document.getElementById('input-exclude').value.trim(), 
                 isDev: document.getElementById('input-dev-mode').checked,
                 bodyComp: { 
@@ -3016,6 +3056,7 @@
             if (u.apiKey) document.getElementById('input-apikey').value = u.apiKey;
             document.getElementById('input-sync-url').value = u.syncUrl || '';
             document.getElementById('input-ig-gas-url').value = u.igGasUrl || '';
+            if (u.igGasToken) document.getElementById('input-ig-gas-token').value = u.igGasToken;
             // 新增：回填開發模式開關
             document.getElementById('input-dev-mode').checked = u.isDev
 
@@ -5099,6 +5140,26 @@
                 try {
                     if (isInstagram) {
                         const item = await app.infrastructure.social.parseInstagram(shareUrl);
+
+                        // 管家 GAS 的 cuisine 欄位可能是「飲品」，比照 TikTok 流程自動分流到飲品食譜庫
+                        const isDrink = /飲/.test(item.cuisine || '');
+                        if (isDrink) {
+                            app.saveDrink({
+                                name: item.name, ingredients: item.ingredients, steps: item.steps,
+                                coverImageUrl: item.imageUrl, sourceUrl: shareUrl
+                            });
+                            box.innerHTML = `
+                                <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">已存入飲品庫</h3>
+                                <p class="text-sm font-bold text-brand-600 mb-6">${esc(item.name)}</p>
+                                <div class="flex gap-3 w-full max-w-sm">
+                                    <button onclick="app.closeModal('modal-share-receiver')" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl active:scale-95 transition">關閉</button>
+                                    <button onclick="app.closeModal('modal-share-receiver'); app.openDrinksLibrary();" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-xl shadow-float active:scale-95 transition">查看飲品庫</button>
+                                </div>
+                            `;
+                            return;
+                        }
+
                         app.saveIgRecipe({ ...item, sourceUrl: shareUrl });
                         box.innerHTML = `
                             <i class="fa-solid fa-circle-check text-5xl text-green-400 mb-5"></i>
@@ -5236,13 +5297,12 @@
                 empty.classList.add('hidden');
                 list.innerHTML = drinks.map(d => `
                     <div class="bg-white rounded-2xl p-2.5 shadow-soft border border-gray-50">
-                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-center gap-2 min-w-0 cursor-pointer mb-2">
-                            <div class="w-7 h-7 rounded-lg bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-sm">
+                        <div onclick="app.openDrinkDetail(${d.id})" class="flex items-start gap-2 min-w-0 cursor-pointer mb-2">
+                            <div class="w-3.5 h-3.5 rounded bg-brand-50 shrink-0 overflow-hidden flex items-center justify-center text-[8px] mt-0.5">
                                 ${d.coverImageUrl ? `<img src="${esc(d.coverImageUrl)}" onerror="this.parentElement.innerHTML='🧋'" class="w-full h-full object-cover">` : '🧋'}
                             </div>
                             <div class="min-w-0 flex-1">
-                                <div class="text-xs font-bold text-gray-800 truncate">${esc(d.name)}</div>
-                                <div class="text-[9px] text-gray-400 mt-0.5">來自 TikTok</div>
+                                <div class="text-xs font-bold text-gray-800 leading-snug">${esc(d.name)}</div>
                             </div>
                         </div>
                         <div class="flex gap-1.5">
@@ -5429,6 +5489,12 @@
 
                     ${item.sourceUrl ? `<a href="${esc(item.sourceUrl)}" target="_blank" rel="noopener" class="text-xs text-brand-500 underline break-all mb-4 block">查看原始貼文 →</a>` : ''}
 
+                    <button id="ig-add-menu-btn" onclick="app.addIgRecipeToMenu(${item.id})" ${item.ingredients.length === 0 ? 'disabled' : ''}
+                        class="w-full bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2 mb-3 disabled:opacity-40 disabled:active:scale-100">
+                        <i class="fa-solid fa-calendar-plus"></i> 加入本週菜單食譜
+                    </button>
+                    ${item.ingredients.length === 0 ? `<p class="text-[10px] text-gray-400 text-center -mt-2 mb-3">沒有完整食材資訊，無法加入菜單</p>` : `<p class="text-[10px] text-gray-400 text-center -mt-2 mb-3">會用你的 Gemini API Key 估算熱量等營養數據</p>`}
+
                     <button onclick="app.shareIgRecipe(${item.id})" class="w-full bg-brand-500 text-white font-bold py-3.5 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-share-nodes"></i> 複製分享
                     </button>
@@ -5438,6 +5504,44 @@
             closeIgRecipeDetail: () => {
                 document.getElementById('ig-recipe-detail-view').classList.add('hidden');
                 document.getElementById('ig-recipes-list-view').classList.remove('hidden');
+            },
+
+            // IG 美食收藏沒有熱量/蛋白質等營養數據（管家 GAS 不提供），
+            // 所以用使用者自己的 Gemini API Key 現算一次，菜名/食材/做法維持原樣不變，
+            // 算完就比照 saveSharedRecipe 併入便當食譜庫，可直接在「規劃」頁選用
+            addIgRecipeToMenu: async (id) => {
+                const item = (app.state.igRecipes || []).find(r => r.id === id);
+                if (!item || !item.ingredients.length) return;
+
+                const u = app.state.user;
+                if (!u.isDev && !u.apiKey) {
+                    app.showModal('尚未設定 Gemini API Key，請先到「我的」→系統設定填寫', '缺少設定', 'error');
+                    return;
+                }
+
+                const btn = document.getElementById('ig-add-menu-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 正在估算營養數據...';
+                }
+
+                try {
+                    const prompt = app.domain.ai.promptFactory.createIgRecipeFillinPrompt(item);
+                    const data = await app.infrastructure.ai.generate(prompt, false);
+                    const dish = data[0];
+                    if (!dish) throw new Error('AI 回傳內容為空');
+
+                    app.saveSharedRecipe({ ...dish, name: dish.name || item.name, sourceUrl: item.sourceUrl });
+                    app.showToast('✅ 已加入本週菜單食譜庫');
+                    app.closeModal('modal-ig-recipes');
+                    app.navigateTo('planner');
+                } catch (e) {
+                    app.showModal(`估算失敗：${e.message || '未知錯誤'}`, '加入菜單失敗', 'error');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> 加入本週菜單食譜';
+                    }
+                }
             },
 
             shareIgRecipe: async (id) => {
