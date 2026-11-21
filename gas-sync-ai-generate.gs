@@ -270,8 +270,8 @@ function handleAiGenerate_(payload) {
     if (!prompt) return out({ success: false, error: "缺少 prompt" });
     if (!GEMINI_API_KEY) return out({ success: false, error: "尚未設定 GEMINI_API_KEY（指令碼屬性）" });
 
-    // GEMINI_MODEL 沒設定時，退回前端原本使用的 gemini-2.5-flash
-    const model = GEMINI_MODEL || "gemini-2.5-flash";
+    // GEMINI_MODEL 沒設定時，退回前端原本使用的 gemini-2.5-flash；有設定就先正規化格式
+    const model = normalizeModelName_(GEMINI_MODEL) || "gemini-2.5-flash";
     const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + GEMINI_API_KEY;
     const res = UrlFetchApp.fetch(url, {
       method: "post",
@@ -292,7 +292,8 @@ function handleAiGenerate_(payload) {
     const code = res.getResponseCode();
     const body = JSON.parse(res.getContentText() || "{}");
     if (code !== 200) {
-      return out({ success: false, error: "Gemini API 錯誤 (" + code + "): " + ((body.error && body.error.message) || "未知錯誤") });
+      // 附上實際使用的模型名稱，方便判斷是 Key 還是模型設定的問題
+      return out({ success: false, error: "Gemini API 錯誤 (" + code + "): " + ((body.error && body.error.message) || "未知錯誤") + "（使用模型：" + model + "）" });
     }
     const text = body && body.candidates && body.candidates[0] && body.candidates[0].content
       && body.candidates[0].content.parts && body.candidates[0].content.parts[0]
@@ -304,6 +305,18 @@ function handleAiGenerate_(payload) {
   }
 }
 
+
+/** 模型名稱正規化：去頭尾空白/換行與引號、去掉 "models/" 前綴、
+ *  把「Gemini 2.5 Flash」這類顯示名稱轉成 API 用的「gemini-2.5-flash」 */
+function normalizeModelName_(raw) {
+  if (!raw) return "";
+  return String(raw).trim()
+    .replace(/^["'`]+|["'`]+$/g, "")
+    .replace(/^models\//i, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+}
 
 // ============================================================
 // 測試用輔助函式（部署前自行跑過，確認沒問題後可以留著也可以刪掉，不影響正式運作）
@@ -320,6 +333,8 @@ function testHandleParseDrink() {
 
 // 🔑 新增：測試 AI 生成菜單代呼叫（在 GAS 編輯器選這個函式按「執行」，看執行紀錄）
 function testHandleAiGenerate() {
+  // 先印出指令碼屬性裡的原始模型值（用 JSON 顯示，看得到隱藏的空白/換行/引號）
+  Logger.log("GEMINI_MODEL 原始值：" + JSON.stringify(GEMINI_MODEL) + " → 正規化後：" + normalizeModelName_(GEMINI_MODEL));
   const result = handleAiGenerate_({ prompt: '請回傳 JSON 陣列：[{"name":"測試便當","cal":500}]' });
   Logger.log(result.getContent());
 }
