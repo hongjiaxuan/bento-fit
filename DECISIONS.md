@@ -39,3 +39,9 @@
 
 ## D-005　移除成就與挑戰（gamification）　（115/06）
 - 連續登入、徽章、`bento_game` 全數移除；不再加回。
+
+## D-006　AI 生成菜單改由「同步 GAS」代呼叫 Gemini　（115/11/21）
+- **背景**：換新 Gemini Key 時發現兩套設定——飲品解析（`parseDrink`）用同步 GAS 指令碼屬性的 Key；AI 生成菜單卻用前端設定頁自填的 `user.apiKey`。
+- **定案**：Key 統一放同步 GAS 指令碼屬性。前端 `ai.generate()` 有 `syncUrl` 就 POST（text/plain）`{action:'aiGenerate', prompt}`，GAS 回 `{success, text}`，前端沿用原 JSON 清洗邏輯（`parseAiJson`）。
+- 未設 `syncUrl` 時才退回前端 `apiKey`（相容）；入口檢查統一用 `ai.isReady(user)`。
+- GAS 端片段＝ `gas-sync-ai-generate.gs`（需手動貼進同步 GAS 並重新部署）。

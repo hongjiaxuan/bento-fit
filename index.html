@@ -662,10 +662,12 @@
 
                     <div id="tab-content-system" class="space-y-5 hidden">
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY (必填)</label>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY（選填：未設雲端同步網址時才使用）</label>
                             <input type="password" id="input-apikey" class="w-full bg-gray-800 text-white rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-brand-400 transition font-mono" placeholder="AIzaSy...">
                             <div class="bg-blue-50 rounded-xl p-3 mt-2">
-                                <p class="text-xs font-bold text-blue-600">如何免費取得 Gemini API Key？</p>
+                                <p class="text-xs font-bold text-blue-600">💡 已填「Google Script URL」者免填</p>
+                                <p class="text-xs text-blue-400 mt-1 leading-relaxed">AI 生成菜單改由同步 GAS 代呼叫，使用 GAS 指令碼屬性裡的 Key（與飲品解析同一把），換 Key 只要改 GAS 那邊。</p>
+                                <p class="text-xs font-bold text-blue-600 mt-2">如何免費取得 Gemini API Key？</p>
                                 <p class="text-xs text-blue-400 mt-1 leading-relaxed">
                                     1. 前往 Google AI Studio (aistudio.google.com)<br>
                                     2. 登入 Google 帳號並點擊「Get API Key」<br>
@@ -969,14 +971,14 @@
                 <h3 class="font-bold text-xl text-gray-800">AI 菜單設定</h3>
                 <button onclick="app.closeModal('modal-ai-options')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400"><i class="fa-solid fa-times"></i></button>
             </div>
-            <!-- API Key 警告條（由 generateAIPlan 控制顯示/隱藏） -->
+            <!-- AI 未設定警告條（由 generateAIPlan 控制顯示/隱藏） -->
             <div id="ai-no-key-warn" class="hidden mb-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
                 <i class="fa-solid fa-triangle-exclamation text-amber-500 text-sm mt-0.5 shrink-0"></i>
                 <div class="flex-1 text-xs text-amber-800">
-                    <div class="font-bold mb-1">尚未設定 Gemini API Key</div>
-                    <div class="text-amber-700">現在使用<strong>示範模式</strong>（內建食譜）。若要啟用 AI 智慧生成，請先設定 Key。</div>
+                    <div class="font-bold mb-1">尚未設定雲端同步網址（GAS）</div>
+                    <div class="text-amber-700">現在使用<strong>示範模式</strong>（內建食譜）。若要啟用 AI 智慧生成，請先設定同步 GAS 網址。</div>
                     <button onclick="app.closeModal('modal-ai-options'); app.navigateTo('profile'); setTimeout(()=>{ app.openEditProfile(); app.switchProfileTab('system'); }, 300);"
-                        class="mt-2 text-amber-600 font-bold underline text-[11px]">前往設定 API Key →</button>
+                        class="mt-2 text-amber-600 font-bold underline text-[11px]">前往系統設定 →</button>
                 </div>
             </div>
 
@@ -1407,8 +1409,29 @@
                     throw new Error("API 回傳內容為空");
                 }
 
-                // JSON 清洗與解析邏輯
-                let jsonString = data.candidates[0].content.parts[0].text.trim();
+                return app.infrastructure.ai.parseAiJson(data.candidates[0].content.parts[0].text);
+            },
+
+            // 🔑 透過「健康餐同步 GAS」代呼叫 Gemini：Key 存在 GAS 的指令碼屬性（與 parseDrink 共用同一把），
+            // 前端不再持有 Key。沿用 parseDrink 的 text/plain POST（simple request，不觸發 CORS 預檢，讀得到回應）
+            gasClient: async (promptText, syncUrl) => {
+                console.log('🚀 透過 GAS 呼叫 Gemini（action: aiGenerate）...');
+                const res = await fetch(syncUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'aiGenerate', prompt: promptText })
+                });
+                if (!res.ok) throw new Error(`GAS 伺服器錯誤 (${res.status})`);
+                const data = await res.json().catch(() => null);
+                if (!data) throw new Error('GAS 回傳非 JSON，請確認同步 GAS 已加入 aiGenerate 並重新部署');
+                if (data.success === false) throw new Error(data.error || 'GAS 呼叫 Gemini 失敗');
+                if (!data.text) throw new Error('GAS 回傳格式不完整（缺 text），請確認同步 GAS 已加入 aiGenerate 並重新部署');
+                return app.infrastructure.ai.parseAiJson(data.text);
+            },
+
+            // JSON 清洗與解析（liveClient / gasClient 共用）
+            parseAiJson: (rawText) => {
+                let jsonString = String(rawText || '').trim();
                 jsonString = jsonString.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
 
                 // 找出最外層 JSON 容器的正確邊界：用括號深度計數（忽略字串內容與跳脫字元），
@@ -1480,9 +1503,14 @@
                     return await app.infrastructure.ai.mockClient(isBatchMode);
                 }
 
-                if (!u.apiKey) throw new Error("未設定 API Key");
-                return await app.infrastructure.ai.liveClient(promptText, u.apiKey);
-            }
+                // 優先走同步 GAS（Key 由 GAS 指令碼屬性管理）；未設同步網址時才退回前端自填的 Key
+                if (u.syncUrl) return await app.infrastructure.ai.gasClient(promptText, u.syncUrl);
+                if (u.apiKey) return await app.infrastructure.ai.liveClient(promptText, u.apiKey);
+                throw new Error("尚未設定雲端同步網址（AI 改由 GAS 代呼叫），請先到「我的」→系統設定填寫");
+            },
+
+            // 是否具備 AI 呼叫條件（開發模式／同步 GAS／前端 Key 任一）
+            isReady: (u) => !!(u && (u.isDev || u.syncUrl || u.apiKey))
         },
         // 🧋 TikTok 飲品食譜解析：呼叫 GAS（action: parseDrink），由後端轉呼叫 TikWM + Gemini 2.5 Flash 視覺解析
         // 🧋🍱 社群影片食譜擷取：飲品存進 bento_drinks 展示庫，料理則直接併入 app.state.recipes
@@ -3344,8 +3372,8 @@
         // A1 今日找靈感：快速生成一道今日便當靈感
         quickInspiration: async () => {
             const user = app.state.user;
-            if (!user || !user.apiKey) {
-                app.showToast('💡 請先設定 Gemini API Key 才能使用 AI 靈感功能');
+            if (!app.infrastructure.ai.isReady(user)) {
+                app.showToast('💡 請先設定雲端同步網址（GAS）才能使用 AI 靈感功能');
                 setTimeout(() => { app.navigateTo('profile'); app.openEditProfile(); app.switchProfileTab('system'); }, 1000);
                 return;
             }
@@ -3462,9 +3490,9 @@
         // --- 1. 修改 generateAIPlan (只負責開視窗) ---
         generateAIPlan: async () => {
             const user = app.state.user;
-            if (!user || !user.apiKey) {
+            if (!app.infrastructure.ai.isReady(user)) {
                 const useDemo = await app.showModal(
-                    '需要 Gemini API Key 才能使用 AI 智慧規劃。\n\n現在可以選擇「使用內建食譜」立即體驗完整備餐流程！',
+                    '需要設定雲端同步網址（GAS，內含 Gemini API Key）才能使用 AI 智慧規劃。\n\n現在可以選擇「使用內建食譜」立即體驗完整備餐流程！',
                     '🔑 AI 規劃', 'confirm'
                 );
                 if (useDemo) { app.generateDemoPlan(); return; }
@@ -3486,9 +3514,9 @@
                 if (radio) radio.checked = true;
             }
 
-            // 無 API Key 時顯示警告條
+            // 未具備 AI 呼叫條件時顯示警告條
             const warn = document.getElementById('ai-no-key-warn');
-            if (warn) warn.classList.toggle('hidden', !!user.apiKey);
+            if (warn) warn.classList.toggle('hidden', app.infrastructure.ai.isReady(user));
 
             // 打開視窗
             document.getElementById('modal-ai-options').classList.remove('hidden');
@@ -5493,7 +5521,7 @@
                         class="w-full bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2 mb-3 disabled:opacity-40 disabled:active:scale-100">
                         <i class="fa-solid fa-calendar-plus"></i> 加入本週菜單食譜
                     </button>
-                    ${item.ingredients.length === 0 ? `<p class="text-[10px] text-gray-400 text-center -mt-2 mb-3">沒有完整食材資訊，無法加入菜單</p>` : `<p class="text-[10px] text-gray-400 text-center -mt-2 mb-3">會用你的 Gemini API Key 估算熱量等營養數據</p>`}
+                    ${item.ingredients.length === 0 ? `<p class="text-[10px] text-gray-400 text-center -mt-2 mb-3">沒有完整食材資訊，無法加入菜單</p>` : `<p class="text-[10px] text-gray-400 text-center -mt-2 mb-3">會透過同步 GAS 的 Gemini 估算熱量等營養數據</p>`}
 
                     <button onclick="app.shareIgRecipe(${item.id})" class="w-full bg-brand-500 text-white font-bold py-3.5 rounded-xl shadow-float active:scale-95 transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-share-nodes"></i> 複製分享
@@ -5507,15 +5535,15 @@
             },
 
             // IG 美食收藏沒有熱量/蛋白質等營養數據（管家 GAS 不提供），
-            // 所以用使用者自己的 Gemini API Key 現算一次，菜名/食材/做法維持原樣不變，
+            // 所以透過 AI（同步 GAS 代呼叫 Gemini）現算一次，菜名/食材/做法維持原樣不變，
             // 算完就比照 saveSharedRecipe 併入便當食譜庫，可直接在「規劃」頁選用
             addIgRecipeToMenu: async (id) => {
                 const item = (app.state.igRecipes || []).find(r => r.id === id);
                 if (!item || !item.ingredients.length) return;
 
                 const u = app.state.user;
-                if (!u.isDev && !u.apiKey) {
-                    app.showModal('尚未設定 Gemini API Key，請先到「我的」→系統設定填寫', '缺少設定', 'error');
+                if (!app.infrastructure.ai.isReady(u)) {
+                    app.showModal('尚未設定雲端同步網址（GAS），請先到「我的」→系統設定填寫', '缺少設定', 'error');
                     return;
                 }
 
