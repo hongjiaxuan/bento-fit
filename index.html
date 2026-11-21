@@ -661,19 +661,9 @@
                     </div>
 
                     <div id="tab-content-system" class="space-y-5 hidden">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">GEMINI API KEY（選填：未設雲端同步網址時才使用）</label>
-                            <input type="password" id="input-apikey" class="w-full bg-gray-800 text-white rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-brand-400 transition font-mono" placeholder="AIzaSy...">
-                            <div class="bg-blue-50 rounded-xl p-3 mt-2">
-                                <p class="text-xs font-bold text-blue-600">💡 已填「Google Script URL」者免填</p>
-                                <p class="text-xs text-blue-400 mt-1 leading-relaxed">AI 生成菜單改由同步 GAS 代呼叫，使用 GAS 指令碼屬性裡的 Key（與飲品解析同一把），換 Key 只要改 GAS 那邊。</p>
-                                <p class="text-xs font-bold text-blue-600 mt-2">如何免費取得 Gemini API Key？</p>
-                                <p class="text-xs text-blue-400 mt-1 leading-relaxed">
-                                    1. 前往 Google AI Studio (aistudio.google.com)<br>
-                                    2. 登入 Google 帳號並點擊「Get API Key」<br>
-                                    3. 建立新 Key 並貼回上方欄位
-                                </p>
-                            </div>
+                        <div class="bg-blue-50 rounded-xl p-3">
+                            <p class="text-xs font-bold text-blue-600">🔑 AI 功能由同步 GAS 代呼叫 Gemini</p>
+                            <p class="text-xs text-blue-400 mt-1 leading-relaxed">Gemini API Key 與模型設定在同步 GAS 的「指令碼屬性」（GEMINI_API_KEY／GEMINI_MODEL），App 不再保存 Key。換 Key 只要改 GAS 那邊。</p>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">Google Script URL (雲端備份)</label>
@@ -1378,40 +1368,6 @@
         
         // 新增 AI 客戶端介面
         ai: {
-            // 真實 API 呼叫（僅在未設同步 GAS 時使用；模型 gemini-3.8-flash）
-            liveClient: async (promptText, apiKey) => {
-                const model = 'gemini-3.8-flash';
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                
-                console.log(`🚀 呼叫真實 API: ${model}...`);
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        contents: [{ parts: [{ text: promptText }] }],
-                        generationConfig: { response_mime_type: "application/json" },
-                        safetySettings: [
-                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                        ]
-                    })
-                });
-
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(`API 錯誤 (${res.status}): ${errData.error?.message || '未知錯誤'}`);
-                }
-
-                const data = await res.json();
-                if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-                    throw new Error("API 回傳內容為空");
-                }
-
-                return app.infrastructure.ai.parseAiJson(data.candidates[0].content.parts[0].text);
-            },
-
             // 🔑 透過「健康餐同步 GAS」代呼叫 Gemini：Key 存在 GAS 的指令碼屬性（與 parseDrink 共用同一把），
             // 前端不再持有 Key。沿用 parseDrink 的 text/plain POST（simple request，不觸發 CORS 預檢，讀得到回應）
             gasClient: async (promptText, syncUrl) => {
@@ -1429,7 +1385,7 @@
                 return app.infrastructure.ai.parseAiJson(data.text);
             },
 
-            // JSON 清洗與解析（liveClient / gasClient 共用）
+            // JSON 清洗與解析（gasClient 使用）
             parseAiJson: (rawText) => {
                 let jsonString = String(rawText || '').trim();
                 jsonString = jsonString.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
@@ -1503,14 +1459,13 @@
                     return await app.infrastructure.ai.mockClient(isBatchMode);
                 }
 
-                // 優先走同步 GAS（Key 由 GAS 指令碼屬性管理）；未設同步網址時才退回前端自填的 Key
+                // AI 一律走同步 GAS（Key 由 GAS 指令碼屬性管理，前端不持有 Key）
                 if (u.syncUrl) return await app.infrastructure.ai.gasClient(promptText, u.syncUrl);
-                if (u.apiKey) return await app.infrastructure.ai.liveClient(promptText, u.apiKey);
-                throw new Error("尚未設定雲端同步網址（AI 改由 GAS 代呼叫），請先到「我的」→系統設定填寫");
+                throw new Error("尚未設定雲端同步網址（AI 由 GAS 代呼叫），請先到「我的」→系統設定填寫");
             },
 
-            // 是否具備 AI 呼叫條件（開發模式／同步 GAS／前端 Key 任一）
-            isReady: (u) => !!(u && (u.isDev || u.syncUrl || u.apiKey))
+            // 是否具備 AI 呼叫條件（開發模式或已設同步 GAS）
+            isReady: (u) => !!(u && (u.isDev || u.syncUrl))
         },
         // 🧋 TikTok 飲品食譜解析：呼叫 GAS（action: parseDrink），由後端轉呼叫 TikWM + Gemini 2.5 Flash 視覺解析
         // 🧋🍱 社群影片食譜擷取：飲品存進 bento_drinks 展示庫，料理則直接併入 app.state.recipes
@@ -2116,7 +2071,7 @@
                 activity: activity || 1.375,
                 goal: app._onboarding.goal,
                 tdee: tdee,
-                apiKey: '', syncUrl: '', exclude: '',
+                syncUrl: '', exclude: '',
                 isDev: false,
                 bodyComp: { bmi: bmi, bf: null, muscleMass: null, bodyWater: null, boneMass: null, visceralFat: null, scaleBmr: null }
             };
@@ -2132,7 +2087,7 @@
                 activity: activity || 1.375,
                 goal: app._onboarding.goal || '均衡飲食',
                 tdee: tdee,
-                apiKey: '', syncUrl: '', exclude: '',
+                syncUrl: '', exclude: '',
                 isDev: false,
                 bodyComp: { bmi: bmi, bf: null, muscleMass: null, bodyWater: null, boneMass: null, visceralFat: null, scaleBmr: null }
             };
@@ -2175,28 +2130,6 @@
             app.fillProfile();
             document.getElementById('modal-profile-edit').classList.remove('hidden');
             app.switchProfileTab('basic');
-            // API Key 格式即時驗證
-            const apiInput = document.getElementById('input-apikey');
-            if (apiInput && !apiInput._hintBound) {
-                apiInput._hintBound = true;
-                apiInput.addEventListener('blur', () => {
-                    const val = apiInput.value.trim();
-                    let hint = document.getElementById('apikey-hint');
-                    if (!hint) {
-                        hint = document.createElement('p');
-                        hint.id = 'apikey-hint';
-                        apiInput.parentElement.appendChild(hint);
-                    }
-                    if (!val) { hint.textContent = ''; }
-                    else if (val.startsWith('AIza') && val.length >= 35) {
-                        hint.textContent = '✅ 格式正確';
-                        hint.className = 'text-[10px] mt-1 text-green-500';
-                    } else {
-                        hint.textContent = '⚠️ 格式可能有誤（應以 AIza 開頭，約 39 字元）';
-                        hint.className = 'text-[10px] mt-1 text-orange-400';
-                    }
-                });
-            }
         },
 
         // --- ⚙️ 新增：切換彈窗分頁 (Tab) ---
@@ -2391,6 +2324,11 @@
 
             // 1. 讀取資料
             app.state.user = safeParse('bento_user', null);
+            // 舊版曾把 Gemini Key 存在前端，現改由 GAS 管理：載入時移除殘留的 apiKey
+            if (app.state.user && 'apiKey' in app.state.user) {
+                delete app.state.user.apiKey;
+                app.infrastructure.storage.set('bento_user', app.state.user);
+            }
             app.state.plan = safeParse('bento_plan', { Mon: null, Tue: null, Wed: null, Thu: null, Fri: null, Sat: null, Sun: null });
             app.state.shopping = safeParse('bento_shopping', {});
             app.state.customStaples = safeParse('bento_custom_staples', ['燕麥奶', '豌豆蛋白']);
@@ -2455,7 +2393,6 @@
                         if (nextInput) nextInput.focus();
                         else {
                             input.blur();
-                            if(input.id === 'input-apikey') app.saveProfile();
                         }
                     }
                 });
@@ -3003,7 +2940,6 @@
             app.state.user = {
                 height: h, weight: w, age: age, gender: gender, activity: activity,
                 goal: goal, tdee: tdee, 
-                apiKey: document.getElementById('input-apikey').value.trim(),
                 syncUrl: syncUrl,
                 igGasUrl: document.getElementById('input-ig-gas-url').value.trim(),
                 igGasToken: document.getElementById('input-ig-gas-token').value.trim(),
@@ -3081,7 +3017,6 @@
             document.getElementById('input-activity').value = u.activity || '1.2';
             document.getElementById('input-goal').value = u.goal || '均衡飲食';
             document.getElementById('input-exclude').value = u.exclude || '';
-            if (u.apiKey) document.getElementById('input-apikey').value = u.apiKey;
             document.getElementById('input-sync-url').value = u.syncUrl || '';
             document.getElementById('input-ig-gas-url').value = u.igGasUrl || '';
             if (u.igGasToken) document.getElementById('input-ig-gas-token').value = u.igGasToken;
@@ -3492,7 +3427,7 @@
             const user = app.state.user;
             if (!app.infrastructure.ai.isReady(user)) {
                 const useDemo = await app.showModal(
-                    '需要設定雲端同步網址（GAS，內含 Gemini API Key）才能使用 AI 智慧規劃。\n\n現在可以選擇「使用內建食譜」立即體驗完整備餐流程！',
+                    '需要設定雲端同步網址（GAS）才能使用 AI 智慧規劃。\n\n現在可以選擇「使用內建食譜」立即體驗完整備餐流程！',
                     '🔑 AI 規劃', 'confirm'
                 );
                 if (useDemo) { app.generateDemoPlan(); return; }
