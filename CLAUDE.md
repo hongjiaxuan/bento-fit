@@ -11,7 +11,7 @@
 - **位置**：`D:/佳萱/08PYTHON/健康餐 App/`
 - **技術**：Vanilla JS ＋ Tailwind CSS（**本機 `tailwind.css`**，非 CDN；SW 對本機資源走「網路優先」避免卡舊版樣式），無建置流程、無框架
 - **AI**：Google Gemini（`generativelanguage` 免費端點，使用者自備 API Key）
-- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.17，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
+- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.18，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
 
 ## 開發流程（重要）
 - **主線在 `origin/main`**；功能走 **feature 分支 ＋ Pull Request** 合併（例：`feat/social-dish-recipes`、`feat/tiktok-drink-recipes`、`refactor/mealprep-merge-into-ai-flow`）。

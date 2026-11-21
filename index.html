@@ -1378,9 +1378,9 @@
         
         // 新增 AI 客戶端介面
         ai: {
-            // 真實 API 呼叫 (嚴格限定 gemini-2.5-flash)
+            // 真實 API 呼叫（僅在未設同步 GAS 時使用；模型 gemini-3.8-flash）
             liveClient: async (promptText, apiKey) => {
-                const model = 'gemini-2.5-flash';
+                const model = 'gemini-3.8-flash';
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
                 
                 console.log(`🚀 呼叫真實 API: ${model}...`);

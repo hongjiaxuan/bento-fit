@@ -270,8 +270,8 @@ function handleAiGenerate_(payload) {
     if (!prompt) return out({ success: false, error: "缺少 prompt" });
     if (!GEMINI_API_KEY) return out({ success: false, error: "尚未設定 GEMINI_API_KEY（指令碼屬性）" });
 
-    // GEMINI_MODEL 沒設定時，退回前端原本使用的 gemini-2.5-flash；有設定就先正規化格式
-    const model = normalizeModelName_(GEMINI_MODEL) || "gemini-2.5-flash";
+    // GEMINI_MODEL 沒設定時，退回 gemini-3.8-flash（2.5 已限縮新用戶存取）；有設定就先正規化格式
+    const model = normalizeModelName_(GEMINI_MODEL) || "gemini-3.8-flash";
     const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + GEMINI_API_KEY;
     const res = UrlFetchApp.fetch(url, {
       method: "post",

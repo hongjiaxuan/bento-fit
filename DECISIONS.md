@@ -44,4 +44,4 @@
 - **背景**：換新 Gemini Key 時發現兩套設定——飲品解析（`parseDrink`）用同步 GAS 指令碼屬性的 Key；AI 生成菜單卻用前端設定頁自填的 `user.apiKey`。
 - **定案**：Key 統一放同步 GAS 指令碼屬性。前端 `ai.generate()` 有 `syncUrl` 就 POST（text/plain）`{action:'aiGenerate', prompt}`，GAS 回 `{success, text}`，前端沿用原 JSON 清洗邏輯（`parseAiJson`）。
 - 未設 `syncUrl` 時才退回前端 `apiKey`（相容）；入口檢查統一用 `ai.isReady(user)`。
-- GAS 端＝ `gas-sync-ai-generate.gs`（同步 GAS 完整版：備份＋parseDrink＋aiGenerate，整份覆蓋貼上後重新部署）。共用指令碼屬性 `GEMINI_API_KEY`／`GEMINI_MODEL`（未設模型時 aiGenerate 退回 gemini-2.5-flash）。
+- GAS 端＝ `gas-sync-ai-generate.gs`（同步 GAS 完整版：備份＋parseDrink＋aiGenerate，整份覆蓋貼上後重新部署）。共用指令碼屬性 `GEMINI_API_KEY`／`GEMINI_MODEL`（未設模型時 aiGenerate 退回 gemini-3.8-flash）。
