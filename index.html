@@ -126,7 +126,7 @@
         body.dark .border-gray-100 { border-color: #3a4639 !important; }
         /* 插畫風新增元素的深色版本（標題徽章、插圖底框、卡片細邊、營養素色塊） */
         body.dark .border-gray-50, body.dark .border-\[\#efe4d1\], body.dark .border-\[\#efe4d2\] { border-color: #3a4639 !important; }
-        body.dark .bg-\[\#fbf3e4\], body.dark .bg-\[\#fbf6ec\] { background-color: #2c352d !important; }
+        body.dark .bg-\[\#fbf3e4\], body.dark .bg-\[\#fbf6ec\], body.dark .bg-\[\#fffaf2\] { background-color: #2c352d !important; }
         body.dark .bg-blue-50, body.dark .bg-yellow-50, body.dark .bg-red-50 { background-color: #2c352d !important; }
         body.dark .border-gray-200 { border-color: #49584a !important; }
         body.dark input:not([type="checkbox"]):not([type="radio"]), body.dark select, body.dark textarea {
@@ -2728,28 +2728,31 @@
             if (banner) {
                 const dow = new Date().getDay(); // 0=日,1=一...5=五,6=六
                 const hasPlan = Object.values(app.state.plan).some(id => id);
-                let html = '', cls = 'rounded-2xl p-4 flex items-center gap-3 text-sm font-bold transition-all ';
+                // 插畫風橫幅：貼紙卡片＋左側插圖徽章＋標題/說明＋右側立體膠囊按鈕；各情境以插圖區分，不再用整片不同底色
+                const cls = 'rounded-[22px] p-3 pr-3.5 flex items-center gap-3 transition-all bg-[#fffaf2] border border-[#efe4d1] shadow-soft';
+                const card = (icon, title, sub, btnText, page) => `
+                    <span class="w-12 h-12 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0">${icon}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-gray-800 leading-snug break-words">${title}</div>
+                        ${sub ? `<div class="text-[11px] text-gray-500 mt-0.5">${sub}</div>` : ''}
+                    </div>
+                    ${btnText ? `<button onclick="app.navigateTo('${page}')" class="shrink-0 bg-brand-500 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-float">${btnText}</button>` : ''}`;
+                let html = '';
 
                 if (!hasPlan) {
-                    html = `<i class="fa-solid fa-calendar-plus text-orange-400 shrink-0"></i><span class="text-orange-700">本週尚未規劃菜單！<span onclick="app.navigateTo('planner')" class="underline cursor-pointer ml-1">立即規劃 →</span></span>`;
-                    cls += 'bg-orange-50 border border-orange-100';
+                    html = card(app.uiIcon('calendar', '📅', 34), '本週還沒規劃菜單', '讓 AI 幫你排好一週便當', '立即規劃', 'planner');
                 } else if (dow === 0) {
                     // 週日：備料提醒（A2）
                     const monRid = app.state.plan['Mon'];
                     const monR = app.state.recipes.find(x => x.id === monRid);
-                    if (monR) {
-                        html = `<i class="fa-solid fa-kitchen-set text-purple-500 shrink-0"></i><span class="text-purple-700">明日便當「<strong>${monR.name}</strong>」，今晚備料正是時候！<span onclick="app.navigateTo('shopping')" class="underline cursor-pointer ml-1">查看採買清單 →</span></span>`;
-                    } else {
-                        html = `<i class="fa-solid fa-calendar-plus text-purple-400 shrink-0"></i><span class="text-purple-700">週日了，<span onclick="app.navigateTo('planner')" class="underline cursor-pointer">安排下週便當菜單</span>開始美好一週！</span>`;
-                    }
-                    cls += 'bg-purple-50 border border-purple-100';
+                    html = monR
+                        ? card(app.recipeIcon(monR, 34), `明天吃「${monR.name}」`, '今晚備料正是時候！', '採買清單', 'shopping')
+                        : card(app.uiIcon('calendar', '📅', 34), '週日了，安排下週便當吧', '開始美好的一週', '去規劃', 'planner');
                 } else if (dow === 1) {
-                    html = `<i class="fa-solid fa-seedling text-brand-500 shrink-0"></i><span class="text-brand-700">新的一週開始，今天的便當已就位！</span>`;
-                    cls += 'bg-brand-50 border border-brand-100';
+                    html = card(app.foodIconById('cooked-meal', '🍱', 34), '新的一週開始！', '今天的便當已就位', '', '');
                 } else if (dow === 4 || dow === 5) {
                     // 週四/五：採購提醒（A2）
-                    html = `<i class="fa-solid fa-cart-shopping text-green-500 shrink-0"></i><span class="text-green-700">週末採買提醒！<span onclick="app.navigateTo('shopping')" class="underline cursor-pointer">前往採買清單</span>，提前備妥食材輕鬆開伙 🛒</span>`;
-                    cls += 'bg-green-50 border border-green-100';
+                    html = card(app.uiIcon('eco-bag', '👜', 34), '週末採買提醒', '提前備妥食材，輕鬆開伙', '採買清單', 'shopping');
                 }
 
                 if (html) {
