@@ -4,8 +4,8 @@
   "description": "AI 智能備餐與健康數據追蹤應用程式",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#fcfcfb",
-  "theme_color": "#7a906f",
+  "background_color": "#f8f2e7",
+  "theme_color": "#7aa356",
   "orientation": "portrait",
   "icons": [
     {
