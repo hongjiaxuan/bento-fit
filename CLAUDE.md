@@ -11,7 +11,7 @@
 - **位置**：`D:/佳萱/08PYTHON/健康餐 App/`
 - **技術**：Vanilla JS ＋ Tailwind CSS（**本機 `tailwind.css`**，非 CDN；SW 對本機資源走「網路優先」避免卡舊版樣式），無建置流程、無框架
 - **AI**：Google Gemini（`generativelanguage` 免費端點，使用者自備 API Key）
-- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.19，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
+- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.20，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
 
 ## 開發流程（重要）
 - **主線在 `origin/main`**；功能走 **feature 分支 ＋ Pull Request** 合併（例：`feat/social-dish-recipes`、`feat/tiktok-drink-recipes`、`refactor/mealprep-merge-into-ai-flow`）。
@@ -44,4 +44,5 @@
 ## 目前狀態（115/10/21）
 - **已完成並合併進 main**：冰箱庫存、首頁冰箱卡片、規劃時自動帶入清冰箱、週末菜單提示、移除成就挑戰（v2.12）；4 項 UX 改善（v2.13）；**IG 社群美食/飲品貼文解析 → 食譜庫**（存 `bento_ig_recipes`／`bento_drinks`，可「加入本週菜單」，PR #10~#12）。
 - 後端 `igRecipe` API 已部署於管家 GAS 並由前端串接。
+- **彈性化改版（115/11/22 定案，計畫：先排初稿 → 市場現場調整 → 買完再對齊）**：① 一句話換菜（計劃頁 ✨ 按鈕開面板：快選＋自由輸入＋冰箱優先）已完成 v2.20；② 採買清單「買不到→替代品」、③ 買完依實際食材對齊菜單 待做；④ 半週規劃（改生成道數）需再確認。
 - 待辦方向（未排程）：IG **影片內容辨識**（第 4 層，需 Cloud Run／Vertex＋GCP 額度，見 DECISIONS D-003）。

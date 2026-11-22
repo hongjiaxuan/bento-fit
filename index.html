@@ -1153,6 +1153,28 @@
             </div>
         </div>
     </div>
+    <!-- AI 一句話換菜面板（z-index 低於 modal-general，見 LESSONS L-002） -->
+    <div id="modal-reroll" class="fixed inset-0 z-[100] hidden modal-backdrop flex items-end sm:items-center sm:justify-center" onclick="if(event.target===this) app.closeModal('modal-reroll')">
+        <div class="bg-white w-full sm:w-[400px] rounded-t-[30px] sm:rounded-[30px] p-6 shadow-2xl animate-slide-up">
+            <div class="flex justify-between items-start mb-1">
+                <h3 id="reroll-title" class="font-bold text-lg text-gray-800 tracking-wide">換掉這天的便當</h3>
+                <button onclick="app.closeModal('modal-reroll')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition border border-gray-100/50"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <p id="reroll-current" class="text-[11px] text-gray-400 mb-4 truncate"></p>
+            <p class="text-xs font-bold text-gray-600 mb-2">快選（可複選）</p>
+            <div id="reroll-chips" class="flex flex-wrap gap-2 mb-4"></div>
+            <p class="text-xs font-bold text-gray-600 mb-2">或一句話說想吃什麼</p>
+            <input type="text" id="reroll-input" placeholder="例：想吃咖哩、不要再雞胸、用掉那包菇" class="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand-400 mb-3" onkeydown="if(event.key==='Enter') app.submitReroll(true)">
+            <label class="flex items-center gap-2 text-xs text-gray-500 mb-5">
+                <input type="checkbox" id="reroll-fridge" class="accent-brand-500">
+                <span id="reroll-fridge-hint">優先用冰箱有的</span>
+            </label>
+            <div class="flex gap-3">
+                <button onclick="app.submitReroll(false)" class="flex-1 bg-gray-50 text-gray-500 font-bold py-3 rounded-2xl hover:bg-gray-100 transition active:scale-95 text-sm">隨機換一道</button>
+                <button onclick="app.submitReroll(true)" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-2xl shadow-float hover:bg-brand-600 transition active:scale-95 text-sm">依需求換</button>
+            </div>
+        </div>
+    </div>
     <div id="modal-staple-manager" class="fixed inset-0 z-[90] hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
         <div class="bg-paper w-full h-[70vh] sm:h-[550px] sm:w-[400px] rounded-t-[30px] sm:rounded-[30px] flex flex-col shadow-2xl animate-slide-up border border-gray-100">
             
@@ -1663,12 +1685,15 @@
                         "prep_guide" (字串，用 " | " 分隔各類別。肉類/海鮮須寫明切法與醃料用量，蔬菜須逐一列出具體切法，澱粉視情況，無則省略該段)
                     `;
                 },
-                createSinglePrompt: (user, exclude, currentNames) => {
+                // request：使用者一句話需求（例：「想吃咖哩」「換海鮮」），fridge：冰箱食材字串；皆選填，未傳時行為與舊版相同
+                createSinglePrompt: (user, exclude, currentNames, request = '', fridge = '') => {
                     const targetCal = Math.round(user.tdee * 0.35);
                     const seed = Date.now();
                     return `
                         你是一位五星級健康餐盒設計師。設計 1 道詳細且美味的午餐便當。
                         熱量約 ${targetCal} kcal，目標：${user.goal}。
+                        ${request ? `★【使用者這次的需求，最優先遵守】${request}` : ""}
+                        ${fridge ? `★ 優先使用冰箱現有食材：${fridge}（盡量少買新食材）` : ""}
                         ${exclude ? `★ 絕對避開食材：${exclude}` : ""}
                         【防重複機制】 避開以下菜色：${currentNames}。必須全新且不同。
                         【配菜要求】 每道便當須包含 1 道主菜 + 2~3 道配菜（蔬菜為主）。
@@ -3590,10 +3615,58 @@
             app.renderPlanner();
         },
 
-        // --- 替換原有的 rerollDay ---
-        rerollDay: async (dayKey) => {
-            if(!(await app.showModal(`確定要重新生成「${DAY_LABELS[dayKey]}」的便當嗎？`, "重骰確認"))) return;
+        // 一句話換菜面板：快選 chip ＋ 自由輸入，送出後呼叫 rerollDay（面板本身即為確認步驟）
+        rerollQuickChips: ['換海鮮', '換素食', '換牛肉', '清淡一點', '重口味下飯', '韓式', '日式', '泰式', '10 分鐘快手'],
+        openRerollPanel: (dayKey) => {
+            app.state.rerollTarget = dayKey;
+            document.getElementById('reroll-title').innerText = `換掉「${DAY_LABELS[dayKey]}」的便當`;
+            const cur = app.state.recipes.find(r => r.id === app.state.plan[dayKey]);
+            document.getElementById('reroll-current').innerText = cur ? `目前：${cur.name}` : '目前未安排';
+            document.getElementById('reroll-input').value = '';
+            const fridgeNames = (app.state.fridge || []).map(x => x.name).filter(Boolean);
+            const fridgeBox = document.getElementById('reroll-fridge');
+            fridgeBox.checked = false;
+            fridgeBox.disabled = fridgeNames.length === 0;
+            document.getElementById('reroll-fridge-hint').innerText = fridgeNames.length
+                ? `優先用冰箱有的（${fridgeNames.slice(0, 4).join('、')}${fridgeNames.length > 4 ? '…' : ''}）`
+                : '冰箱目前沒有庫存';
+            document.getElementById('reroll-chips').innerHTML = app.rerollQuickChips.map(c =>
+                `<button type="button" data-chip="${c}" onclick="app.toggleRerollChip(this)" class="reroll-chip text-xs px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-500 transition active:scale-95">${c}</button>`
+            ).join('');
+            document.getElementById('modal-reroll').classList.remove('hidden');
+        },
+        toggleRerollChip: (btn) => {
+            const on = btn.classList.toggle('chip-on');
+            btn.classList.toggle('bg-brand-500', on);
+            btn.classList.toggle('text-white', on);
+            btn.classList.toggle('border-brand-500', on);
+            btn.classList.toggle('bg-white', !on);
+            btn.classList.toggle('text-gray-500', !on);
+        },
+        // withRequest=false：「隨機換一道」，忽略 chip 與輸入（等同舊版重骰）
+        submitReroll: (withRequest) => {
+            const dayKey = app.state.rerollTarget;
+            if (!dayKey) return;
+            let request = '';
+            let fridge = '';
+            if (withRequest) {
+                const chips = [...document.querySelectorAll('#reroll-chips .chip-on')].map(b => b.dataset.chip);
+                const text = document.getElementById('reroll-input').value.trim();
+                request = [...chips, text].filter(Boolean).join('；');
+                if (document.getElementById('reroll-fridge').checked) {
+                    fridge = (app.state.fridge || []).map(x => x.name).filter(Boolean).join('、');
+                }
+                if (!request && !fridge) {
+                    app.showToast('請選一個快選或輸入想吃什麼，或按「隨機換一道」');
+                    return;
+                }
+            }
+            app.closeModal('modal-reroll');
+            app.rerollDay(dayKey, request, fridge);
+        },
 
+        // --- 替換原有的 rerollDay ---（確認步驟改由 openRerollPanel 面板負責）
+        rerollDay: async (dayKey, request = '', fridge = '') => {
             const card = document.getElementById(`plan-card-${dayKey}`);
             const originalContent = card.innerHTML;
             let cancelled = false;
@@ -3611,7 +3684,7 @@
                 // 1. 領域層：生成 Prompt
                 const currentNames = app.state.recipes.filter(r => r.name).map(r => r.name).join('、');
                 const prompt = app.domain.ai.promptFactory.createSinglePrompt(
-                    app.state.user, app.state.user.exclude, currentNames
+                    app.state.user, app.state.user.exclude, currentNames, request, fridge
                 );
 
                 // 2. 基礎設施層：獲取單一資料
@@ -3683,7 +3756,7 @@
                             <button onclick="app.toggleFavorite(${r.id}); app.renderPlanner();" class="w-6 h-6 rounded-full ${r.favorite ? 'bg-red-50 text-red-400 border-red-100' : 'bg-gray-50 text-gray-300 border-gray-100'} flex items-center justify-center transition border active:scale-90" title="${r.favorite ? '取消收藏' : '加入收藏'}">
                                 <i class="${r.favorite ? 'fa-solid' : 'fa-regular'} fa-heart text-[8px]"></i>
                             </button>
-                            <button onclick="app.rerollDay('${d}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="AI 重骰">
+                            <button onclick="app.openRerollPanel('${d}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="AI 一句話換菜">
                                 <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i>
                             </button>
                             <button onclick="app.openSelector('${d}')" class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="換菜">

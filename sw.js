@@ -1,5 +1,5 @@
 // Bento Fit Service Worker
-const CACHE_NAME = 'bento-fit-v2.19';
+const CACHE_NAME = 'bento-fit-v2.20';
 // 核心本地資源：缺一不可，快取失敗則安裝失敗
 const coreAssets = [
   './',
