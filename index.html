@@ -180,19 +180,37 @@
                 <div id="tomorrow-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-orange-100/50">
                     </div>
             </div>
-            <!-- 🧊 首頁冰箱（視覺化）：分層顯示食材圖示，可一次輸入多項，點食材可標記用畢 -->
+            <!-- 🧊 首頁冰箱（視覺化）：上冷凍庫、下冷藏室；可放生鮮食材，也可放備好的料理（滷肉等）；點食材可移動/標記/用畢 -->
             <div class="bg-white p-4 rounded-[24px] shadow-soft border border-sky-50">
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">🧊 我的冰箱 <span id="dash-fridge-count" class="text-[10px] font-bold text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full"></span></h3>
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">🧊 我的冰箱 <span id="dash-fridge-count" class="hidden text-[10px] font-bold text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full"></span></h3>
                     <button onclick="app.openFridge()" class="text-[10px] bg-sky-50 text-sky-600 px-2.5 py-1 rounded-full font-bold hover:bg-sky-100 transition">管理份量</button>
                 </div>
-                <div class="relative rounded-[22px] border-2 border-sky-100 bg-gradient-to-b from-sky-50 to-white p-3 pr-5">
-                    <!-- 冰箱門把 -->
-                    <div class="absolute right-1.5 top-6 w-1.5 h-12 rounded-full bg-sky-200"></div>
-                    <div id="dash-fridge-list" class="space-y-2"></div>
-                    <div class="flex gap-2 mt-3">
-                        <input type="text" id="input-dash-fridge" placeholder="放進冰箱：雞胸 2片、鴻喜菇、豆腐" class="flex-1 min-w-0 bg-white border border-sky-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-sky-300" onkeydown="if(event.key==='Enter') app.addFridgeFromDash()">
-                        <button onclick="app.addFridgeFromDash()" class="bg-sky-500 text-white px-3 rounded-xl text-xs font-bold shadow-soft active:scale-95 transition shrink-0">放入</button>
+                <div class="relative rounded-[22px] border-2 border-sky-200 bg-white overflow-hidden">
+                    <!-- 冷凍庫 -->
+                    <div class="relative bg-gradient-to-b from-sky-100 to-sky-50 p-3 pr-6">
+                        <div class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full bg-sky-300"></div>
+                        <div class="text-[10px] font-bold text-sky-600 tracking-widest mb-1">❄️ 冷凍庫</div>
+                        <div id="dash-freezer-list" class="flex flex-wrap gap-1 min-h-[56px]"></div>
+                    </div>
+                    <div class="h-1.5 bg-sky-200"></div>
+                    <!-- 冷藏室 -->
+                    <div class="relative bg-gradient-to-b from-sky-50 to-white p-3 pr-6">
+                        <div class="absolute right-2 top-8 w-1.5 h-12 rounded-full bg-sky-200"></div>
+                        <div class="text-[10px] font-bold text-sky-500 tracking-widest mb-1">🥶 冷藏室</div>
+                        <div id="dash-fridge-list" class="flex flex-wrap gap-1 min-h-[72px]"></div>
+                    </div>
+                    <!-- 放入區 -->
+                    <div class="border-t border-sky-100 bg-sky-50/40 p-3">
+                        <div class="flex gap-1.5 mb-2">
+                            <button id="fridge-zone-fridge" onclick="app.setFridgeAddZone('fridge')" class="text-[11px] font-bold px-3 py-1 rounded-full border transition">🥶 放冷藏</button>
+                            <button id="fridge-zone-freezer" onclick="app.setFridgeAddZone('freezer')" class="text-[11px] font-bold px-3 py-1 rounded-full border transition">❄️ 放冷凍</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="input-dash-fridge" placeholder="雞胸 2片、高麗菜半顆、滷肉 1盒" class="flex-1 min-w-0 bg-white border border-sky-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-sky-300" onkeydown="if(event.key==='Enter') app.addFridgeFromDash()">
+                            <button onclick="app.addFridgeFromDash()" class="bg-sky-500 text-white px-3 rounded-xl text-xs font-bold shadow-soft active:scale-95 transition shrink-0">放入</button>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1.5">可一次放多項；滷肉、咖哩等備好的料理會標「備好」。水餃等冷凍食品會自動放冷凍。</p>
                     </div>
                 </div>
             </div>
@@ -256,6 +274,9 @@
                     <span>沿用上週</span>
                 </button>
             </div>
+            <button onclick="app.reconcilePlan()" class="w-full -mt-3 mb-5 bg-sky-50 text-sky-700 border border-sky-100 rounded-2xl py-2.5 text-xs font-bold active:scale-95 transition flex items-center justify-center gap-2">
+                🧊 依冰箱實際食材調整菜單
+            </button>
 
             <div id="ai-loading" class="hidden space-y-4">
                 <div class="flex flex-col items-center justify-center gap-2 text-brand-500 font-medium py-4">
@@ -316,7 +337,12 @@
                 <i class="fa-solid fa-box-archive"></i> 完成採買，放入冰箱
             </button>
 
-            <div id="shopping-list-container" class="space-y-8 pb-36"></div>
+            <!-- 採買場景切換：超市（冷藏櫃＋購物籃）／菜市場（攤販＋茄芷袋） -->
+            <div class="flex bg-gray-100 rounded-full p-1 mb-4">
+                <button id="scene-btn-market" onclick="app.setShopScene('market')" class="flex-1 py-2 rounded-full text-xs font-bold transition">🧺 菜市場</button>
+                <button id="scene-btn-super" onclick="app.setShopScene('super')" class="flex-1 py-2 rounded-full text-xs font-bold transition">🏪 超市</button>
+            </div>
+            <div id="shopping-list-container" class="pb-36"></div>
 
             <div class="fixed bottom-24 left-0 w-full px-6 z-10 pointer-events-none">
                 <div class="flex gap-3">
@@ -1197,6 +1223,41 @@
             </div>
         </div>
     </div>
+    <!-- 🧊 冰箱單品操作（移冷凍/冷藏、標記備好、用完了） -->
+    <div id="modal-fridge-item" class="fixed inset-0 z-[100] hidden modal-backdrop flex items-end sm:items-center sm:justify-center" onclick="if(event.target===this) app.closeModal('modal-fridge-item')">
+        <div class="bg-white w-full sm:w-[400px] rounded-t-[30px] sm:rounded-[30px] p-6 shadow-2xl animate-slide-up">
+            <div class="flex items-center gap-3 mb-5">
+                <div id="fi-icon" class="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center shrink-0"></div>
+                <div class="min-w-0">
+                    <h3 id="fi-name" class="font-bold text-lg text-gray-800 truncate"></h3>
+                    <p id="fi-meta" class="text-[11px] text-gray-400"></p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <button id="fi-move" onclick="app.fridgeItemAction('move')" class="w-full bg-sky-50 text-sky-700 font-bold py-3 rounded-2xl active:scale-95 transition text-sm"></button>
+                <button id="fi-prep" onclick="app.fridgeItemAction('prep')" class="w-full bg-amber-50 text-amber-700 font-bold py-3 rounded-2xl active:scale-95 transition text-sm"></button>
+                <button onclick="app.fridgeItemAction('used')" class="w-full bg-brand-500 text-white font-bold py-3 rounded-2xl shadow-float active:scale-95 transition text-sm">✅ 用完了，移出冰箱</button>
+                <button onclick="app.closeModal('modal-fridge-item')" class="w-full text-gray-400 font-bold py-2 text-sm">取消</button>
+            </div>
+        </div>
+    </div>
+    <!-- 🔄 ③ 依冰箱實際食材對齊菜單（調整前→調整後，勾選才套用） -->
+    <div id="modal-reconcile" class="fixed inset-0 z-[100] hidden modal-backdrop flex items-end sm:items-center sm:justify-center">
+        <div class="bg-white w-full sm:w-[420px] max-h-[85vh] flex flex-col rounded-t-[30px] sm:rounded-[30px] shadow-2xl animate-slide-up">
+            <div class="p-6 pb-3 flex justify-between items-start">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800">依冰箱對齊菜單</h3>
+                    <p id="rc-sub" class="text-[11px] text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="app.closeModal('modal-reconcile')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition border border-gray-100/50"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div id="rc-list" class="flex-1 overflow-y-auto px-6 space-y-3"></div>
+            <div class="p-6 pt-4 flex gap-3">
+                <button onclick="app.closeModal('modal-reconcile')" class="flex-1 bg-gray-50 text-gray-500 font-bold py-3 rounded-2xl active:scale-95 transition text-sm">先不要</button>
+                <button id="rc-apply" onclick="app.applyReconcile()" class="flex-1 bg-brand-500 text-white font-bold py-3 rounded-2xl shadow-float active:scale-95 transition text-sm disabled:opacity-40">套用勾選的調整</button>
+            </div>
+        </div>
+    </div>
     <!-- 🚫 採買清單「買不到 → 換替代」面板（z-index 低於 modal-general） -->
     <div id="modal-substitute" class="fixed inset-0 z-[100] hidden modal-backdrop flex items-end sm:items-center sm:justify-center" onclick="if(event.target===this) app.closeModal('modal-substitute')">
         <div class="bg-white w-full sm:w-[400px] rounded-t-[30px] sm:rounded-[30px] p-6 shadow-2xl animate-slide-up">
@@ -1729,6 +1790,29 @@
                         "prep_guide" (字串，用 " | " 分隔各類別。肉類/海鮮須寫明切法與醃料用量，蔬菜須逐一列出具體切法，澱粉視情況，無則省略該段)
                     `;
                 },
+                // ③ 採買後依冰箱實際食材「最小改動」調整單道便當
+                createReconcilePrompt: (recipe, missing, fridgeNames, exclude) => {
+                    const ings = (recipe.structured_ingredients || []).map(i => `${i.name} ${i.qty || ''}`.trim()).join('、') || (recipe.ingredients || []).join('、');
+                    return `
+                        你是便當調整顧問。使用者採買完，以下便當缺少部分食材，請以「最小改動」調整這道便當。
+                        原便當：${recipe.name}
+                        原食材：${ings}
+                        原配菜：${(recipe.sides || []).join('、') || '無'}
+                        缺少（沒買到）：${missing.join('、')}
+                        冰箱現有：${fridgeNames.join('、') || '（無）'}
+                        【規則】
+                        ★ 保留主菜概念與菜名主體，只替換缺少的食材，其餘不動。
+                        ★ 缺少的食材優先用「冰箱現有」替代；不要加入需要另外購買的新食材（常見調味料除外）。
+                        ★ 若缺的是主菜蛋白質，改用冰箱中的蛋白質，並相應修改菜名。
+                        ${exclude ? `★ 絕對避開食材：${exclude}` : ''}
+                        【嚴格 JSON 格式要求】回傳 JSON Array (1個物件)，不含 Markdown。欄位：
+                        "name", "emoji"（不可用 🍱）, "main_tag", "cal", "p", "c", "f",
+                        "sides" (Array of string), "ingredients" (Array of {name, qty, type}),
+                        "instructions" (字串, \\n 分隔), "prep_minutes" (10、20 或 30), "prep_guide" (字串，" | " 分隔),
+                        "changes"（一句話說明改了什麼，25 字內，例「青花菜改用冰箱的高麗菜」）
+                    `;
+                },
+
                 // 市場買不到某食材 → 請 AI 給同類替代（回傳極短 JSON，速度快）
                 createSubstitutePrompt: (ingredient, dishNames, exclude) => {
                     return `
@@ -1906,73 +1990,112 @@
             const countLabel = document.getElementById('shop-count-label');
             if (countLabel) countLabel.innerText = totalItems > 0 ? `${checkedItems} / ${totalItems} 項` : '';
 
-            container.innerHTML = `<p class="text-[10px] text-gray-400 px-2 mb-4"><i class="fa-solid fa-ban text-orange-400"></i> 市場買不到？點食材右邊的圖示，AI 會給替代並自動改好菜單</p>`;
-            Object.keys(cats).forEach(catName => {
-                if(cats[catName].length > 0) {
-                    let items = cats[catName];
-                    if (app.state.hideChecked) {
-                        items = items.filter(obj => !app.state.shopping[obj.key]);
-                    }
-                    if (items.length === 0) return;
-                    items.sort((a,b) => (app.state.shopping[a.key] ? 1 : 0) - (app.state.shopping[b.key] ? 1 : 0) || a.key.localeCompare(b.key, 'zh-Hant'));
-
-                    const grp = document.createElement('div');
-                    grp.className = "mb-8";
-                    // 視覺升級：分類標題更細緻
-                    grp.innerHTML = `<h3 class="text-[11px] font-bold text-brand-500/70 mb-3 px-2 tracking-widest border-b border-brand-50/50 pb-2">${catName}</h3>`;
-                    
-                    const listDiv = document.createElement('div');
-                    listDiv.className = "grid grid-cols-2 gap-x-1 gap-y-0.5";
-
-                    items.forEach(obj => {
-                        const checked = app.state.shopping[obj.key];
-                        const row = document.createElement('label');
-                        row.className = `flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-brand-50/30 min-w-0 ${checked ? 'opacity-25 grayscale' : 'opacity-100'}`;
-                        row.innerHTML = `
-                            <input type="checkbox" class="hidden custom-checkbox" ${checked?'checked':''} onchange="app.toggleShop('${obj.key}')">
-                            <div class="w-5 h-5 rounded border border-gray-300 flex items-center justify-center transition-colors shrink-0 text-white text-[10px]">
-                                <i class="fa-solid fa-check ${checked?'':'hidden'}"></i>
-                            </div>
-                            <span class="text-xs font-medium ${checked?'line-through':''} text-gray-700 truncate flex-1 tracking-wide">${obj.displayName}</span>
-                            ${checked ? '' : `<button onclick="event.preventDefault(); event.stopPropagation(); app.openSubstitute(decodeURIComponent('${encodeURIComponent(obj.key).replace(/'/g, '%27')}'))" title="買不到，換替代" class="shrink-0 w-6 h-6 -mr-1 rounded-full text-gray-300 hover:text-orange-500 hover:bg-orange-50 flex items-center justify-center transition"><i class="fa-solid fa-ban text-[11px]"></i></button>`}
-                        `;
-                        listDiv.appendChild(row);
-                    });
-                    grp.appendChild(listDiv);
-                    container.appendChild(grp);
-                }
+            // ── 場景式採買：上半部＝菜市場攤販／超市冷藏櫃（待買），下半部＝茄芷袋／購物籃（已買） ──
+            const scene = (app.state.user && app.state.user.shopScene) || 'market';
+            ['market', 'super'].forEach(sc => {
+                const b = document.getElementById(`scene-btn-${sc}`);
+                if (b) b.className = `flex-1 py-2 rounded-full text-xs font-bold transition ${sc === scene ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`;
             });
+            const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const q = (k) => `decodeURIComponent('${encodeURIComponent(k).replace(/'/g, '%27')}')`;
+            const zoneLabel = scene === 'market'
+                ? { [config.categories.veg]: '🥬 菜攤', [config.categories.fresh]: '🥩 肉攤・魚攤', [config.categories.carb]: '🍚 雜糧行', [config.categories.pantry]: '🧂 雜貨店', custom: '🛍️ 其他' }
+                : { [config.categories.veg]: '🥦 蔬果區', [config.categories.fresh]: '🧊 生鮮冷藏櫃', [config.categories.carb]: '🍚 米麵區', [config.categories.pantry]: '🧂 調味雜貨', custom: '🛍️ 手動新增' };
 
-            // ── 手動新增食材區塊 ──
-            if (customItems.length > 0) {
-                const grp = document.createElement('div');
-                grp.className = "mb-8";
-                grp.innerHTML = `
-                    <h3 class="text-[11px] font-bold text-purple-400/80 mb-3 px-2 tracking-widest border-b border-purple-50 pb-2 flex items-center justify-between">
-                        <span>🛍️ 手動新增</span>
-                        <button onclick="app.clearAllCustomShoppingItems()" class="text-gray-300 hover:text-red-400 font-normal tracking-normal normal-case text-[10px]">清空全部</button>
-                    </h3>`;
-                const listDiv = document.createElement('div');
-                listDiv.className = "grid grid-cols-2 gap-x-1 gap-y-0.5";
-                customItems.forEach((name, idx) => {
-                    const key = `__custom_${idx}`;
-                    const checked = !!app.state.shopping[key];
-                    if (app.state.hideChecked && checked) return;
-                    const row = document.createElement('label');
-                    row.className = `flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-purple-50/30 min-w-0 ${checked ? 'opacity-25 grayscale' : ''}`;
-                    row.innerHTML = `
-                        <input type="checkbox" class="hidden custom-checkbox" ${checked?'checked':''} onchange="app.toggleShop('${key}')">
-                        <div class="w-5 h-5 rounded border border-gray-300 flex items-center justify-center transition-colors shrink-0 text-white text-[10px]">
-                            <i class="fa-solid fa-check ${checked?'':'hidden'}"></i>
+            // 整理所有品項：{ key, name, qty, cat, custom, idx }
+            const all = [];
+            Object.keys(cats).forEach(catName => cats[catName].forEach(obj => {
+                const d = aggMap[obj.key];
+                all.push({ key: obj.key, name: obj.key, qty: d && d.qtys.length ? d.qtys.join(' + ') : '', cat: catName, custom: false });
+            }));
+            customItems.forEach((nm, idx) => all.push({ key: `__custom_${idx}`, name: nm, qty: '', cat: 'custom', custom: true, idx }));
+            const todo = all.filter(it => !app.state.shopping[it.key]);
+            const got = all.filter(it => app.state.shopping[it.key]);
+
+            const tile = (it, inBag) => `
+                <div class="relative w-[64px]">
+                    <button onclick="app.toggleShop(${q(it.key)})" class="w-full flex flex-col items-center py-1.5 rounded-xl active:scale-90 transition ${inBag ? '' : 'hover:bg-white/70'}">
+                        ${app.foodIcon(it.name, 34)}
+                        <span class="text-[10px] font-bold text-gray-700 mt-0.5 w-full truncate text-center">${esc(it.name)}</span>
+                        ${it.qty ? `<span class="text-[9px] text-gray-400 w-full truncate text-center">${esc(it.qty)}</span>` : ''}
+                    </button>
+                    ${inBag ? '' : it.custom
+                        ? `<button onclick="event.stopPropagation(); app.removeCustomShoppingItem(${it.idx})" title="刪除" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white shadow text-gray-300 hover:text-red-400 flex items-center justify-center text-[10px]"><i class="fa-solid fa-xmark"></i></button>`
+                        : `<button onclick="event.stopPropagation(); app.openSubstitute(${q(it.key)})" title="買不到，換替代" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white shadow text-gray-300 hover:text-orange-500 flex items-center justify-center text-[10px]"><i class="fa-solid fa-ban"></i></button>`}
+                </div>`;
+
+            // 上半部：依分類分攤位／分層
+            const order = [config.categories.veg, config.categories.fresh, config.categories.carb, config.categories.pantry, 'custom'];
+            const sections = order.map(c => {
+                const items = todo.filter(it => it.cat === c);
+                if (!items.length) return '';
+                return scene === 'market'
+                    ? `<div class="bg-amber-50/80 rounded-2xl p-2 border border-amber-200/70">
+                            <div class="text-[10px] font-bold text-amber-700 mb-1 px-1">${zoneLabel[c] || c}</div>
+                            <div class="flex flex-wrap gap-1">${items.map(it => tile(it, false)).join('')}</div>
+                       </div>`
+                    : `<div class="border-b-4 border-gray-200 pb-1.5">
+                            <div class="text-[10px] font-bold text-sky-600 mb-1 px-1">${zoneLabel[c] || c}</div>
+                            <div class="flex flex-wrap gap-1">${items.map(it => tile(it, false)).join('')}</div>
+                       </div>`;
+            }).join('');
+            const topEmpty = `<div class="text-center text-xs text-gray-400 py-6">🎉 都買齊了！按上方「完成採買，放入冰箱」</div>`;
+            const top = scene === 'market'
+                ? `<div class="rounded-[22px] overflow-hidden border-2 border-amber-200 bg-white">
+                        <div class="h-7" style="background:repeating-linear-gradient(90deg,#e05252 0 22px,#ffffff 22px 44px)"></div>
+                        <div class="flex justify-center -mt-1"><div class="h-2 w-full" style="background:radial-gradient(circle at 11px 0,#e05252 10px,transparent 11px) 0 0/44px 8px repeat-x"></div></div>
+                        <div class="p-3 space-y-2">
+                            <div class="text-[11px] font-bold text-gray-500">🏮 傳統市場・待買 ${todo.length} 項</div>
+                            ${sections || topEmpty}
                         </div>
-                        <span class="text-xs font-medium ${checked?'line-through':''} text-gray-700 truncate flex-1 tracking-wide">${name}</span>
-                        <button onclick="event.stopPropagation(); app.removeCustomShoppingItem(${idx})" class="text-gray-200 hover:text-red-400 transition text-xs shrink-0"><i class="fa-solid fa-xmark"></i></button>
-                    `;
-                    listDiv.appendChild(row);
-                });
-                grp.appendChild(listDiv);
-                container.appendChild(grp);
-            }
+                   </div>`
+                : `<div class="rounded-[22px] overflow-hidden border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white">
+                        <div class="bg-sky-600 text-white text-[11px] font-bold px-4 py-1.5 tracking-widest flex justify-between"><span>FRESH 超市冷藏櫃</span><span>待買 ${todo.length} 項</span></div>
+                        <div class="h-1 bg-sky-200/80"></div>
+                        <div class="p-3 space-y-3">${sections || topEmpty}</div>
+                   </div>`;
+
+            // 下半部：已買放進茄芷袋／購物籃
+            const bagItems = app.state.hideChecked
+                ? `<div class="text-center text-[11px] text-gray-400 py-3">已放入 ${got.length} 項（已隱藏）</div>`
+                : got.length
+                    ? `<div class="flex flex-wrap gap-1 justify-center">${got.map(it => tile(it, true)).join('')}</div>`
+                    : `<div class="text-center text-[11px] text-gray-300 py-4">點上面的食材，就會放進${scene === 'market' ? '茄芷袋' : '購物籃'}<br>放錯了點袋子裡的食材可以拿出來</div>`;
+            const bag = scene === 'market'
+                ? `<div class="mt-6 mx-2">
+                        <div class="flex justify-center gap-16 -mb-1">
+                            <div class="w-12 h-6 border-4 border-b-0 border-red-500 rounded-t-full"></div>
+                            <div class="w-12 h-6 border-4 border-b-0 border-blue-600 rounded-t-full"></div>
+                        </div>
+                        <div class="rounded-b-[26px] rounded-t-lg overflow-hidden border-2 border-gray-200 bg-white">
+                            <div class="h-5" style="background:repeating-linear-gradient(90deg,#d93a3a 0 14px,#ffffff 14px 20px,#2c5aa0 20px 34px,#ffffff 34px 40px)"></div>
+                            <div class="p-3 min-h-[96px]">
+                                <div class="text-[11px] font-bold text-gray-500 mb-1">👜 茄芷袋・已買 ${got.length} 項</div>
+                                ${bagItems}
+                            </div>
+                            <div class="h-5" style="background:repeating-linear-gradient(90deg,#d93a3a 0 14px,#ffffff 14px 20px,#2c5aa0 20px 34px,#ffffff 34px 40px)"></div>
+                        </div>
+                   </div>`
+                : `<div class="mt-6 mx-2">
+                        <div class="flex justify-center -mb-1"><div class="w-40 h-7 border-[5px] border-b-0 border-red-500 rounded-t-[20px]"></div></div>
+                        <div class="rounded-b-[26px] rounded-t-xl border-4 border-red-500 bg-red-50/40 p-3 min-h-[110px]" style="background-image:linear-gradient(rgba(239,68,68,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.08) 1px,transparent 1px);background-size:14px 14px">
+                            <div class="text-[11px] font-bold text-red-500 mb-1">🛒 購物籃・已買 ${got.length} 項</div>
+                            ${bagItems}
+                        </div>
+                   </div>`;
+
+            container.innerHTML = `
+                <p class="text-[10px] text-gray-400 px-1 mb-3">點食材放進${scene === 'market' ? '袋子' : '籃子'}；買不到點右上角 <i class="fa-solid fa-ban text-orange-400"></i>，AI 會給替代並改好菜單</p>
+                ${top}
+                ${bag}`;
+        },
+
+        // 切換採買場景（存在使用者設定 bento_user，不新增 localStorage key）
+        setShopScene: (scene) => {
+            if (!app.state.user) return;
+            app.state.user.shopScene = scene;
+            app.infrastructure.storage.set('bento_user', app.state.user);
+            app.renderShopping();
         },
 
         // --- 替換原有的 copyShoppingList ---
@@ -3855,6 +3978,95 @@
             if (ing) document.getElementById('reroll-input').value = `不要用${ing}`;
         },
 
+        // 🔄 ③ 依冰箱實際食材對齊菜單：找出本週每道菜「冰箱沒有、也不是常備品」的食材 →
+        //    只對受影響的菜平行請 AI 最小改動 → 顯示調整前後，使用者勾選才套用
+        findPlanGaps: () => {
+            const { config, services } = app.domain.shopping;
+            const fridgeNames = (app.state.fridge || []).map(f => (f.name || '').trim()).filter(Boolean);
+            const inFridge = (n) => fridgeNames.some(f => f.includes(n) || n.includes(f));
+            const byRecipe = new Map();
+            Object.entries(app.state.plan || {}).forEach(([day, rid]) => {
+                const r = app.state.recipes.find(x => x.id === rid);
+                if (!r) return;
+                if (!byRecipe.has(r.id)) {
+                    const names = (Array.isArray(r.structured_ingredients) && r.structured_ingredients.length)
+                        ? r.structured_ingredients.map(i => (i.name || '').trim())
+                        : (r.ingredients || []).map(s => String(s).split(' ')[0]);
+                    const missing = [...new Set(names.filter(n => n && !inFridge(n) && !services.checkIsStaple(n, config, app.state.customStaples || [])))];
+                    byRecipe.set(r.id, { recipe: r, days: [], missing });
+                }
+                byRecipe.get(r.id).days.push(day);
+            });
+            return { fridgeNames, gaps: [...byRecipe.values()].filter(g => g.missing.length) };
+        },
+        reconcilePlan: async () => {
+            if (!(app.state.fridge || []).length) {
+                await app.showModal('冰箱目前是空的。先到首頁冰箱放入食材，或在採買清單按「完成採買，放入冰箱」，再來對齊菜單。', '依冰箱對齊菜單', 'alert');
+                return;
+            }
+            const { fridgeNames, gaps } = app.findPlanGaps();
+            if (!gaps.length) { app.showToast('👍 冰箱食材都夠，本週菜單不用調整'); return; }
+            if (!app.infrastructure.ai.isReady(app.state.user)) { app.showToast('💡 請先設定雲端同步網址（GAS）才能使用 AI 調整'); return; }
+            const listEl = document.getElementById('rc-list');
+            const sub = document.getElementById('rc-sub');
+            const applyBtn = document.getElementById('rc-apply');
+            applyBtn.disabled = true;
+            let done = 0;
+            const setSub = () => sub.innerText = `AI 調整中…（${done}/${gaps.length} 道）`;
+            setSub();
+            listEl.innerHTML = gaps.map(() => `<div class="bg-gray-50 rounded-2xl h-20 shimmer"></div>`).join('');
+            document.getElementById('modal-reconcile').classList.remove('hidden');
+            const results = await Promise.allSettled(gaps.map(g =>
+                app.infrastructure.ai.generate(app.domain.ai.promptFactory.createReconcilePrompt(g.recipe, g.missing, fridgeNames, app.state.user.exclude), false)
+                    .then(d => { done++; setSub(); return d && d[0]; })));
+            app.state.reconcile = gaps.map((g, i) => ({ ...g, next: results[i].status === 'fulfilled' ? results[i].value : null,
+                err: results[i].status === 'rejected' ? (results[i].reason && results[i].reason.message) : null }));
+            const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const okCount = app.state.reconcile.filter(x => x.next && x.next.name).length;
+            sub.innerText = `${gaps.length} 道菜缺少食材，AI 已調整 ${okCount} 道。勾選要套用的：`;
+            listEl.innerHTML = app.state.reconcile.map((x, i) => `
+                <label class="block bg-white border ${x.next && x.next.name ? 'border-brand-100' : 'border-red-100'} rounded-2xl p-3">
+                    <div class="flex items-start gap-3">
+                        ${x.next && x.next.name ? `<input type="checkbox" data-rc="${i}" checked class="mt-1 accent-brand-500 w-4 h-4 shrink-0">` : '<span class="w-4 shrink-0"></span>'}
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[10px] font-bold text-brand-500">${x.days.map(d => DAY_LABELS[d]).join('、')}</div>
+                            <div class="text-xs text-gray-400 line-through break-words">${esc(x.recipe.name)}</div>
+                            ${x.next && x.next.name
+                                ? `<div class="text-sm font-bold text-gray-800 break-words">→ ${esc(x.next.name)}</div>
+                                   <div class="text-[11px] text-gray-500 mt-0.5">${esc(x.next.changes || '')}</div>`
+                                : `<div class="text-[11px] text-red-400 mt-0.5">調整失敗：${esc(x.err || 'AI 回傳不完整')}</div>`}
+                            <div class="text-[10px] text-orange-500 mt-1">缺：${esc(x.missing.join('、'))}</div>
+                        </div>
+                    </div>
+                </label>`).join('');
+            applyBtn.disabled = okCount === 0;
+        },
+        applyReconcile: () => {
+            const picks = [...document.querySelectorAll('#rc-list input[data-rc]:checked')].map(el => app.state.reconcile[+el.dataset.rc]);
+            if (!picks.length) { app.closeModal('modal-reconcile'); return; }
+            let base = Date.now();
+            picks.forEach(x => {
+                const item = x.next;
+                const recipe = {
+                    ...item, id: base++, tags: [item.main_tag || '一般'], favorite: false, emoji: item.emoji || '🍱',
+                    prep_minutes: [10, 20, 30].includes(item.prep_minutes) ? item.prep_minutes : 20,
+                    sides: Array.isArray(item.sides) ? item.sides : [],
+                    ingredients: Array.isArray(item.ingredients) ? item.ingredients.map(ing => `${ing.name} ${ing.qty}`) : [],
+                    structured_ingredients: Array.isArray(item.ingredients) ? item.ingredients : []
+                };
+                delete recipe.changes;
+                app.state.recipes.push(recipe);
+                x.days.forEach(d => { app.state.plan[d] = recipe.id; });
+            });
+            app.infrastructure.storage.set('bento_recipes', app.state.recipes);
+            app.infrastructure.storage.set('bento_plan', app.state.plan);
+            app.closeModal('modal-reconcile');
+            app.renderPlanner();
+            app.renderShopping();
+            app.showToast(`🔄 已依冰箱調整 ${picks.length} 道菜`);
+            app.cloudSync.scheduleUpload();
+        },
+
         // --- 替換原有的 rerollDay ---（確認步驟改由 openRerollPanel 面板負責）
         rerollDay: async (dayKey, request = '', fridge = '') => {
             const card = document.getElementById(`plan-card-${dayKey}`);
@@ -4077,6 +4289,13 @@
                 localStorage.setItem('bento_custom_shopping', JSON.stringify(customs));
                 app.renderShopping();
                 app.showToast(`🧊 已將 ${added.length} 項放入冰箱庫存`);
+                // ③ 採買完：若本週菜單還有冰箱沒有的食材，詢問是否依實際買到的食材調整
+                const { gaps } = app.findPlanGaps();
+                if (gaps.length) {
+                    const miss = [...new Set(gaps.flatMap(g => g.missing))];
+                    const ok = await app.showModal(`本週菜單還有 ${miss.length} 項食材冰箱裡沒有（${miss.slice(0, 5).join('、')}${miss.length > 5 ? '…' : ''}）。\n要讓 AI 依冰箱實際食材調整受影響的菜嗎？`, '依實際食材調整菜單', 'confirm', '幫我調整');
+                    if (ok) { app.reconcilePlan(); app.cloudSync.scheduleUpload(); return; }
+                }
                 app.openFridge();
                 app.cloudSync.scheduleUpload();
             },
@@ -4089,59 +4308,112 @@
             // 同步刷新「冰箱 modal 清單」與「首頁冰箱卡片」兩處
             refreshFridgeViews: () => { app.renderFridge(); app.renderDashFridge(); },
 
-            // 冰箱食材 → 圖示與層架（依名稱關鍵字判斷，先比對到的優先）
-            fridgeEmojiRules: [
-                [/牛奶|鮮奶|奶/, '🥛'], [/起司|乳酪/, '🧀'], [/優格|優酪/, '🥣'],
-                [/蛋/, '🥚'], [/蝦/, '🦐'], [/蟹/, '🦀'], [/花枝|透抽|魷|章魚/, '🦑'], [/蛤|蚵|貝|淡菜/, '🦪'],
-                [/魚|鮭|鯖|鯛|鱈|鮪/, '🐟'], [/雞/, '🍗'], [/培根|火腿|香腸/, '🥓'], [/豬|牛|羊|肉|排/, '🥩'],
-                [/豆腐|豆干|豆皮/, '🧈'], [/毛豆|豆/, '🫛'], [/菇|蕈/, '🍄'], [/花椰|青花/, '🥦'], [/紅蘿蔔|胡蘿蔔/, '🥕'],
-                [/洋蔥/, '🧅'], [/蒜/, '🧄'], [/薑/, '🫚'], [/番茄|蕃茄/, '🍅'], [/玉米/, '🌽'], [/小黃瓜|黃瓜|櫛瓜/, '🥒'],
-                [/茄子/, '🍆'], [/椒/, '🫑'], [/地瓜|番薯/, '🍠'], [/馬鈴薯|洋芋/, '🥔'], [/南瓜/, '🎃'], [/酪梨/, '🥑'],
-                [/蘋果/, '🍎'], [/香蕉/, '🍌'], [/莓/, '🍓'], [/檸檬/, '🍋'], [/橘|柳丁|橙/, '🍊'], [/奇異果/, '🥝'],
-                [/九層塔|香菜|羅勒|薄荷|迷迭香/, '🌿'], [/菜|蔥|芹|筍|萵苣|豆芽|蘆筍/, '🥬'],
-                [/飯|米/, '🍚'], [/麵|義大利/, '🍝'], [/吐司|麵包/, '🍞']
+            // 🖼️ 食材圖片目錄：依名稱關鍵字對應固定圖片 img/food/<id>.png（AI 繪製後放入即生效），
+            //    圖片尚未放入時自動退回 emoji。順序＝比對優先順序（調味料 → 備好的料理 → 生鮮）。
+            //    清單同步記錄在 img/food/README.md，新增項目時兩邊一起改。
+            foodCatalog: [
+                ['seasoning', /醬油|豆瓣|味醂|蠔油|醬$|鹽|糖|橄欖油|麻油|沙拉油|香油|醋|米酒|料理酒|太白粉|地瓜粉|麵粉|胡椒|咖哩塊|咖哩粉|味噌|高湯塊|雞粉/, '🧂', '調味料'],
+                ['braised', /滷|紅燒|燉|焢/, '🍲', '滷味／燉菜（備好）', true],
+                ['curry', /咖哩/, '🍛', '咖哩（備好）', true],
+                ['dumpling', /水餃|餃|包子|餛飩/, '🥟', '水餃／包子'],
+                ['soup', /湯/, '🥣', '湯品（備好）', true],
+                ['cooked-meal', /炒飯|便當|熟飯|炒麵/, '🍱', '熟食／便當（備好）', true],
+                ['prepped', /備好|已醃|醃好|半成品|已切|切好/, '🥡', '備好的料理', true],
+                ['milk', /牛奶|鮮奶|奶/, '🥛', '牛奶'], ['cheese', /起司|乳酪/, '🧀', '起司'], ['yogurt', /優格|優酪/, '🥛', '優格'],
+                ['egg', /蛋/, '🥚', '蛋'], ['shrimp', /蝦/, '🦐', '蝦'], ['crab', /蟹/, '🦀', '蟹'],
+                ['squid', /花枝|透抽|魷|章魚|小卷/, '🦑', '花枝／透抽'], ['shellfish', /蛤|蚵|貝|淡菜/, '🦪', '貝類'],
+                ['salmon', /鮭/, '🐟', '鮭魚'], ['fish', /魚|鯖|鯛|鱈|鮪/, '🐟', '魚'],
+                ['chicken', /雞/, '🍗', '雞肉'], ['bacon', /培根|火腿|香腸/, '🥓', '培根／火腿'],
+                ['pork', /豬|五花|梅花|里肌/, '🥩', '豬肉'], ['beef', /牛/, '🥩', '牛肉'], ['meat', /肉|排|羊/, '🥩', '肉類'],
+                ['tofu', /豆腐|豆干|豆皮/, '🧈', '豆腐'], ['beans', /毛豆|四季豆|甜豆|豌豆|豆/, '🫛', '豆類'],
+                ['mushroom', /菇|蕈|木耳/, '🍄', '菇類'], ['broccoli', /花椰|青花/, '🥦', '花椰菜'],
+                ['carrot', /紅蘿蔔|胡蘿蔔/, '🥕', '紅蘿蔔'], ['radish', /白蘿蔔|蘿蔔/, '🥕', '白蘿蔔'],
+                ['onion', /洋蔥/, '🧅', '洋蔥'], ['garlic', /蒜/, '🧄', '蒜'], ['ginger', /薑/, '🫚', '薑'],
+                ['tomato', /番茄|蕃茄/, '🍅', '番茄'], ['corn', /玉米/, '🌽', '玉米'],
+                ['cucumber', /小黃瓜|黃瓜|櫛瓜/, '🥒', '小黃瓜／櫛瓜'], ['eggplant', /茄子/, '🍆', '茄子'], ['pepper', /椒/, '🫑', '甜椒／辣椒'],
+                ['sweet-potato', /地瓜|番薯/, '🍠', '地瓜'], ['potato', /馬鈴薯|洋芋/, '🥔', '馬鈴薯'], ['pumpkin', /南瓜/, '🎃', '南瓜'],
+                ['avocado', /酪梨/, '🥑', '酪梨'], ['apple', /蘋果/, '🍎', '蘋果'], ['banana', /香蕉/, '🍌', '香蕉'],
+                ['berry', /莓/, '🍓', '莓果'], ['lemon', /檸檬/, '🍋', '檸檬'], ['orange', /橘|柳丁|橙/, '🍊', '柑橘'], ['kiwi', /奇異果/, '🥝', '奇異果'],
+                ['herb', /九層塔|香菜|羅勒|薄荷|迷迭香/, '🌿', '香草'], ['scallion', /蔥/, '🌱', '蔥'],
+                ['cabbage', /高麗菜|白菜/, '🥬', '高麗菜／白菜'], ['spinach', /菠菜/, '🥬', '菠菜'],
+                ['leafy-greens', /菜|芹|筍|萵苣|豆芽|蘆筍|地瓜葉/, '🥬', '葉菜類'],
+                ['rice', /飯|米/, '🍚', '米飯'], ['noodle', /麵|義大利|冬粉|米粉/, '🍝', '麵類'], ['bread', /吐司|麵包/, '🍞', '麵包'],
+                ['fruit', /果/, '🍑', '水果']
             ],
-            fridgeEmoji: (name) => {
-                const hit = app.fridgeEmojiRules.find(([re]) => re.test(name || ''));
-                return hit ? hit[1] : '🥫';
+            foodInfo: (name) => {
+                const n = String(name || '');
+                const hit = app.foodCatalog.find(c => c[1].test(n));
+                return hit ? { id: hit[0], emoji: hit[2], prepped: !!hit[4] } : { id: 'other', emoji: '🥫', prepped: false };
             },
-            fridgeShelf: (name) => {
-                const n = name || '';
-                if (/奶|起司|乳酪|優格|優酪/.test(n)) return 'other'; // 乳製品先判斷，避免「牛奶」被當成牛肉
-                if (/蛋|蝦|蟹|花枝|透抽|魷|章魚|蛤|蚵|貝|魚|鮭|鯖|鯛|鱈|鮪|雞|培根|火腿|香腸|豬|牛|羊|肉|排/.test(n)) return 'protein';
-                if (/菜|菇|蕈|花椰|青花|蘿蔔|洋蔥|蒜|薑|番茄|蕃茄|玉米|瓜|茄子|椒|地瓜|番薯|馬鈴薯|洋芋|酪梨|蘋果|香蕉|莓|檸檬|橘|柳丁|橙|奇異果|蔥|芹|筍|萵苣|豆芽|蘆筍|毛豆|果|九層塔|香菜|羅勒|薄荷|迷迭香/.test(n)) return 'veg';
-                return 'other';
+            _foodImgMissing: new Set(),
+            // 回傳食材圖示 HTML：先顯示 emoji，圖片載入成功才換成圖片；載入失敗記住，之後不再重試
+            foodIcon: (name, size = 36) => {
+                const { id, emoji } = app.foodInfo(name);
+                const emo = `<span class="leading-none" style="font-size:${Math.round(size * 0.72)}px">${emoji}</span>`;
+                if (app._foodImgMissing.has(id)) return `<span class="inline-flex items-center justify-center" style="width:${size}px;height:${size}px">${emo}</span>`;
+                return `<span class="inline-flex items-center justify-center relative" style="width:${size}px;height:${size}px">${emo}<img src="img/food/${id}.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="app._foodImgMissing.add('${id}');this.remove()"></span>`;
+            },
+            fridgeEmoji: (name) => app.foodInfo(name).emoji,
+            // 冰箱分區：有存 zone 用存的；沒有則依名稱判斷（冷凍食品 → 冷凍庫）
+            fridgeZone: (item) => item.zone || (/冷凍|水餃|餃|冰淇淋|冰塊|餛飩/.test(item.name || '') ? 'freezer' : 'fridge'),
+            fridgeIsPrepped: (item) => (typeof item.prepped === 'boolean') ? item.prepped : app.foodInfo(item.name).prepped,
+            setFridgeAddZone: (zone) => {
+                app.state.fridgeAddZone = zone;
+                [['fridge', 'fridge-zone-fridge'], ['freezer', 'fridge-zone-freezer']].forEach(([z, id]) => {
+                    const b = document.getElementById(id); if (!b) return;
+                    const on = z === zone;
+                    b.className = `text-[11px] font-bold px-3 py-1 rounded-full border transition ${on ? 'bg-sky-500 text-white border-sky-500' : 'bg-white text-gray-500 border-gray-200'}`;
+                });
             },
 
-            // 首頁冰箱（視覺化）：分三層顯示，點食材 → 確認用畢
+            // 首頁冰箱（視覺化）：冷凍庫／冷藏室兩區，備好的料理排前面並標「備好」，點食材開操作面板
             renderDashFridge: () => {
-                const el = document.getElementById('dash-fridge-list');
-                if (!el) return;
-                const list = (app.state.fridge || []).slice().sort((a, b) => a.id - b.id);
+                const fzEl = document.getElementById('dash-freezer-list');
+                const frEl = document.getElementById('dash-fridge-list');
+                if (!fzEl || !frEl) return;
+                app.setFridgeAddZone(app.state.fridgeAddZone || 'fridge');
+                const list = (app.state.fridge || []).slice().sort((a, b) => (app.fridgeIsPrepped(b) - app.fridgeIsPrepped(a)) || (a.id - b.id));
                 const countEl = document.getElementById('dash-fridge-count');
                 if (countEl) { countEl.innerText = `${list.length} 項`; countEl.classList.toggle('hidden', list.length === 0); }
-                if (list.length === 0) {
-                    el.innerHTML = `<div class="text-center py-6 text-[11px] text-gray-300 tracking-wider">冰箱空空的<br>在下方輸入食材放進來，規劃菜單時會優先使用</div>`;
-                    return;
-                }
                 const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-                const shelves = [['protein', '肉・海鮮・蛋'], ['veg', '蔬菜・水果'], ['other', '其他']];
-                el.innerHTML = shelves.map(([key, label]) => {
-                    const items = list.filter(x => app.fridgeShelf(x.name) === key);
-                    if (items.length === 0) return '';
-                    return `
-                        <div class="border-b-4 border-sky-100/80 pb-1.5">
-                            <div class="text-[9px] font-bold text-sky-400 tracking-widest mb-1">${label}</div>
-                            <div class="flex flex-wrap gap-1">
-                                ${items.map(item => `
-                                    <button onclick="app.removeFridgeItem(${item.id})" title="點一下標記用畢" class="w-[60px] flex flex-col items-center py-1 rounded-xl hover:bg-white active:scale-95 transition">
-                                        <span class="text-2xl leading-none">${app.fridgeEmoji(item.name)}</span>
-                                        <span class="text-[10px] font-bold text-gray-700 mt-1 w-full truncate text-center">${esc(item.name)}</span>
-                                        ${item.qty ? `<span class="text-[9px] text-sky-500 w-full truncate text-center">${esc(item.qty)}</span>` : ''}
-                                    </button>`).join('')}
-                            </div>
-                        </div>`;
-                }).join('');
+                const tile = (item) => `
+                    <button onclick="app.openFridgeItem(${item.id})" class="relative w-[60px] flex flex-col items-center py-1 rounded-xl hover:bg-white active:scale-95 transition">
+                        ${app.fridgeIsPrepped(item) ? '<span class="absolute top-0 right-0 text-[8px] font-bold bg-amber-400 text-white px-1 rounded">備好</span>' : ''}
+                        ${app.foodIcon(item.name, 34)}
+                        <span class="text-[10px] font-bold text-gray-700 mt-0.5 w-full truncate text-center">${esc(item.name)}</span>
+                        ${item.qty ? `<span class="text-[9px] text-sky-500 w-full truncate text-center">${esc(item.qty)}</span>` : ''}
+                    </button>`;
+                const fz = list.filter(x => app.fridgeZone(x) === 'freezer');
+                const fr = list.filter(x => app.fridgeZone(x) !== 'freezer');
+                fzEl.innerHTML = fz.length ? fz.map(tile).join('') : `<span class="text-[10px] text-sky-300 self-center">空的</span>`;
+                frEl.innerHTML = fr.length ? fr.map(tile).join('') : `<span class="text-[10px] text-gray-300 self-center">冰箱空空的，在下方放入食材或備好的料理，規劃菜單時會優先使用</span>`;
+            },
+
+            // 冰箱單品操作面板
+            openFridgeItem: (id) => {
+                const item = (app.state.fridge || []).find(x => x.id === id);
+                if (!item) return;
+                app.state.fridgeItemId = id;
+                const zone = app.fridgeZone(item), prepped = app.fridgeIsPrepped(item);
+                document.getElementById('fi-icon').innerHTML = app.foodIcon(item.name, 40);
+                document.getElementById('fi-name').innerText = item.name;
+                document.getElementById('fi-meta').innerText = [zone === 'freezer' ? '❄️ 冷凍庫' : '🥶 冷藏室', prepped ? '備好的料理' : '食材', item.qty, item.purchaseDate].filter(Boolean).join(' · ');
+                document.getElementById('fi-move').innerText = zone === 'freezer' ? '🥶 移到冷藏室（退冰）' : '❄️ 移到冷凍庫';
+                document.getElementById('fi-prep').innerText = prepped ? '🥬 改為一般食材' : '🍲 標記為備好的料理';
+                document.getElementById('modal-fridge-item').classList.remove('hidden');
+            },
+            fridgeItemAction: (action) => {
+                const id = app.state.fridgeItemId;
+                const item = (app.state.fridge || []).find(x => x.id === id);
+                if (!item) return;
+                if (action === 'move') item.zone = app.fridgeZone(item) === 'freezer' ? 'fridge' : 'freezer';
+                if (action === 'prep') item.prepped = !app.fridgeIsPrepped(item);
+                if (action === 'used') app.state.fridge = app.state.fridge.filter(x => x.id !== id);
+                app.infrastructure.storage.set('bento_fridge', app.state.fridge);
+                app.closeModal('modal-fridge-item');
+                app.refreshFridgeViews();
+                app.showToast(action === 'used' ? `✅ 「${item.name}」已用完` : action === 'move' ? `已移到${item.zone === 'freezer' ? '冷凍庫' : '冷藏室'}` : '已更新');
+                app.cloudSync.scheduleUpload();
             },
 
             // 解析輸入：可一次輸入多項（以、，, ；換行分隔），「名稱 份量」以空白分開，例：「雞胸 2片、鴻喜菇、豆腐」
@@ -4161,7 +4433,13 @@
                 if (!app.state.fridge) app.state.fridge = [];
                 const today = new Date().toLocaleDateString('zh-TW');
                 let base = Date.now();
-                parsed.forEach(p => app.state.fridge.push({ id: base++, name: p.name, qty: p.qty, type: 'pantry', purchaseDate: today }));
+                const pick = app.state.fridgeAddZone || 'fridge';
+                parsed.forEach(p => {
+                    const item = { id: base++, name: p.name, qty: p.qty, type: 'pantry', purchaseDate: today };
+                    item.zone = pick === 'freezer' ? 'freezer' : app.fridgeZone(item); // 選冷藏時，水餃等仍自動進冷凍
+                    item.prepped = app.foodInfo(p.name).prepped;
+                    app.state.fridge.push(item);
+                });
                 app.infrastructure.storage.set('bento_fridge', app.state.fridge);
                 inputEl.value = '';
                 app.refreshFridgeViews();
@@ -4192,7 +4470,7 @@
                         <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                             <div class="flex items-center gap-3">
                                 <div class="flex-1 min-w-0">
-                                    <div class="font-bold text-sm text-gray-800 truncate">${item.name}</div>
+                                    <div class="font-bold text-sm text-gray-800 truncate">${item.name} <span class="text-[10px] font-normal ${app.fridgeZone(item) === 'freezer' ? 'text-sky-500' : 'text-gray-400'}">${app.fridgeZone(item) === 'freezer' ? '❄️冷凍' : '冷藏'}${app.fridgeIsPrepped(item) ? '・備好' : ''}</span></div>
                                     ${qtyPart}
                                 </div>
                                 ${editing ? '' : `

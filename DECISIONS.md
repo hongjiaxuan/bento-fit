@@ -45,3 +45,11 @@
 - **定案**：Key 統一放同步 GAS 指令碼屬性。前端 `ai.generate()` 有 `syncUrl` 就 POST（text/plain）`{action:'aiGenerate', prompt}`，GAS 回 `{success, text}`，前端沿用原 JSON 清洗邏輯（`parseAiJson`）。
 - （115/11/21 更新）**前端 Gemini Key 欄位與直連 Gemini 的 liveClient 已移除**，AI 一律走同步 GAS；載入時會刪除 localStorage 殘留的 `apiKey`。入口檢查統一用 `ai.isReady(user)`（開發模式或已設 `syncUrl`）。
 - GAS 端＝ `gas-sync-ai-generate.gs`（同步 GAS 完整版：備份＋parseDrink＋aiGenerate，整份覆蓋貼上後重新部署）。共用指令碼屬性 `GEMINI_API_KEY`／`GEMINI_MODEL`（未設模型時 aiGenerate 退回 gemini-3.8-flash）。
+
+## D-007　彈性化改版：先排初稿 → 市場現場調整 → 買完再對齊　（115/11/22）
+- **背景**：蔬菜不一定買得到、臨時想吃別的難改、10 道一次生成太慢。
+- **定案**：保留整週生成架構，加功能：一句話換菜、採買「買不到→替代」、買完依冰箱對齊菜單（③）、一般模式 5 組×2 道平行生成。
+- 不做聊天框（使用者選「單道菜快速換」）；**④ 半週規劃（改生成道數）不做**。
+- 冰箱分「冷凍庫／冷藏室」（`zone`），可放備好的料理（`prepped`），欄位存在既有 `bento_fridge`。
+- 食材圖示改用**固定圖片目錄** `img/food/<id>.png`（AI 繪製後放入即生效，未放入退回 emoji），對應表見 `img/food/README.md`，與 `index.html` 的 `foodCatalog` 同步維護。
+- 採買清單改場景式：上＝菜市場攤販／超市冷藏櫃，下＝茄芷袋／購物籃，場景偏好存在 `bento_user.shopScene`（不新增 key）。
