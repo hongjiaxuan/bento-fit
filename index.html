@@ -16,7 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- 圓體（繁中）：呼應食材插圖的圓潤手感；Google Fonts 依字元分割子集，只下載用到的字 -->
+    <link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Tailwind 改為預先編譯的靜態樣式（tailwind.config 移至 repo 建置設定，重新產生請參考 README） -->
@@ -30,6 +31,36 @@
             /* 插畫風：溫暖奶油底，呼應食材插圖的米白與柔和陰影 */
             background-color: #f8f2e7 !important;
         }
+        /* ── 🎨 插畫風（115/11/23）：點點紙背景、貼紙感卡片、扁平立體按鈕、導覽膠囊 ── */
+        body:not(.dark) {
+            background-image: radial-gradient(rgba(186, 160, 120, 0.22) 1.2px, transparent 1.3px);
+            background-size: 20px 20px;
+        }
+        body:not(.dark) .shadow-soft {
+            box-shadow: 0 3px 0 #efe4d1, 0 14px 26px -18px rgba(120, 88, 50, 0.45) !important;
+        }
+        body:not(.dark) .bg-white.shadow-soft,
+        body:not(.dark) #main-container .bg-white.rounded-2xl.border,
+        body:not(.dark) #main-container .bg-white.rounded-\[24px\] {
+            border: 1.5px solid #efe4d1 !important;
+        }
+        body:not(.dark) .shadow-float {
+            box-shadow: 0 4px 0 #557a39, 0 12px 20px -12px rgba(85, 122, 57, 0.7) !important;
+        }
+        body:not(.dark) button.shadow-float { transition: transform .12s ease, box-shadow .12s ease; }
+        body:not(.dark) button.shadow-float:active {
+            transform: translateY(3px) !important;
+            box-shadow: 0 1px 0 #557a39 !important;
+        }
+        body:not(.dark) .bg-sky-500.shadow-soft { box-shadow: 0 3px 0 #0b7fb5 !important; }
+        h1, h2, h3, h4 { letter-spacing: 0.03em; }
+        /* 底部導覽：圖示放進膠囊，目前頁籤上底色 */
+        .nav-item > div i {
+            width: 52px; height: 30px; border-radius: 9999px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background-color .2s ease;
+        }
+        body:not(.dark) .nav-item > div.text-brand-500 i { background-color: #e2eed2; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -93,6 +124,10 @@
         body.dark .text-gray-400 { color: #6a7866 !important; }
         body.dark .text-gray-300 { color: #4e5c4a !important; }
         body.dark .border-gray-100 { border-color: #3a4639 !important; }
+        /* 插畫風新增元素的深色版本（標題徽章、插圖底框、卡片細邊、營養素色塊） */
+        body.dark .border-gray-50, body.dark .border-\[\#efe4d1\], body.dark .border-\[\#efe4d2\] { border-color: #3a4639 !important; }
+        body.dark .bg-\[\#fbf3e4\], body.dark .bg-\[\#fbf6ec\] { background-color: #2c352d !important; }
+        body.dark .bg-blue-50, body.dark .bg-yellow-50, body.dark .bg-red-50 { background-color: #2c352d !important; }
         body.dark .border-gray-200 { border-color: #49584a !important; }
         body.dark input:not([type="checkbox"]):not([type="radio"]), body.dark select, body.dark textarea {
             background-color: #313a30 !important;
@@ -117,6 +152,9 @@
             <h1 id="page-title" class="text-xl font-bold text-gray-800 tracking-wider">Bento Fit</h1>
             <p id="page-subtitle" class="text-[10px] text-gray-400 font-medium tracking-widest mt-0.5">今天也要吃得健康</p>
         </div>
+        <div class="flex items-end -space-x-2 ml-auto mr-3 pointer-events-none select-none" aria-hidden="true">
+            <span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🥦</span><img src="img/food/broccoli.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🥚</span><img src="img/food/egg.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🐟</span><img src="img/food/salmon.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+        </div>
         <div class="w-11 h-11 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 cursor-pointer hover:bg-brand-100 transition border border-brand-100 active:scale-90" onclick="app.navigateTo('profile')">
             <i class="fa-solid fa-user text-sm"></i>
         </div>
@@ -130,7 +168,7 @@
 
             <div class="bg-white p-5 rounded-[24px] shadow-soft border border-gray-50">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-base font-bold text-gray-800">今日目標</h2>
+                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🎯</span><img src="img/ui/target.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日目標</h2>
                     <button onclick="app.navigateTo('history'); app.switchHistoryTab('calendar');" class="text-[10px] bg-brand-100 text-brand-600 px-2 py-1 rounded-full font-bold hover:bg-brand-200 transition">
                         <i class="fa-solid fa-chart-pie mr-1"></i>週分析
                     </button>
@@ -148,16 +186,19 @@
                     </div>
                     <div class="grid grid-cols-3 gap-3">
                         <div class="bg-blue-50 p-2 rounded-xl text-center">
+                            <div class="flex justify-center mb-0.5"><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🍗</span><img src="img/food/chicken.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
                             <div class="text-[10px] text-blue-400 mb-0.5">蛋白質</div>
                             <div class="text-xs font-bold text-blue-600 mb-1"><span id="dash-prot-val">-</span><span class="text-[9px] font-normal text-blue-300">g</span></div>
                             <div class="h-1 w-full bg-blue-100 rounded-full"><div id="bar-prot" class="h-1 bg-blue-400 rounded-full" style="width:0%"></div></div>
                         </div>
                         <div class="bg-yellow-50 p-2 rounded-xl text-center">
+                            <div class="flex justify-center mb-0.5"><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🍚</span><img src="img/food/rice.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
                             <div class="text-[10px] text-yellow-500 mb-0.5">碳水</div>
                             <div class="text-xs font-bold text-yellow-600 mb-1"><span id="dash-carb-val">-</span><span class="text-[9px] font-normal text-yellow-400">g</span></div>
                             <div class="h-1 w-full bg-yellow-100 rounded-full"><div id="bar-carb" class="h-1 bg-yellow-400 rounded-full" style="width:0%"></div></div>
                         </div>
                         <div class="bg-red-50 p-2 rounded-xl text-center">
+                            <div class="flex justify-center mb-0.5"><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🥑</span><img src="img/food/avocado.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
                             <div class="text-[10px] text-red-400 mb-0.5">脂肪</div>
                             <div class="text-xs font-bold text-red-500 mb-1"><span id="dash-fat-val">-</span><span class="text-[9px] font-normal text-red-300">g</span></div>
                             <div class="h-1 w-full bg-red-100 rounded-full"><div id="bar-fat" class="h-1 bg-red-400 rounded-full" style="width:0%"></div></div>
@@ -167,14 +208,14 @@
             </div>
 
             <div>
-                <h3 class="text-base font-bold text-gray-800 mb-3 ml-1">今日便當</h3>
+                <h3 class="text-base font-bold text-gray-800 mb-3 ml-1 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🍱</span><img src="img/food/cooked-meal.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日便當</h3>
                 <div id="today-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-gray-50">
                     <div class="p-8 text-center text-gray-400 italic">尚未安排</div>
                 </div>
             </div>
             <div class="mt-4">
                 <h3 class="text-base font-bold text-gray-800 mb-3 ml-1 flex items-center gap-2">
-                    <span>明日備餐</span>
+                    <span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🥡</span><img src="img/food/prepped.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span><span>明日備餐</span>
                     <span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">提前準備</span>
                 </h3>
                 <div id="tomorrow-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-orange-100/50">
@@ -183,21 +224,21 @@
             <!-- 🧊 首頁冰箱（視覺化）：上冷凍庫、下冷藏室；可放生鮮食材，也可放備好的料理（滷肉等）；點食材可移動/標記/用畢 -->
             <div class="bg-white p-4 rounded-[24px] shadow-soft border border-sky-50">
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">🧊 我的冰箱 <span id="dash-fridge-count" class="hidden text-[10px] font-bold text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full"></span></h3>
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🧊</span><img src="img/ui/fridge.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>我的冰箱 <span id="dash-fridge-count" class="hidden text-[10px] font-bold text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full"></span></h3>
                     <button onclick="app.openFridge()" class="text-[10px] bg-sky-50 text-sky-600 px-2.5 py-1 rounded-full font-bold hover:bg-sky-100 transition">管理份量</button>
                 </div>
                 <div class="relative rounded-[22px] border-2 border-sky-200 bg-white overflow-hidden">
                     <!-- 冷凍庫 -->
                     <div class="relative bg-gradient-to-b from-sky-100 to-sky-50 p-3 pr-6">
                         <div class="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full bg-sky-300"></div>
-                        <div class="text-[10px] font-bold text-sky-600 tracking-widest mb-1">❄️ 冷凍庫</div>
+                        <div class="text-[10px] font-bold text-sky-600 tracking-widest mb-1 flex items-center gap-1"><span class="inline-flex items-center justify-center relative shrink-0" style="width:18px;height:18px"><span class="leading-none" style="font-size:13px">❄️</span><img src="img/ui/freezer.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span> 冷凍庫</div>
                         <div id="dash-freezer-list" class="flex flex-wrap gap-1 min-h-[56px]"></div>
                     </div>
                     <div class="h-1.5 bg-sky-200"></div>
                     <!-- 冷藏室 -->
                     <div class="relative bg-gradient-to-b from-sky-50 to-white p-3 pr-6">
                         <div class="absolute right-2 top-8 w-1.5 h-12 rounded-full bg-sky-200"></div>
-                        <div class="text-[10px] font-bold text-sky-500 tracking-widest mb-1">🥶 冷藏室</div>
+                        <div class="text-[10px] font-bold text-sky-500 tracking-widest mb-1 flex items-center gap-1"><span class="inline-flex items-center justify-center relative shrink-0" style="width:18px;height:18px"><span class="leading-none" style="font-size:13px">🧊</span><img src="img/ui/fridge.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span> 冷藏室</div>
                         <div id="dash-fridge-list" class="flex flex-wrap gap-1 min-h-[72px]"></div>
                     </div>
                     <!-- 放入區 -->
@@ -218,7 +259,7 @@
             <!-- ⚖️ 體重快速記錄 -->
             <div class="bg-white p-4 rounded-[24px] shadow-soft border border-purple-50">
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">⚖️ 今日體重</h3>
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">⚖️</span><img src="img/ui/scale.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日體重</h3>
                     <span id="dash-last-weight" class="text-xs text-purple-400 font-bold"></span>
                 </div>
                 <div class="flex gap-2">
@@ -240,20 +281,20 @@
 
             <!-- 📚 收藏食譜：IG 美食／飲品庫／貼連結解析（原本只在「我的」頁，首頁也放入口） -->
             <div class="bg-white p-4 rounded-[24px] shadow-soft border border-orange-50">
-                <h3 class="text-base font-bold text-gray-800 mb-3">📚 收藏食譜</h3>
+                <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">📚</span><img src="img/ui/recipe-book.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>收藏食譜</h3>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="app.openIgCollection()" class="bg-orange-50/60 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
-                        <span class="text-2xl">📸</span>
+                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">📸</span><img src="img/ui/camera.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
                         <span class="text-[11px] font-bold text-gray-700">IG 美食</span>
                         <span id="dash-ig-count" class="text-[10px] text-orange-500"></span>
                     </button>
                     <button onclick="app.openDrinksLibrary()" class="bg-orange-50/60 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
-                        <span class="text-2xl">🧋</span>
+                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">🧋</span><img src="img/ui/drink.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
                         <span class="text-[11px] font-bold text-gray-700">飲品庫</span>
                         <span id="dash-drink-count" class="text-[10px] text-orange-500"></span>
                     </button>
                     <button onclick="app.openPasteLinkModal()" class="bg-gray-50 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
-                        <span class="text-2xl">🔗</span>
+                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">🔗</span><img src="img/ui/link.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
                         <span class="text-[11px] font-bold text-gray-700">貼連結解析</span>
                         <span class="text-[10px] text-gray-400">IG / TikTok</span>
                     </button>
@@ -262,7 +303,7 @@
         </section>
 
         <section id="view-planner" class="view-section fade-in hidden">
-            <h2 class="text-lg font-bold text-gray-800 mb-4 ml-1">本週菜單</h2>
+            <h2 class="text-lg font-bold text-gray-800 mb-4 ml-1 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">📅</span><img src="img/ui/calendar.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>本週菜單</h2>
             
             <div class="flex gap-3 mb-6">
                 <button onclick="app.generateAIPlan()" class="flex-1 bg-brand-500 text-white p-4 rounded-2xl shadow-float flex items-center justify-center gap-2 transform active:scale-95 transition-all hover:bg-brand-600">
@@ -351,7 +392,7 @@
                         title="手動新增食材">
                         <i class="fa-solid fa-plus"></i>
                     </button>
-                    <button onclick="app.openBatchPrep()" class="pointer-events-auto flex-1 bg-gray-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 transform transition active:scale-95 hover:bg-gray-800 border border-gray-700">
+                    <button onclick="app.openBatchPrep()" class="pointer-events-auto flex-1 bg-brand-600 text-white font-bold py-4 rounded-2xl shadow-float flex items-center justify-center gap-2 transform transition hover:bg-brand-700">
                         <i class="fa-solid fa-kitchen-set"></i> 進入週末備料模式
                     </button>
                 </div>
@@ -1999,8 +2040,11 @@
             const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             const q = (k) => `decodeURIComponent('${encodeURIComponent(k).replace(/'/g, '%27')}')`;
             const zoneLabel = scene === 'market'
-                ? { [config.categories.veg]: '🥬 菜攤', [config.categories.fresh]: '🥩 肉攤・魚攤', [config.categories.carb]: '🍚 雜糧行', [config.categories.pantry]: '🧂 雜貨店', custom: '🛍️ 其他' }
-                : { [config.categories.veg]: '🥦 蔬果區', [config.categories.fresh]: '🧊 生鮮冷藏櫃', [config.categories.carb]: '🍚 米麵區', [config.categories.pantry]: '🧂 調味雜貨', custom: '🛍️ 手動新增' };
+                ? { [config.categories.veg]: '菜攤', [config.categories.fresh]: '肉攤・魚攤', [config.categories.carb]: '雜糧行', [config.categories.pantry]: '雜貨店', custom: '其他' }
+                : { [config.categories.veg]: '蔬果區', [config.categories.fresh]: '生鮮冷藏櫃', [config.categories.carb]: '米麵區', [config.categories.pantry]: '調味雜貨', custom: '手動新增' };
+            // 各區代表插圖（沿用食材圖）
+            const zoneIcon = { [config.categories.veg]: app.foodIconById('cabbage', '🥬', 22), [config.categories.fresh]: app.foodIconById('meat', '🥩', 22),
+                [config.categories.carb]: app.foodIconById('rice', '🍚', 22), [config.categories.pantry]: app.foodIconById('seasoning', '🧂', 22), custom: app.uiIcon('eco-bag', '🛍️', 22) };
 
             // 整理所有品項：{ key, name, qty, cat, custom, idx }
             const all = [];
@@ -2031,26 +2075,26 @@
                 if (!items.length) return '';
                 return scene === 'market'
                     ? `<div class="bg-amber-50/80 rounded-2xl p-2 border border-amber-200/70">
-                            <div class="text-[10px] font-bold text-amber-700 mb-1 px-1">${zoneLabel[c] || c}</div>
+                            <div class="text-[11px] font-bold text-amber-700 mb-1 px-1 flex items-center gap-1">${zoneIcon[c] || ''}${zoneLabel[c] || c}</div>
                             <div class="flex flex-wrap gap-1">${items.map(it => tile(it, false)).join('')}</div>
                        </div>`
                     : `<div class="border-b-4 border-gray-200 pb-1.5">
-                            <div class="text-[10px] font-bold text-sky-600 mb-1 px-1">${zoneLabel[c] || c}</div>
+                            <div class="text-[11px] font-bold text-sky-600 mb-1 px-1 flex items-center gap-1">${zoneIcon[c] || ''}${zoneLabel[c] || c}</div>
                             <div class="flex flex-wrap gap-1">${items.map(it => tile(it, false)).join('')}</div>
                        </div>`;
             }).join('');
             const topEmpty = `<div class="text-center text-xs text-gray-400 py-6">🎉 都買齊了！按上方「完成採買，放入冰箱」</div>`;
             const top = scene === 'market'
                 ? `<div class="rounded-[22px] overflow-hidden border-2 border-amber-200 bg-white">
-                        <div class="h-7" style="background:repeating-linear-gradient(90deg,#e05252 0 22px,#ffffff 22px 44px)"></div>
-                        <div class="flex justify-center -mt-1"><div class="h-2 w-full" style="background:radial-gradient(circle at 11px 0,#e05252 10px,transparent 11px) 0 0/44px 8px repeat-x"></div></div>
+                        <div class="h-7" style="background:repeating-linear-gradient(90deg,#ef9a8a 0 22px,#fff7ec 22px 44px)"></div>
+                        <div class="flex justify-center -mt-1"><div class="h-2 w-full" style="background:radial-gradient(circle at 11px 0,#ef9a8a 10px,transparent 11px) 0 0/44px 8px repeat-x"></div></div>
                         <div class="p-3 space-y-2">
-                            <div class="text-[11px] font-bold text-gray-500">🏮 傳統市場・待買 ${todo.length} 項</div>
+                            <div class="text-xs font-bold text-gray-600 flex items-center gap-1.5">${app.uiIcon('market-stall', '🏮', 28)}傳統市場・待買 ${todo.length} 項</div>
                             ${sections || topEmpty}
                         </div>
                    </div>`
                 : `<div class="rounded-[22px] overflow-hidden border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white">
-                        <div class="bg-sky-600 text-white text-[11px] font-bold px-4 py-1.5 tracking-widest flex justify-between"><span>FRESH 超市冷藏櫃</span><span>待買 ${todo.length} 項</span></div>
+                        <div class="bg-[#8fc1dc] text-white text-[11px] font-bold px-4 py-1.5 tracking-widest flex justify-between items-center"><span class="flex items-center gap-1.5">${app.uiIcon('supermarket', '🏪', 24)}FRESH 超市冷藏櫃</span><span>待買 ${todo.length} 項</span></div>
                         <div class="h-1 bg-sky-200/80"></div>
                         <div class="p-3 space-y-3">${sections || topEmpty}</div>
                    </div>`;
@@ -2064,22 +2108,22 @@
             const bag = scene === 'market'
                 ? `<div class="mt-6 mx-2">
                         <div class="flex justify-center gap-16 -mb-1">
-                            <div class="w-12 h-6 border-4 border-b-0 border-red-500 rounded-t-full"></div>
-                            <div class="w-12 h-6 border-4 border-b-0 border-blue-600 rounded-t-full"></div>
+                            <div class="w-12 h-6 border-4 border-b-0 border-[#e8877a] rounded-t-full"></div>
+                            <div class="w-12 h-6 border-4 border-b-0 border-[#7f9fd0] rounded-t-full"></div>
                         </div>
                         <div class="rounded-b-[26px] rounded-t-lg overflow-hidden border-2 border-gray-200 bg-white">
-                            <div class="h-5" style="background:repeating-linear-gradient(90deg,#d93a3a 0 14px,#ffffff 14px 20px,#2c5aa0 20px 34px,#ffffff 34px 40px)"></div>
+                            <div class="h-5" style="background:repeating-linear-gradient(90deg,#e8877a 0 14px,#fff7ec 14px 20px,#7f9fd0 20px 34px,#fff7ec 34px 40px)"></div>
                             <div class="p-3 min-h-[96px]">
-                                <div class="text-[11px] font-bold text-gray-500 mb-1">👜 茄芷袋・已買 ${got.length} 項</div>
+                                <div class="text-xs font-bold text-gray-600 mb-1 flex items-center gap-1.5">${app.uiIcon('eco-bag', '👜', 28)}茄芷袋・已買 ${got.length} 項</div>
                                 ${bagItems}
                             </div>
-                            <div class="h-5" style="background:repeating-linear-gradient(90deg,#d93a3a 0 14px,#ffffff 14px 20px,#2c5aa0 20px 34px,#ffffff 34px 40px)"></div>
+                            <div class="h-5" style="background:repeating-linear-gradient(90deg,#e8877a 0 14px,#fff7ec 14px 20px,#7f9fd0 20px 34px,#fff7ec 34px 40px)"></div>
                         </div>
                    </div>`
                 : `<div class="mt-6 mx-2">
-                        <div class="flex justify-center -mb-1"><div class="w-40 h-7 border-[5px] border-b-0 border-red-500 rounded-t-[20px]"></div></div>
-                        <div class="rounded-b-[26px] rounded-t-xl border-4 border-red-500 bg-red-50/40 p-3 min-h-[110px]" style="background-image:linear-gradient(rgba(239,68,68,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.08) 1px,transparent 1px);background-size:14px 14px">
-                            <div class="text-[11px] font-bold text-red-500 mb-1">🛒 購物籃・已買 ${got.length} 項</div>
+                        <div class="flex justify-center -mb-1"><div class="w-40 h-7 border-[5px] border-b-0 border-[#e8877a] rounded-t-[20px]"></div></div>
+                        <div class="rounded-b-[26px] rounded-t-xl border-4 border-[#e8877a] bg-[#fff4ef] p-3 min-h-[110px]" style="background-image:linear-gradient(rgba(232,135,122,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(232,135,122,.12) 1px,transparent 1px);background-size:14px 14px">
+                            <div class="text-xs font-bold text-[#c9665a] mb-1 flex items-center gap-1.5">${app.uiIcon('basket', '🛒', 28)}購物籃・已買 ${got.length} 項</div>
                             ${bagItems}
                         </div>
                    </div>`;
@@ -4359,6 +4403,13 @@
                 return `<span class="inline-flex items-center justify-center relative" style="width:${size}px;height:${size}px">${emo}<img src="img/food/${id}.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="app._foodImgMissing.add('${id}');this.remove()"></span>`;
             },
             fridgeEmoji: (name) => app.foodInfo(name).emoji,
+            // UI 插圖 img/ui/<id>.png（冰箱、攤販、茄芷袋…），未放圖時顯示 emoji；清單見 img/ui/README.md
+            uiIcon: (id, emoji, size = 28) => {
+                const key = 'ui:' + id;
+                const emo = `<span class="leading-none" style="font-size:${Math.round(size * 0.72)}px">${emoji}</span>`;
+                if (app._foodImgMissing.has(key)) return `<span class="inline-flex items-center justify-center shrink-0" style="width:${size}px;height:${size}px">${emo}</span>`;
+                return `<span class="inline-flex items-center justify-center relative shrink-0" style="width:${size}px;height:${size}px">${emo}<img src="img/ui/${id}.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="app._foodImgMissing.add('${key}');this.remove()"></span>`;
+            },
             // 菜色代表圖：依序比對 菜名 → 主分類 → 食材（略過調味料，避免「鹽烤鯖魚」對到鹽罐），都沒有就用便當盒
             recipeIcon: (r, size = 40) => {
                 if (!r) return app.foodIconById('cooked-meal', '🍱', size);

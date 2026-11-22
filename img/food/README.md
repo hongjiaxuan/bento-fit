@@ -6,6 +6,7 @@ App 會依食材名稱對應下表的 **id**，讀取 `img/food/<id>.png`。
 ## 圖片規格（建議全部一致）
 - 檔名：`<id>.png`（英文小寫，與下表相同）
 - 尺寸：512×512，**透明背景**，主體置中、四周留約 10% 空白
+- 入庫時會壓縮成 256×256（量化 PNG，每張約 10KB），畫面上看不出差異；請保留 512 原檔在自己電腦
 - 風格：同一套扁平插畫風（建議 AI 繪圖時固定同一段風格描述，例如：
   `flat vector illustration, soft pastel colors, single food item, centered, transparent background, no text`）
 

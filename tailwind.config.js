@@ -38,7 +38,7 @@ module.exports = {
         dark: '#2c3e50',
       },
       fontFamily: {
-        sans: ['Noto Sans TC', 'sans-serif'],
+        sans: ['Chiron GoRound TC', 'Noto Sans TC', 'sans-serif'],
       },
       boxShadow: {
         // 暖色柔和陰影，像插圖底下的淡影
