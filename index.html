@@ -56,7 +56,7 @@
         h1, h2, h3, h4 { letter-spacing: 0.03em; }
         /* 底部導覽：圖示放進膠囊，目前頁籤上底色 */
         .nav-item > div i {
-            width: 52px; height: 30px; border-radius: 9999px;
+            width: 48px; height: 26px; border-radius: 9999px;
             display: flex; align-items: center; justify-content: center;
             transition: background-color .2s ease;
         }
@@ -147,20 +147,20 @@
 </head>
 <body class="text-gray-700 font-sans antialiased h-screen flex flex-col overflow-hidden">
 
-    <header class="bg-paper/90 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100">
+    <header class="bg-paper/90 backdrop-blur-md px-5 pb-2 flex justify-between items-center sticky top-0 z-20 border-b border-gray-100" style="padding-top: max(8px, env(safe-area-inset-top))">
         <div>
-            <h1 id="page-title" class="text-xl font-bold text-gray-800 tracking-wider">Bento Fit</h1>
-            <p id="page-subtitle" class="text-[10px] text-gray-400 font-medium tracking-widest mt-0.5">今天也要吃得健康</p>
+            <h1 id="page-title" class="text-lg font-bold text-gray-800 tracking-wider leading-tight">Bento Fit</h1>
+            <p id="page-subtitle" class="text-[10px] text-gray-400 font-medium tracking-widest leading-tight">今天也要吃得健康</p>
         </div>
         <div class="flex items-end -space-x-2 ml-auto mr-3 pointer-events-none select-none" aria-hidden="true">
-            <span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🥦</span><img src="img/food/broccoli.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🥚</span><img src="img/food/egg.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🐟</span><img src="img/food/salmon.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+            <span class="inline-flex items-center justify-center relative shrink-0" style="width:24px;height:24px"><span class="leading-none" style="font-size:17px">🥦</span><img src="img/food/broccoli.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span><span class="inline-flex items-center justify-center relative shrink-0" style="width:20px;height:20px"><span class="leading-none" style="font-size:14px">🥚</span><img src="img/food/egg.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span><span class="inline-flex items-center justify-center relative shrink-0" style="width:24px;height:24px"><span class="leading-none" style="font-size:17px">🐟</span><img src="img/food/salmon.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
         </div>
-        <div class="w-11 h-11 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 cursor-pointer hover:bg-brand-100 transition border border-brand-100 active:scale-90" onclick="app.navigateTo('profile')">
+        <div class="w-9 h-9 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 cursor-pointer hover:bg-brand-100 transition border border-brand-100 active:scale-90" onclick="app.navigateTo('profile')">
             <i class="fa-solid fa-user text-sm"></i>
         </div>
     </header>
 
-    <main id="main-container" class="flex-1 overflow-y-auto hide-scrollbar pb-24 px-4 pt-4 relative">
+    <main id="main-container" class="flex-1 overflow-y-auto hide-scrollbar px-4 pt-4 relative" style="padding-bottom: calc(76px + env(safe-area-inset-bottom))">
         
         <section id="view-dashboard" class="view-section fade-in hidden space-y-5">
             <!-- 智慧情境提示橫幅 (由 JS renderDashboard 動態注入) -->
@@ -385,7 +385,7 @@
             </div>
             <div id="shopping-list-container" class="pb-36"></div>
 
-            <div class="fixed bottom-24 left-0 w-full px-6 z-10 pointer-events-none">
+            <div class="fixed left-0 w-full px-6 z-10 pointer-events-none" style="bottom: calc(72px + env(safe-area-inset-bottom))">
                 <div class="flex gap-3">
                     <button onclick="app.toggleCustomShopInput()"
                         class="pointer-events-auto flex-none bg-white text-brand-500 font-bold py-4 px-5 rounded-2xl shadow-soft border border-brand-100 flex items-center gap-2 transform transition active:scale-95 hover:bg-brand-50"
@@ -820,13 +820,13 @@
         </div>
     </main>
 
-    <nav class="bg-paper px-4 pb-6 pt-3 border-t border-gray-100 z-30 w-full fixed bottom-0 safe-pb">
+    <nav class="bg-paper px-4 pt-1.5 border-t border-gray-100 z-30 w-full fixed bottom-0" style="padding-bottom: max(6px, env(safe-area-inset-bottom))">
         <ul class="flex justify-between items-center">
-            <li class="nav-item w-full" onclick="app.navigateTo('dashboard')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-brand-500 py-1" id="nav-dashboard"><i class="fa-solid fa-house text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">首頁</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('planner')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-planner"><i class="fa-solid fa-calendar-days text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">規劃</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('shopping')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-shopping"><i class="fa-solid fa-list-check text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">清單</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('history')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-history"><i class="fa-solid fa-clock-rotate-left text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">紀錄</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('profile')"><div class="flex flex-col items-center gap-1.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-profile"><i class="fa-solid fa-user text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">我的</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('dashboard')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-brand-500 py-1" id="nav-dashboard"><i class="fa-solid fa-house text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">首頁</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('planner')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-planner"><i class="fa-solid fa-calendar-days text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">規劃</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('shopping')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-shopping"><i class="fa-solid fa-list-check text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">清單</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('history')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-history"><i class="fa-solid fa-clock-rotate-left text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">紀錄</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('profile')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-profile"><i class="fa-solid fa-user text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">我的</span></div></li>
         </ul>
     </nav>
 

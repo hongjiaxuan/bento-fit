@@ -11,7 +11,7 @@
 - **位置**：`D:/佳萱/08PYTHON/健康餐 App/`
 - **技術**：Vanilla JS ＋ Tailwind CSS（**本機 `tailwind.css`**，非 CDN；SW 對本機資源走「網路優先」避免卡舊版樣式），無建置流程、無框架
 - **AI**：Google Gemini（`generativelanguage` 免費端點，使用者自備 API Key）
-- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.25，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
+- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.26，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
 
 ## 開發流程（重要）
 - **主線在 `origin/main`**；功能走 **feature 分支 ＋ Pull Request** 合併（例：`feat/social-dish-recipes`、`feat/tiktok-drink-recipes`、`refactor/mealprep-merge-into-ai-flow`）。
@@ -44,5 +44,5 @@
 ## 目前狀態（115/10/21）
 - **已完成並合併進 main**：冰箱庫存、首頁冰箱卡片、規劃時自動帶入清冰箱、週末菜單提示、移除成就挑戰（v2.12）；4 項 UX 改善（v2.13）；**IG 社群美食/飲品貼文解析 → 食譜庫**（存 `bento_ig_recipes`／`bento_drinks`，可「加入本週菜單」，PR #10~#12）。
 - 後端 `igRecipe` API 已部署於管家 GAS 並由前端串接。
-- **彈性化改版（115/11/22 定案，見 DECISIONS D-007，PR #14）**：一句話換菜、採買「買不到→替代」、③ 買完依冰箱對齊菜單（完成採買後自動詢問／計劃頁按鈕）、一般模式 5 組×2 道平行生成、計劃卡片兩排、首頁收藏食譜入口、冰箱分冷凍／冷藏＋可放備好料理、採買場景（菜市場＋茄芷袋／超市＋購物籃）、食材圖片目錄 `img/food/`（已上傳 34 張）；整體改插畫風（見 DECISIONS D-008：圓體字、點點紙背景、貼紙卡片、立體按鈕、插圖標題徽章；UI 插圖目錄 `img/ui/`，待繪製）＋菜色改用插圖、食材圖壓縮為 256px、首頁提示橫幅改插畫卡片。已完成 v2.25；④ 半週規劃不做。
+- **彈性化改版（115/11/22 定案，見 DECISIONS D-007，PR #14）**：一句話換菜、採買「買不到→替代」、③ 買完依冰箱對齊菜單（完成採買後自動詢問／計劃頁按鈕）、一般模式 5 組×2 道平行生成、計劃卡片兩排、首頁收藏食譜入口、冰箱分冷凍／冷藏＋可放備好料理、採買場景（菜市場＋茄芷袋／超市＋購物籃）、食材圖片目錄 `img/food/`（56 張全數到齊）；整體改插畫風（見 DECISIONS D-008：圓體字、點點紙背景、貼紙卡片、立體按鈕、插圖標題徽章；UI 插圖目錄 `img/ui/`，待繪製）＋菜色改用插圖、食材圖壓縮為 256px、首頁提示橫幅改插畫卡片、標題列／導覽列縮小並改用系統安全區。已完成 v2.26；④ 半週規劃不做。
 - 待辦方向（未排程）：IG **影片內容辨識**（第 4 層，需 Cloud Run／Vertex＋GCP 額度，見 DECISIONS D-003）。
