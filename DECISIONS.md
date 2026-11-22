@@ -54,9 +54,14 @@
 - 食材圖示改用**固定圖片目錄** `img/food/<id>.png`（AI 繪製後放入即生效，未放入退回 emoji），對應表見 `img/food/README.md`，與 `index.html` 的 `foodCatalog` 同步維護。
 - 採買清單改場景式：上＝菜市場攤販／超市冷藏櫃，下＝茄芷袋／購物籃，場景偏好存在 `bento_user.shopScene`（不新增 key）。
 
-## D-008　整體改為「食材插圖風」　（115/11/23）
+## D-008　整體改為「食材插圖風」　（115/11/22）
 - **背景**：使用者上傳 AI 繪製的扁平食材插圖，要求整體風格（不只色票）一致。
 - **定案**：圓體字 Chiron GoRound TC（Google Fonts，依字元分子集）；暖奶油點點紙背景；卡片＝暖米描邊＋底部實色陰影（貼紙感）；主要按鈕＝扁平立體（按下下沉）；各區標題加圓形插圖徽章；底部導覽目前頁籤加膠囊底；採買場景改柔和粉彩。
 - 色票：主色清新鼠尾草綠 `#7aa356`、灰階改暖灰（覆寫 Tailwind gray）、`paper` 奶油白。
 - 插圖兩個目錄：`img/food/`（食材，`foodCatalog`）、`img/ui/`（介面，`uiIcon`），**缺圖一律退回 emoji**；圖片入庫前壓縮為 256×256 量化 PNG（原 512px 約 180KB → 約 10KB）。
 - 只作用於淺色模式（`body:not(.dark)`），深色模式另有對應色。
+
+## D-009　標題列／導覽列縮小，邊距改用系統安全區　（115/11/22）
+- 標題列 53px、導覽列 64px；頂部 `padding-top: max(8px, env(safe-area-inset-top))`、底部 `max(6px, env(safe-area-inset-bottom))`；主內容底部與採買浮動按鈕位置都用 `calc(… + env(safe-area-inset-bottom))` 跟著導覽列。
+- 否決：沿用固定 `pb-6`（原 `safe-pb` 類別從未定義，一般手機多留 24px，iPhone 又不保證夠）。
+- 圖片入庫規格：食材／UI 插圖一律壓成 256×256 量化 PNG（見 D-008），使用者保留 512 原檔。
