@@ -71,3 +71,5 @@ App 會依食材名稱對應下表的 **id**，讀取 `img/food/<id>.png`。
 | `other.png` | 其他（都沒對到時） | — | 🥫 | |
 
 > 新增或修改項目時，請同步修改 `index.html` 內的 `foodCatalog`。
+
+> 每張的 AI 繪圖描述（可直接複製）見 [PROMPTS.md](PROMPTS.md)。
