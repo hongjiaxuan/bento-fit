@@ -244,8 +244,8 @@
                     <!-- 放入區 -->
                     <div class="border-t border-sky-100 bg-sky-50/40 p-3">
                         <div class="flex gap-1.5 mb-2">
-                            <button id="fridge-zone-fridge" onclick="app.setFridgeAddZone('fridge')" class="text-[11px] font-bold px-3 py-1 rounded-full border transition">🥶 放冷藏</button>
-                            <button id="fridge-zone-freezer" onclick="app.setFridgeAddZone('freezer')" class="text-[11px] font-bold px-3 py-1 rounded-full border transition">❄️ 放冷凍</button>
+                            <button id="fridge-zone-fridge" onclick="app.setFridgeAddZone('fridge')" class="text-[11px] font-bold px-3 py-1 rounded-full border transition"><span class="inline-flex items-center justify-center gap-1"><span class="inline-flex items-center justify-center relative shrink-0" style="width:18px;height:18px"><span class="leading-none" style="font-size:13px">🥶</span><img src="img/ui/fridge.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>放冷藏</span></button>
+                            <button id="fridge-zone-freezer" onclick="app.setFridgeAddZone('freezer')" class="text-[11px] font-bold px-3 py-1 rounded-full border transition"><span class="inline-flex items-center justify-center gap-1"><span class="inline-flex items-center justify-center relative shrink-0" style="width:18px;height:18px"><span class="leading-none" style="font-size:13px">❄️</span><img src="img/ui/freezer.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>放冷凍</span></button>
                         </div>
                         <div class="flex gap-2">
                             <input type="text" id="input-dash-fridge" placeholder="雞胸 2片、高麗菜半顆、滷肉 1盒" class="flex-1 min-w-0 bg-white border border-sky-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-sky-300" onkeydown="if(event.key==='Enter') app.addFridgeFromDash()">
@@ -380,8 +380,8 @@
 
             <!-- 採買場景切換：超市（冷藏櫃＋購物籃）／菜市場（攤販＋茄芷袋） -->
             <div class="flex bg-gray-100 rounded-full p-1 mb-4">
-                <button id="scene-btn-market" onclick="app.setShopScene('market')" class="flex-1 py-2 rounded-full text-xs font-bold transition">🧺 菜市場</button>
-                <button id="scene-btn-super" onclick="app.setShopScene('super')" class="flex-1 py-2 rounded-full text-xs font-bold transition">🏪 超市</button>
+                <button id="scene-btn-market" onclick="app.setShopScene('market')" class="flex-1 py-2 rounded-full text-xs font-bold transition"><span class="inline-flex items-center justify-center gap-1"><span class="inline-flex items-center justify-center relative shrink-0" style="width:22px;height:22px"><span class="leading-none" style="font-size:16px">🧺</span><img src="img/ui/market-stall.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>菜市場</span></button>
+                <button id="scene-btn-super" onclick="app.setShopScene('super')" class="flex-1 py-2 rounded-full text-xs font-bold transition"><span class="inline-flex items-center justify-center gap-1"><span class="inline-flex items-center justify-center relative shrink-0" style="width:22px;height:22px"><span class="leading-none" style="font-size:16px">🏪</span><img src="img/ui/supermarket.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>超市</span></button>
             </div>
             <div id="shopping-list-container" class="pb-36"></div>
 

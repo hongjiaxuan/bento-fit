@@ -57,3 +57,8 @@
 - 症狀：「新版本可用！點此更新」怎麼點都沒反應。
 - 根因：`#toast` 為了不擋畫面設了 `pointer-events-none`，裡面的連結也一起被穿透，點擊落到底下的頁面。
 - 規則：要讓使用者點的提示（如 `showUpdateToast`）必須拿掉 `pointer-events-none`；一般 `showToast` 再加回來。驗證要用真的滑鼠點擊或 `elementFromPoint`，不能只呼叫 onclick。
+
+## L-012　上傳插圖的檔名多了後綴 → App 讀不到
+- 症狀：UI 插圖上傳成 `fridge_512.png` 等，程式找的是 `fridge.png`，畫面全是 emoji（L-009 也再發生一次：又傳到已合併的分支）。
+- 處理：`git mv` 改回 `<id>.png`（保留歷史）再壓縮；用腳本比對「程式用到的 id」與「實際檔名」，缺／多都要是 0。
+- 規則：收到上傳一律先跑這個比對，別只看檔案有沒有傳上來。
