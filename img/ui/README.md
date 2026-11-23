@@ -4,6 +4,9 @@ App 介面上的插圖（標題徽章、採買場景、收藏入口）。讀取 
 
 規格與食材插圖相同：512×512（上傳後會壓縮成 256×256）、**透明背景 PNG**、與 `img/food/` 同一套風格。
 
+> ⚠️ **檔名必須與下表完全相同**（例如 `fridge.png`），不要加 `_512` 等後綴，否則 App 讀不到、會一直顯示 emoji。
+> 13 張已於 115/11/23 全數上傳並壓縮。
+
 ## 共用風格（Style）
 ```
 flat vector illustration, soft pastel colors, clean simple shapes, subtle soft shadow, single subject centered, transparent background, no text, no logo, 1:1 square
