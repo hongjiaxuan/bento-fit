@@ -5581,9 +5581,30 @@
 
             showToast: (msg) => {
                 const t = document.getElementById('toast');
+                // 一般提示：恢復「點擊穿透」與預設圖示（可能剛被「新版本可用」提示改過）
+                t.classList.add('pointer-events-none');
+                t.classList.remove('cursor-pointer');
+                t.onclick = null;
+                t.querySelector('i').className = 'fa-solid fa-check text-brand-400';
                 document.getElementById('toast-msg').innerText = msg;
                 t.classList.remove('opacity-0', 'translate-y-4');
-                setTimeout(() => t.classList.add('opacity-0', 'translate-y-4'), 2000);
+                clearTimeout(app.state._toastTimer);
+                app.state._toastTimer = setTimeout(() => {
+                    // 更新還沒按就把「新版本可用」放回來，不讓一般提示蓋掉
+                    if (app.state._swUpdateReady) app.showUpdateToast();
+                    else t.classList.add('opacity-0', 'translate-y-4');
+                }, 2000);
+            },
+            // 「新版本可用」提示：必須拿掉 pointer-events-none，否則點擊會穿透到底下頁面（點了沒反應的原因）
+            showUpdateToast: () => {
+                const t = document.getElementById('toast');
+                if (!t) return;
+                app.state._swUpdateReady = true;
+                document.getElementById('toast-msg').innerHTML = '新版本可用！<span class="underline ml-1">點此更新</span>';
+                t.querySelector('i').className = 'fa-solid fa-rotate text-blue-400';
+                t.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+                t.classList.add('cursor-pointer');
+                t.onclick = () => location.reload(); // 整個提示框都可點
             },
             // --- 請新增此函式到 app 物件中 ---
             showModal: (msg, title = "提示", type = "confirm", confirmText = null) => {
@@ -6218,14 +6239,7 @@
                 // 監聽 SW 更新訊息，顯示「新版本可用」提示
                 navigator.serviceWorker.addEventListener('message', event => {
                     if (event.data && event.data.type === 'SW_UPDATED') {
-                        const toast = document.getElementById('toast');
-                        const toastMsg = document.getElementById('toast-msg');
-                        if (toast && toastMsg) {
-                            toastMsg.innerHTML = '新版本可用！<span onclick="location.reload()" class="underline cursor-pointer ml-1">點此更新</span>';
-                            toast.querySelector('i').className = 'fa-solid fa-rotate text-blue-400';
-                            toast.classList.remove('opacity-0', 'translate-y-4');
-                            // 不自動消失，等使用者點擊
-                        }
+                        app.showUpdateToast(); // 不自動消失，等使用者點擊
                     }
                 });
             }

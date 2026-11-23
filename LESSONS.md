@@ -52,3 +52,8 @@
 ## L-010　雲端（Claude Code on the web）環境與本機的差異
 - 沒有本機 `.git/hooks/` → SW 版本**不會自動遞增**，改 index.html 要手動改 `sw.js`。
 - cdnjs.cloudflare.com 被擋 → 截圖裡 Font Awesome 圖示全是空白，**不是 bug**；Google Fonts 可連。
+
+## L-011　提示框 pointer-events-none 讓「點此更新」點了沒反應
+- 症狀：「新版本可用！點此更新」怎麼點都沒反應。
+- 根因：`#toast` 為了不擋畫面設了 `pointer-events-none`，裡面的連結也一起被穿透，點擊落到底下的頁面。
+- 規則：要讓使用者點的提示（如 `showUpdateToast`）必須拿掉 `pointer-events-none`；一般 `showToast` 再加回來。驗證要用真的滑鼠點擊或 `elementFromPoint`，不能只呼叫 onclick。
