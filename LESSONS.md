@@ -34,3 +34,26 @@
 - 實例（115/10）：本機沒 fetch 就接著規劃「IG 前端」，結果 `origin/main` 早已**領先 34 筆**、IG 功能（含飲品/食譜庫/加入本週菜單）全做完了——差點重做一遍。
 - 規矩：**每次開工先 `git fetch` → `git status -sb` 看 ahead/behind**，分岔就先同步再動工。
 - 本機 `.git/hooks/` 的 hook 不隨 repo（見 D-004），換機/重拉要注意。
+
+## L-007　index.html 是 CRLF，用腳本改檔會整檔變 LF
+- 症狀：只改幾行，`git diff --stat` 卻顯示上萬行變動。
+- 根因：Python 預設讀寫會把 `\r\n` 轉成 `\n`；Edit 工具則會保留原格式。
+- 規則：腳本一律 `open(..., newline='')`，插入字串也轉 CRLF；改完跑 `grep -c -v $'\r$' index.html` 必須為 0。
+
+## L-008　Tailwind 是本機預編譯：class 不在 tailwind.css 就等於沒寫
+- 症狀：`focus:border-brand-300` 寫了好幾處卻從未生效（色票根本沒有 300 階，115/11/22 已補）。
+- 規則：新增／修改 class 後一定重編 `tailwind.css`，並 `grep -F` 確認新 class 真的有產出；色票只能用 config 有定義的階。
+
+## L-009　檔案上傳到「已合併 PR 的分支」
+- 症狀：使用者用 GitHub「Add files via upload」把圖傳到已合併的分支，想從 main 重建分支需 force push，被安全機制擋下。
+- 解法：不覆蓋歷史，改 `git merge origin/main` 進該分支再接著改，內容與重建相同。
+- 規則：提醒使用者上傳到 **main 或新分支**；收工前分支已合併就別再往上放東西。
+
+## L-010　雲端（Claude Code on the web）環境與本機的差異
+- 沒有本機 `.git/hooks/` → SW 版本**不會自動遞增**，改 index.html 要手動改 `sw.js`。
+- cdnjs.cloudflare.com 被擋 → 截圖裡 Font Awesome 圖示全是空白，**不是 bug**；Google Fonts 可連。
+
+## L-011　提示框 pointer-events-none 讓「點此更新」點了沒反應
+- 症狀：「新版本可用！點此更新」怎麼點都沒反應。
+- 根因：`#toast` 為了不擋畫面設了 `pointer-events-none`，裡面的連結也一起被穿透，點擊落到底下的頁面。
+- 規則：要讓使用者點的提示（如 `showUpdateToast`）必須拿掉 `pointer-events-none`；一般 `showToast` 再加回來。驗證要用真的滑鼠點擊或 `elementFromPoint`，不能只呼叫 onclick。

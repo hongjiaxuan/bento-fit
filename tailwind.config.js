@@ -2,7 +2,7 @@
 //   npx tailwindcss@3 -c tailwind.config.js -i tailwind.src.css -o tailwind.css --minify
 // tailwind.src.css 內容只需三行：@tailwind base; @tailwind components; @tailwind utilities;
 //
-// 🎨 配色依食材插圖風格（115/11/23）：溫暖奶油底＋清新鼠尾草綠＋暖灰，搭配柔和暖色陰影
+// 🎨 配色依食材插圖風格（115/11/22）：溫暖奶油底＋清新鼠尾草綠＋暖灰，搭配柔和暖色陰影
 module.exports = {
   content: ['./index.html'],
   theme: {
