@@ -31,7 +31,7 @@
             /* 插畫風：溫暖奶油底，呼應食材插圖的米白與柔和陰影 */
             background-color: #f8f2e7 !important;
         }
-        /* ── 🎨 插畫風（115/11/23）：點點紙背景、貼紙感卡片、扁平立體按鈕、導覽膠囊 ── */
+        /* ── 🎨 插畫風（115/11/22）：點點紙背景、貼紙感卡片、扁平立體按鈕、導覽膠囊 ── */
         body:not(.dark) {
             background-image: radial-gradient(rgba(186, 160, 120, 0.22) 1.2px, transparent 1.3px);
             background-size: 20px 20px;
@@ -4122,7 +4122,7 @@
             const originalContent = card.innerHTML;
             let cancelled = false;
             card.innerHTML = `
-                <div class="flex flex-col justify-center items-center h-20 gap-2">
+                <div class="w-full flex flex-col justify-center items-center h-20 gap-2">
                     <i class="fa-solid fa-circle-notch fa-spin text-xl text-brand-500"></i>
                     <button id="reroll-cancel-${dayKey}" class="text-[10px] text-gray-400 hover:text-red-400 transition underline">取消</button>
                 </div>`;
@@ -4191,36 +4191,34 @@
                 const dayText = DAY_LABELS[d]; 
 
                 if(r) {
-                    // 排版：上排「星期＋圖示＋完整菜名（可換行）」，下排「配菜＋操作按鈕」，菜名不再被按鈕擠掉
-                    el.className = "bg-white p-4 rounded-2xl border border-gray-100 transition-all duration-300 hover:border-brand-200 active:scale-[0.99] group";
+                    // 排版：左「星期＋插圖」、右「菜名 → 熱量 → 配菜 → 操作按鈕」同一欄，不留空白；配菜最多兩行
+                    el.className = "bg-white p-3.5 rounded-2xl border border-gray-100 transition-all duration-300 hover:border-brand-200 group flex items-start gap-3";
+                    const btn = 'w-8 h-8 rounded-full flex items-center justify-center transition border active:scale-90';
                     el.innerHTML = `
-                        <div class="flex items-start gap-3 cursor-pointer" onclick="app.openDetailById(${r.id})">
-                            <div class="w-14 shrink-0 flex flex-col items-center">
-                                <span class="text-[10px] font-bold text-brand-600 leading-none mb-1">${dayText}</span>
-                                <div class="w-14 h-14 rounded-2xl bg-[#fbf6ec] border border-[#efe4d2] flex items-center justify-center">${app.recipeIcon(r, 44)}</div>
-                            </div>
-                            <div class="flex-1 min-w-0">
+                        <div class="w-14 shrink-0 flex flex-col items-center cursor-pointer" onclick="app.openDetailById(${r.id})">
+                            <span class="text-[10px] font-bold text-brand-600 leading-none mb-1">${dayText}</span>
+                            <div class="w-14 h-14 rounded-2xl bg-[#fbf6ec] border border-[#efe4d2] flex items-center justify-center">${app.recipeIcon(r, 44)}</div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="cursor-pointer" onclick="app.openDetailById(${r.id})">
                                 <h4 class="font-bold text-gray-800 text-sm tracking-wide leading-snug break-words">${r.name}</h4>
-                                <div class="text-[11px] text-gray-400 mt-1 tracking-wider">${r.cal} Kcal · ${(r.tags && r.tags[0]) || '一般'}${r.prep_minutes ? ` · <i class="fa-regular fa-clock"></i> ${r.prep_minutes}分` : ''}</div>
+                                <div class="text-[11px] text-gray-400 mt-0.5 tracking-wider">${r.cal} Kcal · ${(r.tags && r.tags[0]) || '一般'}${r.prep_minutes ? ` · <i class="fa-regular fa-clock"></i> ${r.prep_minutes}分` : ''}</div>
+                                ${r.sides && r.sides.length ? `<div class="text-[11px] text-green-600 mt-1 leading-snug line-clamp-2">${r.sides.join(' · ')}</div>` : ''}
                             </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-gray-50">
-                            <div class="flex-1 min-w-0 text-[10px] text-green-600 truncate">${r.sides && r.sides.length ? r.sides.join(' · ') : ''}</div>
-                        <div class="flex gap-1.5 shrink-0">
-                            <button onclick="app.toggleFavorite(${r.id}); app.renderPlanner();" class="w-8 h-8 rounded-full ${r.favorite ? 'bg-red-50 text-red-400 border-red-100' : 'bg-gray-50 text-gray-300 border-gray-100'} flex items-center justify-center transition border active:scale-90" title="${r.favorite ? '取消收藏' : '加入收藏'}">
-                                <i class="${r.favorite ? 'fa-solid' : 'fa-regular'} fa-heart text-[11px]"></i>
-                            </button>
-                            <button onclick="app.openRerollPanel('${d}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="AI 一句話換菜">
-                                <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
-                            </button>
-                            <button onclick="app.openSelector('${d}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-brand-50 hover:text-brand-500 transition border border-gray-100 active:scale-90" title="換菜">
-                                <i class="fa-solid fa-rotate text-[11px]"></i>
-                            </button>
-                            <button onclick="app.clearDayPlan('${d}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center hover:bg-red-50 hover:text-red-400 transition border border-gray-100 active:scale-90" title="清除這天的安排">
-                                <i class="fa-solid fa-xmark text-[11px]"></i>
-                            </button>
-                        </div>
+                            <div class="flex justify-end gap-1.5 mt-2">
+                                <button onclick="app.toggleFavorite(${r.id}); app.renderPlanner();" class="${btn} ${r.favorite ? 'bg-red-50 text-red-400 border-red-100' : 'bg-gray-50 text-gray-300 border-gray-100'}" title="${r.favorite ? '取消收藏' : '加入收藏'}">
+                                    <i class="${r.favorite ? 'fa-solid' : 'fa-regular'} fa-heart text-[11px]"></i>
+                                </button>
+                                <button onclick="app.openRerollPanel('${d}')" class="${btn} bg-gray-50 text-gray-400 border-gray-100 hover:bg-brand-50 hover:text-brand-500" title="AI 一句話換菜">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                                </button>
+                                <button onclick="app.openSelector('${d}')" class="${btn} bg-gray-50 text-gray-400 border-gray-100 hover:bg-brand-50 hover:text-brand-500" title="換菜">
+                                    <i class="fa-solid fa-rotate text-[11px]"></i>
+                                </button>
+                                <button onclick="app.clearDayPlan('${d}')" class="${btn} bg-gray-50 text-gray-300 border-gray-100 hover:bg-red-50 hover:text-red-400" title="清除這天的安排">
+                                    <i class="fa-solid fa-xmark text-[11px]"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                 } else {

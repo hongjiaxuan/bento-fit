@@ -11,7 +11,7 @@
 - **位置**：`D:/佳萱/08PYTHON/健康餐 App/`
 - **技術**：Vanilla JS ＋ Tailwind CSS（**本機 `tailwind.css`**，非 CDN；SW 對本機資源走「網路優先」避免卡舊版樣式），無建置流程、無框架
 - **AI**：Google Gemini（`generativelanguage` 免費端點，使用者自備 API Key）
-- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.26，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
+- **部署**：靜態檔；SW 快取版本 `bento-fit-vX.Y`（目前 v2.27，由 git pre-commit hook 於 index.html 變更時自動遞增，見 DECISIONS D-004）
 
 ## 開發流程（重要）
 - **主線在 `origin/main`**；功能走 **feature 分支 ＋ Pull Request** 合併（例：`feat/social-dish-recipes`、`feat/tiktok-drink-recipes`、`refactor/mealprep-merge-into-ai-flow`）。
@@ -41,8 +41,8 @@
 - 新增 localStorage key 必在 5 處登記。
 - 通用確認框 `modal-general` z-index 須最高（見 LESSONS L-002）。
 
-## 目前狀態（115/11/22）
-- **已合併 main（v2.26，PR #14、#15）**：彈性化改版（一句話換菜、買不到換替代、③ 買完依冰箱對齊、平行生成、冷凍／冷藏冰箱、場景式採買，D-007）＋整體插畫風（D-008）＋列高縮小與安全區（D-009）；食材插圖 `img/food/` 56 張到齊。④ 半週規劃不做。
+## 目前狀態（115/11/23）
+- **已合併 main（v2.26，PR #14、#15）**：彈性化改版（一句話換菜、買不到換替代、③ 買完依冰箱對齊、平行生成、冷凍／冷藏冰箱、場景式採買，D-007）＋整體插畫風（D-008）＋列高縮小與安全區（D-009）；115/11/23 本週菜單卡片改單排（配菜、按鈕移到右欄，去除空白，v2.27）；食材插圖 `img/food/` 56 張到齊。④ 半週規劃不做。
 - **下一步**：使用者手機實測（真的 Gemini 下平行生成速度與免費額度、iPhone 安全區）；陸續補 `img/ui/` 13 張 UI 插圖（清單與繪圖描述見 `img/ui/README.md`），上傳後壓縮成 256px 並核對檔名。
-- **待確認**：`index.html` 內插畫風 CSS 註解日期誤寫 115/11/23（下次改 index.html 時順手更正）；「鮮蝦炒蛋」插圖目前對到蛋，使用者未表態。
+- **待確認**：「鮮蝦炒蛋」插圖目前對到蛋，使用者未表態。
 - 待辦方向（未排程）：IG 影片內容辨識（需 Cloud Run／Vertex，見 D-003）。
