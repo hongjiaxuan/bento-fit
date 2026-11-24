@@ -605,7 +605,7 @@
             </div>
 
             <button onclick="app.openDrinksLibrary()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
-                <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-500 flex items-center justify-center text-2xl shrink-0">🧋</div>
+                <div class="w-12 h-12 rounded-2xl bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:38px;height:38px"><span class="leading-none" style="font-size:27px">🧋</span><img src="img/ui/drink.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
                 <div class="flex-1 text-left">
                     <div class="text-sm font-bold text-gray-800">飲品食譜庫</div>
                     <div class="text-[10px] text-gray-400 mt-0.5">從 TikTok 分享連結，自動整理成食譜</div>
@@ -614,7 +614,7 @@
             </button>
 
             <button onclick="app.openIgCollection()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
-                <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-500 flex items-center justify-center text-2xl shrink-0">📸</div>
+                <div class="w-12 h-12 rounded-2xl bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:38px;height:38px"><span class="leading-none" style="font-size:27px">📸</span><img src="img/ui/camera.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
                 <div class="flex-1 text-left">
                     <div class="text-sm font-bold text-gray-800">IG 美食收藏</div>
                     <div class="text-[10px] text-gray-400 mt-0.5">從 Instagram 分享連結，自動整理成食譜</div>
@@ -623,7 +623,7 @@
             </button>
 
             <button onclick="app.openPasteLinkModal()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
-                <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-link"></i></div>
+                <div class="w-12 h-12 rounded-2xl bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:38px;height:38px"><span class="leading-none" style="font-size:27px">🔗</span><img src="img/ui/link.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
                 <div class="flex-1 text-left">
                     <div class="text-sm font-bold text-gray-800">貼上連結手動解析</div>
                     <div class="text-[10px] text-gray-400 mt-0.5">手機分享選單找不到 App 時，改用這裡貼連結</div>
@@ -634,7 +634,7 @@
             <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-24">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-line text-brand-500"></i> 體重趨勢
+                        <span class="w-8 h-8 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:22px;height:22px"><span class="leading-none" style="font-size:16px">⚖️</span><img src="img/ui/scale.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>體重趨勢
                     </h3>
                     <span class="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">最近 30 筆</span>
                 </div>
@@ -1535,7 +1535,25 @@
         ai: {
             // 🔑 透過「健康餐同步 GAS」代呼叫 Gemini：Key 存在 GAS 的指令碼屬性（與 parseDrink 共用同一把），
             // 前端不再持有 Key。沿用 parseDrink 的 text/plain POST（simple request，不觸發 CORS 預檢，讀得到回應）
+            // Gemini 暫時忙線（503 過載、429 頻率限制、500/504）：自動重試，間隔逐次拉長＋隨機錯開，避免平行請求同時再撞
+            isBusyError: (msg) => /\((429|500|503|504)\)|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand|overloaded|try again later/i.test(String(msg || '')),
             gasClient: async (promptText, syncUrl) => {
+                const MAX_TRY = 4; // 第 1 次＋重試 3 次
+                for (let attempt = 1; ; attempt++) {
+                    try {
+                        return await app.infrastructure.ai.gasClientOnce(promptText, syncUrl);
+                    } catch (e) {
+                        if (!app.infrastructure.ai.isBusyError(e.message)) throw e;
+                        if (attempt >= MAX_TRY) {
+                            throw new Error(`Gemini 目前忙線中（Google 伺服器暫時過載），已自動重試 ${MAX_TRY - 1} 次仍失敗。通常幾分鐘後就會恢復，請稍後再試一次。\n（原始訊息：${e.message}）`);
+                        }
+                        const wait = 1500 * Math.pow(2, attempt - 1) + Math.random() * 800; // 約 1.5s → 3s → 6s
+                        console.warn(`⏳ Gemini 忙線，${Math.round(wait)}ms 後第 ${attempt + 1} 次嘗試`, e.message);
+                        await new Promise(r => setTimeout(r, wait));
+                    }
+                }
+            },
+            gasClientOnce: async (promptText, syncUrl) => {
                 console.log('🚀 透過 GAS 呼叫 Gemini（action: aiGenerate）...');
                 const res = await fetch(syncUrl, {
                     method: 'POST',
