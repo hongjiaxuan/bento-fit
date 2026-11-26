@@ -2890,27 +2890,12 @@
                 document.getElementById('dash-carb-val').innerText = '-';
                 document.getElementById('dash-fat-val').innerText = '-';
                 const isWeekend = ['Sat','Sun'].includes(todayKey);
-                const todayStr2 = new Date().toLocaleDateString('zh-TW');
-                const existingLog = app.state.quickLog && app.state.quickLog[todayStr2];
-                const quickInputHtml = existingLog
-                    ? `<div class="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2 mt-2">
-                           <i class="fa-solid fa-circle-check text-green-500 text-xs"></i>
-                           <span class="text-xs text-green-700 font-bold flex-1 truncate">${existingLog.text}</span>
-                           <button onclick="app.clearQuickLog()" class="text-[10px] text-gray-400 hover:text-red-400 transition shrink-0">✕</button>
-                       </div>`
-                    : `<div class="flex gap-2 mt-2">
-                           <input type="text" id="input-quick-log" placeholder="今天吃了什麼？快速記錄 →"
-                               class="flex-1 min-w-0 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-300"
-                               onkeydown="if(event.key==='Enter') app.quickLogMeal()">
-                           <button onclick="app.quickLogMeal()" class="bg-brand-500 text-white px-3 rounded-xl text-xs font-bold active:scale-95 transition shrink-0">記錄</button>
-                       </div>`;
                 document.getElementById('today-meal-card').innerHTML = `
                     <div class="p-4">
-                        <div class="flex items-center gap-3 mb-1">
+                        <div class="flex items-center gap-3">
                             ${app.foodIconById('cooked-meal', '🍱', 36)}
                             <span class="text-sm text-gray-400">${isWeekend ? '今日未安排便當' : '今日尚未安排便當'}</span>
                         </div>
-                        ${quickInputHtml}
                         <div class="flex gap-2 mt-3">
                             <button onclick="app.quickInspiration()" class="flex-1 text-xs text-brand-500 font-bold bg-brand-50 px-3 py-2 rounded-xl hover:bg-brand-100 transition">
                                 <i class="fa-solid fa-lightbulb mr-1"></i>找靈感
@@ -3596,31 +3581,6 @@
             } catch(e) {
                 app.showToast('⚠️ 靈感生成失敗，請重試');
             }
-        },
-
-        // 快速記錄今日餐點（不需 AI 計劃）
-        quickLogMeal: () => {
-            const input = document.getElementById('input-quick-log');
-            const text = (input ? input.value : '').trim();
-            if (!text) return app.showToast('請輸入今天吃了什麼');
-            if (!app.state.quickLog) app.state.quickLog = {};
-            const todayStr = new Date().toLocaleDateString('zh-TW');
-            app.state.quickLog[todayStr] = { text, timestamp: Date.now() };
-            // 只保留最近 30 天
-            const keys = Object.keys(app.state.quickLog).sort();
-            if (keys.length > 30) delete app.state.quickLog[keys[0]];
-            app.infrastructure.storage.set('bento_quick_log', app.state.quickLog);
-            app.showToast(`📝 已記錄：${text}`);
-            app.renderDashboard();
-            app.cloudSync.scheduleUpload();
-        },
-
-        // 清除今日快速記錄
-        clearQuickLog: () => {
-            const todayStr = new Date().toLocaleDateString('zh-TW');
-            if (app.state.quickLog) delete app.state.quickLog[todayStr];
-            app.infrastructure.storage.set('bento_quick_log', app.state.quickLog || {});
-            app.renderDashboard();
         },
 
         // 首頁體重快速輸入
