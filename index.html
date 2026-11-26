@@ -162,65 +162,131 @@
 
     <main id="main-container" class="flex-1 overflow-y-auto hide-scrollbar px-4 pt-4 relative" style="padding-bottom: calc(76px + env(safe-area-inset-bottom))">
         
-        <section id="view-dashboard" class="view-section fade-in hidden space-y-5">
+        <section id="view-dashboard" class="view-section fade-in hidden space-y-4">
             <!-- 智慧情境提示橫幅 (由 JS renderDashboard 動態注入) -->
             <div id="dash-context-banner" class="hidden rounded-2xl p-4 flex items-center gap-3 text-sm font-bold transition-all"></div>
 
-            <div class="bg-white p-5 rounded-[24px] shadow-soft border border-gray-50">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🎯</span><img src="img/ui/target.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日目標</h2>
+            <!-- 1. 今日目標（緊湊版：熱量單行＋三大營養素名稱與克數並排） -->
+            <div class="bg-white p-3.5 rounded-[22px] shadow-soft border border-gray-50">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:22px;height:22px"><span class="leading-none" style="font-size:16px">🎯</span><img src="img/ui/target.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日目標</h2>
                     <button onclick="app.navigateTo('history'); app.switchHistoryTab('calendar');" class="text-[10px] bg-brand-100 text-brand-600 px-2 py-1 rounded-full font-bold hover:bg-brand-200 transition">
                         <i class="fa-solid fa-chart-pie mr-1"></i>週分析
                     </button>
                 </div>
-                <div class="space-y-3">
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="font-medium text-gray-500">熱量 (Kcal)</span>
-                            <span class="text-gray-800 font-bold"><span id="dash-cal-curr">0</span> <span class="text-gray-300 font-normal">/</span> <span id="dash-cal-target">0</span></span>
+                <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="font-medium text-gray-500">熱量 <span class="text-[10px] text-gray-400" id="tdee-display">TDEE: 計算中...</span></span>
+                    <span class="text-gray-800 font-bold"><span id="dash-cal-curr">0</span> <span class="text-gray-300 font-normal">/</span> <span id="dash-cal-target">0</span> <span class="text-[9px] font-normal text-gray-400">kcal</span></span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mb-3">
+                    <div id="bar-cal" class="bg-brand-400 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="bg-blue-50 px-1.5 py-1.5 rounded-xl">
+                        <div class="flex items-center gap-1">
+                            <span class="inline-flex items-center justify-center relative shrink-0" style="width:16px;height:16px"><span class="leading-none" style="font-size:12px">🍗</span><img src="img/food/chicken.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+                            <span class="text-[10px] text-blue-400 flex-1 whitespace-nowrap">蛋白質</span>
+                            <span class="text-xs font-bold text-blue-600 shrink-0"><span id="dash-prot-val">-</span><span class="text-[9px] font-normal text-blue-300">g</span></span>
                         </div>
-                        <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                            <div id="bar-cal" class="bg-brand-400 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
-                        </div>
-                        <div class="text-right mt-1"><span class="text-[10px] text-gray-400" id="tdee-display">TDEE: 計算中...</span></div>
+                        <div class="h-1 w-full bg-blue-100 rounded-full mt-1"><div id="bar-prot" class="h-1 bg-blue-400 rounded-full" style="width:0%"></div></div>
                     </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="bg-blue-50 p-2 rounded-xl text-center">
-                            <div class="flex justify-center mb-0.5"><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🍗</span><img src="img/food/chicken.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
-                            <div class="text-[10px] text-blue-400 mb-0.5">蛋白質</div>
-                            <div class="text-xs font-bold text-blue-600 mb-1"><span id="dash-prot-val">-</span><span class="text-[9px] font-normal text-blue-300">g</span></div>
-                            <div class="h-1 w-full bg-blue-100 rounded-full"><div id="bar-prot" class="h-1 bg-blue-400 rounded-full" style="width:0%"></div></div>
+                    <div class="bg-yellow-50 px-1.5 py-1.5 rounded-xl">
+                        <div class="flex items-center gap-1">
+                            <span class="inline-flex items-center justify-center relative shrink-0" style="width:16px;height:16px"><span class="leading-none" style="font-size:12px">🍚</span><img src="img/food/rice.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+                            <span class="text-[10px] text-yellow-500 flex-1 whitespace-nowrap">碳水</span>
+                            <span class="text-xs font-bold text-yellow-600 shrink-0"><span id="dash-carb-val">-</span><span class="text-[9px] font-normal text-yellow-400">g</span></span>
                         </div>
-                        <div class="bg-yellow-50 p-2 rounded-xl text-center">
-                            <div class="flex justify-center mb-0.5"><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🍚</span><img src="img/food/rice.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
-                            <div class="text-[10px] text-yellow-500 mb-0.5">碳水</div>
-                            <div class="text-xs font-bold text-yellow-600 mb-1"><span id="dash-carb-val">-</span><span class="text-[9px] font-normal text-yellow-400">g</span></div>
-                            <div class="h-1 w-full bg-yellow-100 rounded-full"><div id="bar-carb" class="h-1 bg-yellow-400 rounded-full" style="width:0%"></div></div>
+                        <div class="h-1 w-full bg-yellow-100 rounded-full mt-1"><div id="bar-carb" class="h-1 bg-yellow-400 rounded-full" style="width:0%"></div></div>
+                    </div>
+                    <div class="bg-red-50 px-1.5 py-1.5 rounded-xl">
+                        <div class="flex items-center gap-1">
+                            <span class="inline-flex items-center justify-center relative shrink-0" style="width:16px;height:16px"><span class="leading-none" style="font-size:12px">🥑</span><img src="img/food/avocado.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+                            <span class="text-[10px] text-red-400 flex-1 whitespace-nowrap">脂肪</span>
+                            <span class="text-xs font-bold text-red-500 shrink-0"><span id="dash-fat-val">-</span><span class="text-[9px] font-normal text-red-300">g</span></span>
                         </div>
-                        <div class="bg-red-50 p-2 rounded-xl text-center">
-                            <div class="flex justify-center mb-0.5"><span class="inline-flex items-center justify-center relative shrink-0" style="width:30px;height:30px"><span class="leading-none" style="font-size:22px">🥑</span><img src="img/food/avocado.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
-                            <div class="text-[10px] text-red-400 mb-0.5">脂肪</div>
-                            <div class="text-xs font-bold text-red-500 mb-1"><span id="dash-fat-val">-</span><span class="text-[9px] font-normal text-red-300">g</span></div>
-                            <div class="h-1 w-full bg-red-100 rounded-full"><div id="bar-fat" class="h-1 bg-red-400 rounded-full" style="width:0%"></div></div>
-                        </div>
+                        <div class="h-1 w-full bg-red-100 rounded-full mt-1"><div id="bar-fat" class="h-1 bg-red-400 rounded-full" style="width:0%"></div></div>
                     </div>
                 </div>
             </div>
 
+            <!-- 2. 今日便當 -->
             <div>
-                <h3 class="text-base font-bold text-gray-800 mb-3 ml-1 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🍱</span><img src="img/food/cooked-meal.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日便當</h3>
+                <h3 class="text-base font-bold text-gray-800 mb-2 ml-1 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🍱</span><img src="img/food/cooked-meal.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日便當</h3>
                 <div id="today-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-gray-50">
                     <div class="p-8 text-center text-gray-400 italic">尚未安排</div>
                 </div>
             </div>
-            <div class="mt-4">
-                <h3 class="text-base font-bold text-gray-800 mb-3 ml-1 flex items-center gap-2">
+
+            <!-- 3. 明日備餐 -->
+            <div>
+                <h3 class="text-base font-bold text-gray-800 mb-2 ml-1 flex items-center gap-2">
                     <span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🥡</span><img src="img/food/prepped.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span><span>明日備餐</span>
                     <span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">提前準備</span>
                 </h3>
                 <div id="tomorrow-meal-card" class="bg-white rounded-[24px] overflow-hidden shadow-soft cursor-pointer hover:scale-[1.01] transition-transform duration-300 group relative border border-orange-100/50">
                     </div>
             </div>
+
+            <!-- 4. 冰箱摘要（完整冰箱已移到「冰箱」分頁） -->
+            <button onclick="app.navigateTo('fridge')" class="w-full bg-white px-4 py-3 rounded-[22px] shadow-soft border border-sky-50 flex items-center gap-3 active:scale-[0.98] transition">
+                <span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🧊</span><img src="img/ui/fridge.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>
+                <span class="flex-1 text-left min-w-0">
+                    <span class="block text-sm font-bold text-gray-800">我的冰箱</span>
+                    <span id="dash-fridge-summary" class="block text-[11px] text-gray-400 truncate">冰箱空空的，點此放入食材</span>
+                </span>
+                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
+            </button>
+
+            <!-- 5. 體重快速記錄（單行） -->
+            <div class="bg-white px-4 py-3 rounded-[22px] shadow-soft border border-purple-50">
+                <div class="flex items-center gap-2">
+                    <span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">⚖️</span><img src="img/ui/scale.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>
+                    <div class="shrink-0 leading-tight">
+                        <div class="text-sm font-bold text-gray-800">今日體重</div>
+                        <div id="dash-last-weight" class="text-[10px] text-purple-400 font-bold"></div>
+                    </div>
+                    <input type="number" id="input-dash-weight" placeholder="kg" step="0.1" min="20" max="300"
+                        class="flex-1 min-w-0 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-purple-300"
+                        onkeydown="if(event.key==='Enter') app.quickLogWeight()">
+                    <button onclick="app.quickLogWeight()" class="bg-purple-500 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-soft active:scale-95 transition shrink-0">記錄</button>
+                </div>
+            </div>
+
+            <!-- 6. 行動入口 -->
+            <div class="flex gap-3">
+                <button onclick="app.quickInspiration()" class="flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-lightbulb"></i> 今日找靈感
+                </button>
+                <button onclick="app.navigateTo('planner')" class="flex-1 bg-white border border-gray-200 text-gray-500 font-bold py-3.5 rounded-2xl hover:bg-brand-50 hover:text-brand-600 hover:border-brand-100 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-calendar-plus"></i> 規劃菜單
+                </button>
+            </div>
+
+            <!-- 📚 收藏食譜：IG 美食／飲品庫／貼連結解析（原本只在「我的」頁，首頁也放入口） -->
+            <div class="bg-white p-4 rounded-[24px] shadow-soft border border-orange-50">
+                <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">📚</span><img src="img/ui/recipe-book.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>收藏食譜</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="app.openIgCollection()" class="bg-orange-50/60 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
+                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">📸</span><img src="img/ui/camera.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+                        <span class="text-[11px] font-bold text-gray-700">IG 美食</span>
+                        <span id="dash-ig-count" class="text-[10px] text-orange-500"></span>
+                    </button>
+                    <button onclick="app.openDrinksLibrary()" class="bg-orange-50/60 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
+                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">🧋</span><img src="img/ui/drink.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+                        <span class="text-[11px] font-bold text-gray-700">飲品庫</span>
+                        <span id="dash-drink-count" class="text-[10px] text-orange-500"></span>
+                    </button>
+                    <button onclick="app.openPasteLinkModal()" class="bg-gray-50 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
+                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">🔗</span><img src="img/ui/link.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
+                        <span class="text-[11px] font-bold text-gray-700">貼連結解析</span>
+                        <span class="text-[10px] text-gray-400">IG / TikTok</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🧊 冰箱分頁（原首頁冰箱卡片搬來；id 不變，renderDashFridge 照常渲染） -->
+        <section id="view-fridge" class="view-section fade-in hidden space-y-4">
             <!-- 🧊 首頁冰箱（視覺化）：上冷凍庫、下冷藏室；可放生鮮食材，也可放備好的料理（滷肉等）；點食材可移動/標記/用畢 -->
             <div class="bg-white p-4 rounded-[24px] shadow-soft border border-sky-50">
                 <div class="flex justify-between items-center mb-3">
@@ -253,51 +319,6 @@
                         </div>
                         <p class="text-[10px] text-gray-400 mt-1.5">可一次放多項；滷肉、咖哩等備好的料理會標「備好」。水餃等冷凍食品會自動放冷凍。</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- ⚖️ 體重快速記錄 -->
-            <div class="bg-white p-4 rounded-[24px] shadow-soft border border-purple-50">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">⚖️</span><img src="img/ui/scale.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>今日體重</h3>
-                    <span id="dash-last-weight" class="text-xs text-purple-400 font-bold"></span>
-                </div>
-                <div class="flex gap-2">
-                    <input type="number" id="input-dash-weight" placeholder="輸入體重 (kg)" step="0.1" min="20" max="300"
-                        class="flex-1 min-w-0 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs outline-none focus:border-purple-300"
-                        onkeydown="if(event.key==='Enter') app.quickLogWeight()">
-                    <button onclick="app.quickLogWeight()" class="bg-purple-500 text-white px-3 rounded-xl text-xs font-bold shadow-soft active:scale-95 transition shrink-0">記錄</button>
-                </div>
-            </div>
-
-            <div class="flex gap-3">
-                <button onclick="app.quickInspiration()" class="flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-lightbulb"></i> 今日找靈感
-                </button>
-                <button onclick="app.navigateTo('planner')" class="flex-1 bg-white border border-gray-200 text-gray-500 font-bold py-3.5 rounded-2xl hover:bg-brand-50 hover:text-brand-600 hover:border-brand-100 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-calendar-plus"></i> 規劃菜單
-                </button>
-            </div>
-
-            <!-- 📚 收藏食譜：IG 美食／飲品庫／貼連結解析（原本只在「我的」頁，首頁也放入口） -->
-            <div class="bg-white p-4 rounded-[24px] shadow-soft border border-orange-50">
-                <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2"><span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">📚</span><img src="img/ui/recipe-book.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>收藏食譜</h3>
-                <div class="grid grid-cols-3 gap-2">
-                    <button onclick="app.openIgCollection()" class="bg-orange-50/60 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
-                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">📸</span><img src="img/ui/camera.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
-                        <span class="text-[11px] font-bold text-gray-700">IG 美食</span>
-                        <span id="dash-ig-count" class="text-[10px] text-orange-500"></span>
-                    </button>
-                    <button onclick="app.openDrinksLibrary()" class="bg-orange-50/60 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
-                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">🧋</span><img src="img/ui/drink.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
-                        <span class="text-[11px] font-bold text-gray-700">飲品庫</span>
-                        <span id="dash-drink-count" class="text-[10px] text-orange-500"></span>
-                    </button>
-                    <button onclick="app.openPasteLinkModal()" class="bg-gray-50 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
-                        <span class="inline-flex items-center justify-center relative shrink-0" style="width:40px;height:40px"><span class="leading-none" style="font-size:29px">🔗</span><img src="img/ui/link.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span>
-                        <span class="text-[11px] font-bold text-gray-700">貼連結解析</span>
-                        <span class="text-[10px] text-gray-400">IG / TikTok</span>
-                    </button>
                 </div>
             </div>
         </section>
@@ -352,7 +373,7 @@
                         class="w-9 h-9 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 active:scale-90 transition">
                         <i class="fa-solid fa-gear text-xs"></i>
                     </button>
-                    <button onclick="app.openFridge()" title="冰箱庫存"
+                    <button onclick="app.navigateTo('fridge')" title="冰箱庫存"
                         class="w-9 h-9 rounded-full bg-blue-50 text-blue-400 flex items-center justify-center border border-blue-100 active:scale-90 transition">
                         <i class="fa-solid fa-box-archive text-xs"></i>
                     </button>
@@ -481,13 +502,14 @@
         <section id="view-history" class="view-section fade-in hidden">
             <!-- 分頁切換 -->
             <div class="flex bg-gray-100 rounded-2xl p-1 mb-4">
+                <button onclick="app.navigateTo('profile')" class="flex-1 py-2 text-sm font-bold rounded-xl text-gray-400 transition">👤 總覽</button>
                 <button id="hist-tab-list" onclick="app.switchHistoryTab('list')"
                     class="flex-1 py-2 text-sm font-bold rounded-xl bg-white text-gray-700 shadow-sm transition">
                     📋 週紀錄
                 </button>
                 <button id="hist-tab-cal" onclick="app.switchHistoryTab('calendar')"
                     class="flex-1 py-2 text-sm font-bold rounded-xl text-gray-400 transition">
-                    📊 統計覽
+                    📊 統計
                 </button>
             </div>
             <!-- 週紀錄列表 -->
@@ -568,6 +590,12 @@
         </section>
 
 <section id="view-profile" class="view-section fade-in hidden">
+            <!-- 我的：總覽｜週紀錄｜統計（週紀錄、統計由原「紀錄」分頁併入） -->
+            <div class="flex bg-gray-100 rounded-2xl p-1 mb-4">
+                <button class="flex-1 py-2 text-sm font-bold rounded-xl bg-white text-gray-700 shadow-sm transition">👤 總覽</button>
+                <button onclick="app.navigateTo('history'); app.switchHistoryTab('list')" class="flex-1 py-2 text-sm font-bold rounded-xl text-gray-400 transition">📋 週紀錄</button>
+                <button onclick="app.navigateTo('history'); app.switchHistoryTab('calendar')" class="flex-1 py-2 text-sm font-bold rounded-xl text-gray-400 transition">📊 統計</button>
+            </div>
             
             <div class="bg-white rounded-[30px] p-6 shadow-soft mb-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-bl-full -mr-10 -mt-10 z-0"></div>
@@ -603,33 +631,6 @@
                 </div>
 
             </div>
-
-            <button onclick="app.openDrinksLibrary()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
-                <div class="w-12 h-12 rounded-2xl bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:38px;height:38px"><span class="leading-none" style="font-size:27px">🧋</span><img src="img/ui/drink.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
-                <div class="flex-1 text-left">
-                    <div class="text-sm font-bold text-gray-800">飲品食譜庫</div>
-                    <div class="text-[10px] text-gray-400 mt-0.5">從 TikTok 分享連結，自動整理成食譜</div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
-            </button>
-
-            <button onclick="app.openIgCollection()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
-                <div class="w-12 h-12 rounded-2xl bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:38px;height:38px"><span class="leading-none" style="font-size:27px">📸</span><img src="img/ui/camera.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
-                <div class="flex-1 text-left">
-                    <div class="text-sm font-bold text-gray-800">IG 美食收藏</div>
-                    <div class="text-[10px] text-gray-400 mt-0.5">從 Instagram 分享連結，自動整理成食譜</div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
-            </button>
-
-            <button onclick="app.openPasteLinkModal()" class="w-full bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-4 flex items-center gap-4 active:scale-[0.98] transition">
-                <div class="w-12 h-12 rounded-2xl bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:38px;height:38px"><span class="leading-none" style="font-size:27px">🔗</span><img src="img/ui/link.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></div>
-                <div class="flex-1 text-left">
-                    <div class="text-sm font-bold text-gray-800">貼上連結手動解析</div>
-                    <div class="text-[10px] text-gray-400 mt-0.5">手機分享選單找不到 App 時，改用這裡貼連結</div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
-            </button>
 
             <div id="chart-container" class="bg-white p-4 rounded-[24px] shadow-sm border border-gray-100 mb-24">
                 <div class="flex justify-between items-center mb-2">
@@ -823,10 +824,10 @@
     <nav class="bg-paper px-4 pt-1.5 border-t border-gray-100 z-30 w-full fixed bottom-0" style="padding-bottom: max(6px, env(safe-area-inset-bottom))">
         <ul class="flex justify-between items-center">
             <li class="nav-item w-full" onclick="app.navigateTo('dashboard')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-brand-500 py-1" id="nav-dashboard"><i class="fa-solid fa-house text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">首頁</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('planner')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-planner"><i class="fa-solid fa-calendar-days text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">規劃</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('shopping')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-shopping"><i class="fa-solid fa-list-check text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">清單</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('history')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-history"><i class="fa-solid fa-clock-rotate-left text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">紀錄</span></div></li>
-            <li class="nav-item w-full" onclick="app.navigateTo('profile')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 py-1 hover:text-gray-400" id="nav-profile"><i class="fa-solid fa-user text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">我的</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('planner')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 hover:text-gray-400 py-1" id="nav-planner"><i class="fa-solid fa-calendar-days text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">規劃</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('fridge')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 hover:text-gray-400 py-1" id="nav-fridge"><i class="fa-solid fa-snowflake text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">冰箱</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('shopping')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 hover:text-gray-400 py-1" id="nav-shopping"><i class="fa-solid fa-list-check text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">清單</span></div></li>
+            <li class="nav-item w-full" onclick="app.navigateTo('profile')"><div class="flex flex-col items-center gap-0.5 group cursor-pointer text-gray-300 hover:text-gray-400 py-1" id="nav-profile"><i class="fa-solid fa-user text-lg transition-transform group-active:scale-90"></i><span class="text-[10px] font-bold tracking-widest">我的</span></div></li>
         </ul>
     </nav>
 
@@ -2793,8 +2794,8 @@
             if (!statsContainer && dashboardCard) {
                 statsContainer = document.createElement('div');
                 statsContainer.id = 'dash-body-stats';
-                statsContainer.className = "mt-4 pt-4 border-t border-gray-100 grid grid-cols-4 gap-2";
-                dashboardCard.querySelector('.space-y-3').appendChild(statsContainer);
+                statsContainer.className = "mt-2.5 pt-2.5 border-t border-gray-100 grid grid-cols-4 gap-2";
+                dashboardCard.appendChild(statsContainer);
             }
 
             if (statsContainer && u.bodyComp) {
@@ -3162,7 +3163,8 @@
                 
                 {
                     document.querySelector('nav').classList.remove('hidden');
-                    const navEl = document.getElementById(`nav-${pageId}`);
+                    // 「週紀錄／統計」併入「我的」：看紀錄頁時，導覽列仍亮在「我的」
+                    const navEl = document.getElementById(`nav-${pageId === 'history' ? 'profile' : pageId}`);
                     if(navEl) {
                         navEl.classList.add('text-brand-500');
                         navEl.classList.remove('text-gray-300');
@@ -3173,6 +3175,7 @@
                 if(pageId === 'dashboard') app.renderDashboard();
                 if(pageId === 'planner') app.renderPlanner();
                 if(pageId === 'shopping') app.renderShopping();
+                if(pageId === 'fridge') app.renderDashFridge();
                 if(pageId === 'history') app.renderHistory();
                 if(pageId === 'profile' && app.state.user) app.fillProfile();
             },
@@ -4460,6 +4463,12 @@
                 const list = (app.state.fridge || []).slice().sort((a, b) => (app.fridgeIsPrepped(b) - app.fridgeIsPrepped(a)) || (a.id - b.id));
                 const countEl = document.getElementById('dash-fridge-count');
                 if (countEl) { countEl.innerText = `${list.length} 項`; countEl.classList.toggle('hidden', list.length === 0); }
+                // 首頁摘要列：總數＋冷藏／冷凍各幾項（不含保存期限）
+                const sumEl = document.getElementById('dash-fridge-summary');
+                if (sumEl) {
+                    const nFz = list.filter(x => app.fridgeZone(x) === 'freezer').length;
+                    sumEl.innerText = list.length ? `共 ${list.length} 項・冷藏 ${list.length - nFz}・冷凍 ${nFz}` : '冰箱空空的，點此放入食材';
+                }
                 const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
                 const tile = (item) => `
                     <button onclick="app.openFridgeItem(${item.id})" class="relative w-[60px] flex flex-col items-center py-1 rounded-xl hover:bg-white active:scale-95 transition">
