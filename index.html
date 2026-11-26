@@ -227,17 +227,7 @@
                     </div>
             </div>
 
-            <!-- 4. 冰箱摘要（完整冰箱已移到「冰箱」分頁） -->
-            <button onclick="app.navigateTo('fridge')" class="w-full bg-white px-4 py-3 rounded-[22px] shadow-soft border border-sky-50 flex items-center gap-3 active:scale-[0.98] transition">
-                <span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">🧊</span><img src="img/ui/fridge.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>
-                <span class="flex-1 text-left min-w-0">
-                    <span class="block text-sm font-bold text-gray-800">我的冰箱</span>
-                    <span id="dash-fridge-summary" class="block text-[11px] text-gray-400 truncate">冰箱空空的，點此放入食材</span>
-                </span>
-                <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
-            </button>
-
-            <!-- 5. 體重快速記錄（單行） -->
+            <!-- 4. 體重快速記錄（單行） -->
             <div class="bg-white px-4 py-3 rounded-[22px] shadow-soft border border-purple-50">
                 <div class="flex items-center gap-2">
                     <span class="w-9 h-9 rounded-full bg-[#fbf3e4] border border-[#efe4d1] flex items-center justify-center shrink-0"><span class="inline-flex items-center justify-center relative shrink-0" style="width:26px;height:26px"><span class="leading-none" style="font-size:19px">⚖️</span><img src="img/ui/scale.png" alt="" class="hidden absolute inset-0 w-full h-full object-contain" onload="this.classList.remove('hidden');this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()"></span></span>
@@ -252,7 +242,7 @@
                 </div>
             </div>
 
-            <!-- 6. 行動入口 -->
+            <!-- 5. 行動入口 -->
             <div class="flex gap-3">
                 <button onclick="app.quickInspiration()" class="flex-1 bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-float active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-lightbulb"></i> 今日找靈感
@@ -4463,12 +4453,6 @@
                 const list = (app.state.fridge || []).slice().sort((a, b) => (app.fridgeIsPrepped(b) - app.fridgeIsPrepped(a)) || (a.id - b.id));
                 const countEl = document.getElementById('dash-fridge-count');
                 if (countEl) { countEl.innerText = `${list.length} 項`; countEl.classList.toggle('hidden', list.length === 0); }
-                // 首頁摘要列：總數＋冷藏／冷凍各幾項（不含保存期限）
-                const sumEl = document.getElementById('dash-fridge-summary');
-                if (sumEl) {
-                    const nFz = list.filter(x => app.fridgeZone(x) === 'freezer').length;
-                    sumEl.innerText = list.length ? `共 ${list.length} 項・冷藏 ${list.length - nFz}・冷凍 ${nFz}` : '冰箱空空的，點此放入食材';
-                }
                 const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
                 const tile = (item) => `
                     <button onclick="app.openFridgeItem(${item.id})" class="relative w-[60px] flex flex-col items-center py-1 rounded-xl hover:bg-white active:scale-95 transition">
