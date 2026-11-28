@@ -1532,11 +1532,23 @@
             },
             gasClientOnce: async (promptText, syncUrl) => {
                 console.log('🚀 透過 GAS 呼叫 Gemini（action: aiGenerate）...');
-                const res = await fetch(syncUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'aiGenerate', prompt: promptText })
-                });
+                // 單次請求 75 秒逾時：GAS／Gemini 卡住時不再無限轉圈，改丟出「忙線」類錯誤進入自動重試
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 75000);
+                let res;
+                try {
+                    res = await fetch(syncUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'aiGenerate', prompt: promptText }),
+                        signal: ctrl.signal
+                    });
+                } catch (e) {
+                    if (e.name === 'AbortError') throw new Error('AI 回應逾時 (504)：等待超過 75 秒仍無回應');
+                    throw e;
+                } finally {
+                    clearTimeout(timer);
+                }
                 if (!res.ok) throw new Error(`GAS 伺服器錯誤 (${res.status})`);
                 const data = await res.json().catch(() => null);
                 if (!data) throw new Error('GAS 回傳非 JSON，請確認同步 GAS 已加入 aiGenerate 並重新部署');
@@ -3824,7 +3836,23 @@
                 return app.infrastructure.ai.generate(prompt, true)
                     .then(arr => { done++; setText(); return Array.isArray(arr) ? arr : []; });
             });
-            const results = await Promise.allSettled(tasks);
+            // 不再死等全部 5 組：總上限 100 秒；或已有 ≥3 組成功（≥6 道）後再多等 15 秒寬限就收工，
+            // 晚到的組別直接放棄（其結果被忽略），避免單一組卡住拖垮整份菜單
+            const settled = tasks.map(t => t.then(v => ({ status: 'fulfilled', value: v }), e => ({ status: 'rejected', reason: e })));
+            const slots = new Array(GROUPS).fill(null);
+            settled.forEach((p, i) => p.then(r => { slots[i] = r; }));
+            await new Promise(resolve => {
+                const t0 = Date.now();
+                let graceStart = null; // 成功組數達 3 時開始計寬限
+                const iv = setInterval(() => {
+                    const finished = slots.filter(Boolean).length;
+                    const okCount = slots.filter(s => s && s.status === 'fulfilled').length;
+                    if (okCount >= 3 && graceStart === null) graceStart = Date.now();
+                    const graceOver = graceStart !== null && Date.now() - graceStart >= 15000;
+                    if (finished === GROUPS || Date.now() - t0 >= 100000 || graceOver) { clearInterval(iv); resolve(); }
+                }, 500);
+            });
+            const results = slots.map(s => s || { status: 'rejected', reason: new Error('AI 回應逾時，請重試') });
             const groups = results.filter(r => r.status === 'fulfilled').map(r => r.value);
             // 交錯排列：讓週一～週五各取自不同組（蛋白質不重複）
             const merged = [];
